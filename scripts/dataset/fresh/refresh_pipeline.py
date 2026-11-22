@@ -44,6 +44,7 @@ BOARD_HISTORY_PATH = (
 )
 
 RAW_DB_PATH = PROJECT_ROOT / "data" / "raw" / "moex_daily_raw.sqlite"
+STATE_DB_PATH = PROJECT_ROOT / "data" / "interim" / "fresh" / "fresh_state.sqlite"
 ADJUSTED_BUILDER_PATH = (
     PROJECT_ROOT / "scripts" / "dataset" / "04_build_adjusted_dataset.py"
 )
@@ -296,7 +297,7 @@ def update_raw_database() -> dict[str, Any]:
     )
 
     connection = sqlite3.connect(RAW_DB_PATH, timeout=30)
-    connection.row_factory = sqlite3.Row
+    state_connection = sqlite3.connect(STATE_DB_PATH, timeout=30)
 
     attempted = 0
     successful = 0
@@ -307,7 +308,8 @@ def update_raw_database() -> dict[str, Any]:
     errors: list[dict[str, str]] = []
 
     try:
-        create_refresh_state(connection)
+        STATE_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        create_refresh_state(state_connection)
 
         required = connection.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='daily_bars_raw'"
@@ -319,19 +321,20 @@ def update_raw_database() -> dict[str, Any]:
             secid = pair["secid"]
             board = pair["boardid"]
 
-            checked_through = get_checked_through(connection, secid, board)
+            checked_through = get_checked_through(state_connection, secid, board)
             if checked_through is None:
                 checked_through = get_last_observation(connection, secid, board)
 
             if checked_through is None:
-                # Initial historical load is a separate, explicit stage.
+                # No raw observations exist for this historical board pair.
                 # Do not unexpectedly download decades of history here.
+                # Historical coverage is handled by stage 02.
                 skipped += 1
-                errors.append({
-                    "secid": secid,
-                    "boardid": board,
-                    "error": "No existing raw observations; run the historical downloader first.",
-                })
+                LOG.warning(
+                    "Skipping %s/%s: no existing raw observations; "
+                    "historical backfill remains stage 02.",
+                    secid, board,
+                )
                 continue
 
             start_date = (
@@ -362,7 +365,7 @@ def update_raw_database() -> dict[str, Any]:
                 # Advance the checkpoint even when there were no trades:
                 # this avoids repeatedly querying inactive securities.
                 save_board_state(
-                    connection,
+                    state_connection,
                     secid,
                     board,
                     END_DATE.isoformat(),
@@ -379,7 +382,7 @@ def update_raw_database() -> dict[str, Any]:
                     "error": error_text,
                 })
                 save_board_state(
-                    connection,
+                    state_connection,
                     secid,
                     board,
                     checked_through,
@@ -400,6 +403,7 @@ def update_raw_database() -> dict[str, Any]:
 
     finally:
         connection.close()
+        state_connection.close()
 
     result = {
         "end_date_checked": END_DATE.isoformat(),
