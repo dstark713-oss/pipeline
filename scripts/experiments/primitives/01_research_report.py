@@ -782,7 +782,7 @@ def summarize_breadth(breadth: pd.DataFrame) -> pd.DataFrame:
     for feature in BREADTH_FEATURES:
         for horizon in FORWARD_HORIZONS:
             target = f"top50_cohort_forward_return_{horizon}"
-            count_column = f"top50_cohort_{target}_n"
+            count_column = f"{target}_n"
             pair = breadth[[feature, target, count_column]].replace(
                 [np.inf, -np.inf], np.nan
             ).dropna()
