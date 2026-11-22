@@ -88,6 +88,38 @@ def safe_corr(x: pd.Series, y: pd.Series, method: str = "pearson") -> float:
     return float(pair.iloc[:, 0].corr(pair.iloc[:, 1], method=method))
 
 
+def hac_correlation_test(
+    x: pd.Series,
+    y: pd.Series,
+    method: str,
+    max_lags: int,
+) -> tuple[float, float]:
+    pair = pd.concat([x, y], axis=1).replace(
+        [np.inf, -np.inf], np.nan
+    ).dropna()
+
+    if len(pair) < 30:
+        return np.nan, np.nan
+
+    left = pair.iloc[:, 0]
+    right = pair.iloc[:, 1]
+
+    if method == "spearman":
+        left = left.rank(method="average")
+        right = right.rank(method="average")
+
+    left_std = left.std(ddof=0)
+    right_std = right.std(ddof=0)
+    if left_std == 0 or right_std == 0:
+        return np.nan, np.nan
+
+    left_z = (left - left.mean()) / left_std
+    right_z = (right - right.mean()) / right_std
+    cross_product = left_z * right_z
+
+    return newey_west_mean_test(cross_product, max_lags)
+
+
 def normal_two_sided_pvalue(t_stat: float) -> float:
     if not np.isfinite(t_stat):
         return np.nan
@@ -614,11 +646,25 @@ def build_breadth_frame(
     forward_columns = [
         f"forward_return_{h}" for h in FORWARD_HORIZONS
     ]
-    outcome = frame.groupby("tradedate")[forward_columns].mean().reset_index()
+    grouped_outcome = frame.groupby("tradedate")[forward_columns]
+    outcome = grouped_outcome.mean().reset_index()
+    outcome_counts = grouped_outcome.count().add_suffix("_n").reset_index()
+    outcome = outcome.merge(
+        outcome_counts,
+        on="tradedate",
+        how="left",
+        validate="one_to_one",
+    )
     outcome = outcome.rename(
         columns={
-            column: f"top50_cohort_{column}"
-            for column in forward_columns
+            **{
+                column: f"top50_cohort_{column}"
+                for column in forward_columns
+            },
+            **{
+                f"{column}_n": f"top50_cohort_{column}_n"
+                for column in forward_columns
+            },
         }
     )
 
@@ -736,10 +782,19 @@ def summarize_breadth(breadth: pd.DataFrame) -> pd.DataFrame:
     for feature in BREADTH_FEATURES:
         for horizon in FORWARD_HORIZONS:
             target = f"top50_cohort_forward_return_{horizon}"
-            pair = breadth[[feature, target]].replace(
+            count_column = f"top50_cohort_{target}_n"
+            pair = breadth[[feature, target, count_column]].replace(
                 [np.inf, -np.inf], np.nan
             ).dropna()
 
+            pearson_t, pearson_p = hac_correlation_test(
+                pair[feature], pair[target], "pearson",
+                min(horizon - 1, HAC_MAX_LAGS_CAP),
+            )
+            spearman_t, spearman_p = hac_correlation_test(
+                pair[feature], pair[target], "spearman",
+                min(horizon - 1, HAC_MAX_LAGS_CAP),
+            )
             rows.append({
                 "primitive": feature,
                 "horizon": int(horizon),
@@ -747,18 +802,28 @@ def summarize_breadth(breadth: pd.DataFrame) -> pd.DataFrame:
                 "pearson_correlation": safe_corr(
                     pair[feature], pair[target], "pearson"
                 ),
+                "pearson_hac_t": pearson_t,
+                "pearson_pvalue": pearson_p,
                 "spearman_correlation": safe_corr(
                     pair[feature], pair[target], "spearman"
                 ),
+                "spearman_hac_t": spearman_t,
+                "spearman_pvalue": spearman_p,
                 "mean_feature": (
                     float(pair[feature].mean()) if len(pair) else np.nan
                 ),
                 "mean_future_top50_cohort_return": (
                     float(pair[target].mean()) if len(pair) else np.nan
                 ),
+                "mean_forward_coverage": (
+                    float(pair[count_column].mean()) if len(pair) else np.nan
+                ),
             })
 
-    return pd.DataFrame(rows)
+    result = pd.DataFrame(rows)
+    result["pearson_qvalue"] = benjamini_hochberg(result["pearson_pvalue"])
+    result["spearman_qvalue"] = benjamini_hochberg(result["spearman_pvalue"])
+    return result
 
 
 # ============================================================
