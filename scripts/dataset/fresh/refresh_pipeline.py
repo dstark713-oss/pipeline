@@ -335,6 +335,7 @@ def update_raw_database() -> dict[str, Any]:
         PROJECT_ROOT / "scripts" / "dataset" / "02_download_daily_bars_sqlite.py",
     )
 
+    STATE_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(RAW_DB_PATH, timeout=30)
     state_connection = sqlite3.connect(STATE_DB_PATH, timeout=30)
 
@@ -347,7 +348,6 @@ def update_raw_database() -> dict[str, Any]:
     errors: list[dict[str, str]] = []
 
     try:
-        STATE_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
         create_refresh_state(state_connection)
 
         required = connection.execute(
