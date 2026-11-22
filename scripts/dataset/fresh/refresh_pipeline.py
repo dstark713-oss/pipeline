@@ -257,11 +257,50 @@ def fetch_board_range(
         if not rows:
             break
 
+        # Raw observations are append-only. If MOEX republishes a
+        # different value for an already stored SECID/BOARDID/TRADEDATE,
+        # do not silently create a second daily row. Stop and require a
+        # separate correction review instead.
+        new_rows = []
+        for row in rows:
+            tradedate = row.get("TRADEDATE")
+            if not tradedate:
+                raise RuntimeError(
+                    f"MOEX row has no TRADEDATE: {secid}/{board}"
+                )
+
+            incoming_hash = downloader.make_row_hash(
+                secid=secid,
+                board=board,
+                row=row,
+            )
+            existing = connection.execute(
+                """
+                SELECT row_hash
+                FROM daily_bars_raw
+                WHERE secid = ? AND boardid = ? AND tradedate = ?
+                """,
+                (secid, board, str(tradedate)),
+            ).fetchall()
+            existing_hashes = {item[0] for item in existing}
+
+            if existing_hashes:
+                if incoming_hash not in existing_hashes:
+                    raise RuntimeError(
+                        "MOEX revised an already stored daily observation; "
+                        "raw data was not overwritten or duplicated. "
+                        f"Manual correction review required: "
+                        f"{secid}/{board}/{tradedate}"
+                    )
+                continue
+
+            new_rows.append(row)
+
         inserted = downloader.insert_history_rows(
             connection=connection,
             secid=secid,
             board=board,
-            rows=rows,
+            rows=new_rows,
         )
         connection.commit()
 
@@ -505,7 +544,7 @@ def main() -> int:
             "download": download_summary,
             "errors_file": str(ERRORS_PATH),
             "derived_datasets_rebuilt": False,
-            "reason": "At least one board download failed or has no existing raw history.",
+            "reason": "At least one MOEX board request failed or returned a conflicting revision of an existing raw observation.",
         }
         write_json_atomic(report, SUMMARY_PATH)
         LOG.error(
