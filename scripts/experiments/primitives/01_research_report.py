@@ -386,7 +386,8 @@ def build_ticker_features(
     # Before the first observed bar, turnover history remains unknown.
     first_observed = ticker_history["tradedate"].min()
     turnover = pd.to_numeric(indexed["value"], errors="coerce")
-    turnover = turnover.where(turnover.index >= first_observed).fillna(0.0)
+    turnover = turnover.fillna(0.0)
+    turnover.loc[turnover.index < first_observed] = np.nan
 
     daily_return = close.pct_change(fill_method=None)
 
