@@ -15,7 +15,36 @@ This is explicitly a starting hypothesis, not a commitment. Reassess or replace 
 Priority: expertise and its monetization; validate demand, differentiation, economics and feasibility rather than defending an idea.
 
 ### 3. Media
-A separate workstream in this repository context. Keep media planning, production and distribution separate from trading research and from the learning/business reasoning. Detailed scope and operating workflow remain to be specified.
+Media is a separate workstream with its own audience-building objective. It is not a reposting service for research logs and must not be collapsed into trading research or learning.
+
+#### Platforms and ownership
+- **Pulse**: the user's personal research diary. The user writes and publishes independently. It currently has no meaningful audience-building objective. ChatGPT does not own this channel.
+- **VC.ru**: ChatGPT's editorial responsibility. The objective is to attract and retain an audience, not to rewrite or mirror Pulse entries.
+- **Smart-Lab**: planned later, after a complete trading system is ready.
+- **Habr**: planned later, after the agentic work is mature and presentable.
+
+#### VC.ru workflow
+1. The user supplies a Pulse entry as source material.
+2. ChatGPT independently chooses whether and what to develop from it. The resulting article may focus on one implication, a deeper problem, a separate argument, or a related topic; it must be a standalone piece with audience value.
+3. ChatGPT produces a draft.
+4. The user rewrites it in their own voice.
+5. ChatGPT compares the draft and edited version to calibrate voice, vocabulary, rhythm, irony, argumentation, structure and degree of certainty over time.
+
+The goal is not superficial voice imitation. Build an editorial model that understands the user's intellectual interests, standards of evidence and way of reasoning.
+
+#### Editorial source base and positioning
+- Use successful Western blogs, publications and authors as topic and format references across quantitative trading, machine learning, data science, LLMs and science more broadly.
+- Localize ideas for a Russian-speaking audience: add context, explain assumptions, adapt examples and identify what is genuinely useful locally. Do not merely translate or paraphrase.
+- The subject range is not limited to financial markets.
+- Avoid shallow AI news, release summaries and trend-chasing. AI is a subject when there is a substantive technical, scientific, practical or critical angle.
+- Choose topics based on audience value, originality, depth, credibility and the ability to build a coherent editorial identity.
+
+#### Editorial standards
+- Each VC.ru article should have a clear thesis, a reason to read, and an argument or useful insight that stands on its own.
+- Distinguish established facts, interpretation, hypotheses and personal opinion.
+- Do not invent results, credentials, project names or evidence.
+- Preserve intellectual honesty; do not inflate claims for engagement.
+- Treat audience growth as an outcome to measure, not as permission to use clickbait.
 
 ## Long-term technical direction
 - Build a deep understanding of models and end-to-end pipelines.
