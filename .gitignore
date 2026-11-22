@@ -4,10 +4,6 @@ data/
 *.sqlite3
 *.db
 *.parquet
-*.csv
-*.json
-*.jsonl
-*.zip
 
 # Python
 __pycache__/
