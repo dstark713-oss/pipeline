@@ -786,6 +786,7 @@ def summarize_breadth(breadth: pd.DataFrame) -> pd.DataFrame:
             pair = breadth[[feature, target, count_column]].replace(
                 [np.inf, -np.inf], np.nan
             ).dropna()
+            pair = pair[pair[count_column] >= MIN_CROSS_SECTION]
 
             pearson_t, pearson_p = hac_correlation_test(
                 pair[feature], pair[target], "pearson",
@@ -859,6 +860,8 @@ def write_markdown_report(
         "- Forward return horizon H = close[T+H] / open[T+1] - 1. Signal is formed after close T.",
         "- No price forward-fill is used.",
         "- Cross-sectional IC is computed per date across available TOP50 members.",
+        "- RS rank 1 means strongest; for RS-rank primitives, negative IC means stronger-ranked securities tend to have higher forward returns.",
+        "- Breadth dates require at least the configured minimum number of forward cohort outcomes.",
         f"- Dates with fewer than {MIN_CROSS_SECTION} valid cross-sectional observations are omitted.",
         "- IC IR = mean daily IC / standard deviation of daily IC; it is not annualized.",
         "- HAC/Newey-West mean tests use a lag window up to H-1; p-values use a two-sided normal approximation.",
