@@ -676,36 +676,112 @@ def build_breadth_frame(
 # CROSS-SECTIONAL IC / RANK IC REPORT
 # ============================================================
 
-def calculate_daily_ic(
-    frame: pd.DataFrame,
-) -> pd.DataFrame:
-    log("Calculating daily cross-sectional IC and Rank IC...")
+def _grouped_pearson(
+    x: np.ndarray,
+    y: np.ndarray,
+    group_codes: np.ndarray,
+    n_groups: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Vectorized per-group Pearson correlation using NumPy bincount."""
+    counts = np.bincount(group_codes, minlength=n_groups).astype(np.float64)
+    sum_x = np.bincount(group_codes, weights=x, minlength=n_groups)
+    sum_y = np.bincount(group_codes, weights=y, minlength=n_groups)
+    sum_x2 = np.bincount(group_codes, weights=x * x, minlength=n_groups)
+    sum_y2 = np.bincount(group_codes, weights=y * y, minlength=n_groups)
+    sum_xy = np.bincount(group_codes, weights=x * y, minlength=n_groups)
+
+    safe_n = np.maximum(counts, 1.0)
+    covariance = sum_xy - sum_x * sum_y / safe_n
+    variance_x = sum_x2 - sum_x * sum_x / safe_n
+    variance_y = sum_y2 - sum_y * sum_y / safe_n
+    denominator = np.sqrt(
+        np.maximum(variance_x, 0.0) * np.maximum(variance_y, 0.0)
+    )
+
+    correlations = np.full(n_groups, np.nan, dtype=np.float64)
+    valid = (counts >= 2) & (denominator > 0)
+    correlations[valid] = covariance[valid] / denominator[valid]
+    return np.clip(correlations, -1.0, 1.0), counts.astype(np.int64)
+
+
+def calculate_daily_ic(frame: pd.DataFrame) -> pd.DataFrame:
+    """
+    Calculate daily Pearson IC and Spearman Rank IC without Python loops
+    over individual dates. Only the small fixed feature/horizon grid loops
+    remain; per-date statistics are vectorized.
+    """
+    log("Calculating daily cross-sectional IC and Rank IC (vectorized)...")
+
+    date_codes, unique_dates = pd.factorize(frame["tradedate"], sort=True)
+    date_codes = date_codes.astype(np.int64, copy=False)
+    n_dates = len(unique_dates)
+    if n_dates == 0:
+        raise RuntimeError("No dates available for IC calculation.")
+
     records = []
 
     for feature in CROSS_SECTIONAL_FEATURES:
+        feature_values = pd.to_numeric(
+            frame[feature], errors="coerce"
+        ).to_numpy(dtype=np.float64, na_value=np.nan)
+
         for horizon in FORWARD_HORIZONS:
-            target = f"forward_return_{horizon}"
-            subset = frame[["tradedate", feature, target]].copy()
+            target_values = pd.to_numeric(
+                frame[f"forward_return_{horizon}"], errors="coerce"
+            ).to_numpy(dtype=np.float64, na_value=np.nan)
 
-            for date, group in subset.groupby("tradedate", sort=True):
-                pair = group[[feature, target]].replace(
-                    [np.inf, -np.inf], np.nan
-                ).dropna()
+            valid = (
+                (date_codes >= 0)
+                & np.isfinite(feature_values)
+                & np.isfinite(target_values)
+            )
+            if not valid.any():
+                continue
 
-                if len(pair) < MIN_CROSS_SECTION:
-                    continue
+            groups = date_codes[valid]
+            x = feature_values[valid]
+            y = target_values[valid]
 
-                if pair[feature].nunique() < 2 or pair[target].nunique() < 2:
-                    continue
+            pearson_ic, counts = _grouped_pearson(x, y, groups, n_dates)
 
-                records.append({
-                    "tradedate": date,
-                    "primitive": feature,
-                    "horizon": horizon,
-                    "n": int(len(pair)),
-                    "ic": float(pair[feature].corr(pair[target], method="pearson")),
-                    "rank_ic": float(pair[feature].corr(pair[target], method="spearman")),
-                })
+            # Average ranks within each date; Pearson correlation of these
+            # ranks is Spearman Rank IC. No Python loop over dates.
+            valid_index = np.flatnonzero(valid)
+            group_keys = pd.Series(groups, index=valid_index)
+            x_rank = (
+                pd.Series(x, index=valid_index)
+                .groupby(group_keys, sort=False)
+                .rank(method="average")
+                .to_numpy(dtype=np.float64)
+            )
+            y_rank = (
+                pd.Series(y, index=valid_index)
+                .groupby(group_keys, sort=False)
+                .rank(method="average")
+                .to_numpy(dtype=np.float64)
+            )
+            rank_ic, rank_counts = _grouped_pearson(
+                x_rank, y_rank, groups, n_dates
+            )
+
+            eligible = (
+                (counts >= MIN_CROSS_SECTION)
+                & (rank_counts >= MIN_CROSS_SECTION)
+                & np.isfinite(pearson_ic)
+                & np.isfinite(rank_ic)
+            )
+            if not eligible.any():
+                continue
+
+            positions = np.flatnonzero(eligible)
+            records.append(pd.DataFrame({
+                "tradedate": unique_dates.take(positions),
+                "primitive": feature,
+                "horizon": int(horizon),
+                "n": counts[eligible],
+                "ic": pearson_ic[eligible],
+                "rank_ic": rank_ic[eligible],
+            }))
 
     if not records:
         raise RuntimeError(
@@ -713,7 +789,7 @@ def calculate_daily_ic(
             "MIN_CROSS_SECTION."
         )
 
-    return pd.DataFrame(records)
+    return pd.concat(records, ignore_index=True)
 
 
 def summarize_ic(daily_ic: pd.DataFrame) -> pd.DataFrame:
