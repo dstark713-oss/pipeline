@@ -404,8 +404,22 @@ def aggregate_boards(
         .fillna(999)
     )
 
+    # Prefer a board row with a usable close before applying board
+    # priority. A quarantined/missing TQBR OHLC row must not hide a
+    # valid EQBR price row for the same security and session.
+    price_fields = [
+        "adjusted_open",
+        "adjusted_high",
+        "adjusted_low",
+        "adjusted_close",
+    ]
+    prices["_valid_price"] = (
+        prices[price_fields].notna().all(axis=1).astype("int8")
+    )
+
     prices = prices.sort_values(
-        keys + ["_priority", "boardid"],
+        keys + ["_valid_price", "_priority", "boardid"],
+        ascending=[True, True, False, True, True],
         kind="mergesort",
     )
 
