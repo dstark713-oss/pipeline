@@ -380,7 +380,13 @@ def build_ticker_features(
 
     close = pd.to_numeric(indexed["adjusted_close"], errors="coerce")
     open_ = pd.to_numeric(indexed["adjusted_open"], errors="coerce")
+
+    # Match the panel's activity convention: after the first observed bar,
+    # a missing ticker/session observation contributes zero turnover.
+    # Before the first observed bar, turnover history remains unknown.
+    first_observed = ticker_history["tradedate"].min()
     turnover = pd.to_numeric(indexed["value"], errors="coerce")
+    turnover = turnover.where(turnover.index >= first_observed).fillna(0.0)
 
     daily_return = close.pct_change(fill_method=None)
 
@@ -467,7 +473,7 @@ def build_ticker_features(
             close.shift(-horizon) / open_.shift(-1) - 1.0
         )
 
-    return features.reset_index(names="tradedate")
+    return features.rename_axis("tradedate").reset_index()
 
 
 def build_feature_frame(
@@ -796,11 +802,11 @@ def write_markdown_report(
         "",
         "## Cross-sectional IC summary",
         "",
-        ic_summary.to_markdown(index=False, floatfmt=".5f"),
+        "```\\n" + ic_summary.to_string(index=False, float_format=lambda x: f"{x:.5f}") + "\\n```",
         "",
         "## Market breadth summary",
         "",
-        breadth_summary.to_markdown(index=False, floatfmt=".5f"),
+        "```\\n" + breadth_summary.to_string(index=False, float_format=lambda x: f"{x:.5f}") + "\\n```",
         "",
         "## Interpretation warnings",
         "",
