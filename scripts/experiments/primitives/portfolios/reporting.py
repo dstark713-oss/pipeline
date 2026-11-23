@@ -28,6 +28,7 @@ def summarize_period(group: pd.DataFrame) -> dict:
             "observations": 0, "total_return": np.nan,
             "annualized_return": np.nan, "annualized_volatility": np.nan,
             "sharpe_252": np.nan, "max_drawdown": np.nan,
+            "p05_daily_return": np.nan, "worst_day": np.nan,
             "positive_share": np.nan, "average_exposure": np.nan,
             "average_turnover": np.nan, "average_missing_return_weight": np.nan,
         }
@@ -50,6 +51,8 @@ def summarize_period(group: pd.DataFrame) -> dict:
             if daily_std > 0 else np.nan
         ),
         "max_drawdown": max_drawdown(equity),
+        "p05_daily_return": float(returns.quantile(0.05)),
+        "worst_day": float(returns.min()),
         "positive_share": float((returns > 0).mean()),
         "average_exposure": float(group["effective_exposure"].mean()),
         "average_turnover": float(group["turnover_one_way"].mean()),
@@ -176,6 +179,17 @@ def write_assistant_report(
             ],
         ),
         "",
+        "## Full-sample cost sensitivity",
+        "",
+        markdown_table(
+            overall.sort_values(["strategy", "transaction_cost_bps"]),
+            [
+                "strategy", "transaction_cost_bps", "total_return",
+                "max_drawdown", "p05_daily_return", "worst_day",
+                "average_exposure", "average_turnover",
+            ],
+        ),
+        "",
         "## Focus years: 2024, 2025, 2026 (zero transaction costs)",
         "",
         markdown_table(
@@ -183,6 +197,7 @@ def write_assistant_report(
             [
                 "year", "period_status", "strategy", "observations",
                 "total_return", "annualized_volatility", "max_drawdown",
+                "p05_daily_return", "worst_day",
                 "positive_share", "average_exposure",
             ],
         ),
@@ -194,6 +209,7 @@ def write_assistant_report(
             [
                 "year", "strategy", "transaction_cost_bps",
                 "observations", "total_return", "max_drawdown",
+                "p05_daily_return", "worst_day",
                 "average_exposure", "average_turnover",
             ],
         ),
