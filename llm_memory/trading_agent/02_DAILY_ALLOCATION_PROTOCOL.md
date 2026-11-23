@@ -1,6 +1,6 @@
 # Daily Allocation Protocol
 
-Last updated: 2026-11-23
+Last updated: 2026-11-24
 
 ## Trigger
 
@@ -12,9 +12,10 @@ The goal is to train and improve the agent's real-market allocation reasoning th
 
 1. Establish the decision date, market session, and relevant data cutoff.
 2. Read the latest known allocation ledger from this memory and the user's latest updates.
-3. Request the **Daily Market Snapshot** from the user: current local screener/market breadth outputs and any other relevant local research results. Ask only for the missing items needed for today's decision.
-4. If the user supplies a new portfolio snapshot/allocation, reconcile it against the ledger. Do not infer that unreported allocation is cash.
-5. Mark stale or missing data explicitly.
+3. Read [the allocation decision tree and current decision](05_ALLOCATION_DECISION_TREE.md).
+4. Request the **Daily Market Snapshot** from the user: current local screener/market breadth outputs and any other relevant local research results. Ask only for the missing items needed for today's decision.
+5. If the user supplies a new portfolio snapshot/allocation, reconcile it against the ledger. Do not infer that unreported allocation is cash.
+6. Mark stale or missing data explicitly.
 
 ## Phase 1: Daily Market Snapshot
 
@@ -90,10 +91,17 @@ Use the current user-provided allocation as the baseline. For each position/cand
 - strongest counterargument;
 - confidence and invalidation condition.
 
+Portfolio-level constraints explicitly supplied by the user:
+- no more than 10 simultaneous equity names;
+- aggregate signed portfolio loading from -0.5 to +1.5;
+- no per-security weight limit has been supplied;
+- no separate gross-exposure limit has been supplied.
+
+Do not invent missing constraints. The aggregate loading range is not a per-security cap. It permits short exposure and leverage mathematically but does not make either desirable by default.
+
 Portfolio-level checks:
 - state the allocation convention and make the total explicit;
 - do not classify unknown weight as cash;
-- respect only constraints actually supplied by the user;
 - consider liquidity, spread, turnover, taxes, and transaction costs where evidence exists;
 - avoid churn when expected benefit is smaller than implementation friction;
 - if inputs do not support precise weights, provide a bounded/conditional recommendation or request the one missing critical input.
