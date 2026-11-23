@@ -413,8 +413,8 @@ def load_market_breadth(snapshot_date: pd.Timestamp) -> pd.DataFrame:
 
     pos = daily.index.get_loc(snapshot_date)
     lag_date = daily.index[pos - 5] if pos >= 5 else pd.NaT
+    daily.index.name = "snapshot_date"
     current = daily.loc[[snapshot_date]].reset_index()
-    current = current.rename(columns={"index": "snapshot_date"})
     current["snapshot_date"] = current["snapshot_date"].dt.strftime("%Y-%m-%d")
     current["breadth_sma20_universe_n"] = int(
         ph.loc[ph["tradedate"].eq(snapshot_date), "secid"].nunique()
