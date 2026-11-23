@@ -155,3 +155,17 @@ A read-only descriptive screener has now been added:
 - The tool reads the prepared primitive feature frame; it does not recalculate features or mutate source data.
 
 The tool is committed to GitHub. Local execution and output validation remain pending user-run confirmation.
+
+
+## Screener: роль, выход и границы интерпретации
+
+Подробная спецификация для downstream-агента находится в `docs/tools/01_primitive_screener.md`. Скринер — runtime-инструмент состояния, не исследовательский отчёт: он выводит текущие значения трёх утверждённых примитивов по последнему PIT TOP50 срезу и не рассчитывает статистику связи с forward returns.
+
+Важно различать три слоя:
+1. Runtime snapshot: текущие значения примитивов, их поперечные ранги/перцентили, PIT liquidity rank и статусы пропусков.
+2. Исследовательская валидация: IC, Rank IC, IC IR, HAC/Newey-West, p-values, BH q-values, coverage, периодная устойчивость, квантильные/децильные профили, корреляции и проверки утечки/смещений.
+3. Портфельные прикладные эксперименты: CAGR, terminal wealth, Sharpe, MDD, exposure, turnover, transaction costs, missing return weight, вклад тикеров/дат и stress-тесты концентрации.
+
+Слой 2 проверяет информационное содержание и устойчивость эффекта. Слой 3 иллюстрирует возможное применение информации в конкретной портфельной конструкции, но не является критерием истинности эффекта. Не оптимизировать исследовательские примитивы по CAGR/Sharpe/MDD и не отвергать эффект только из-за слабой доходности симуляции. Решение о применении информации относится к downstream-агенту.
+
+Идентичность инструмента определяется SECID. Разные SECID не склеиваются по эмитенту, ISIN или названию без отдельного явного правила пользователя.
