@@ -13,7 +13,7 @@ User-reported portfolio snapshot, 2026-11-23:
 - GCHE: 2%
 - LQDT: 88%
 
-Current equity allocation: 12%. LQDT is a money-market fund, not idle cash. The user estimates its current effective yield at approximately 12% annualized (key rate less fund expenses); this is a user estimate for the current environment, not a guaranteed return and not a historical series.
+Current equity allocation: 12%. This is the result of a tactical position reduction made on Friday, 2026-11-20, as reported by the user. It is not a strategic baseline, target exposure, or validated risk budget. LQDT is a money-market fund, not idle cash. The user estimates its current effective yield at approximately 12% annualized (key rate less fund expenses); this is a user estimate for the current environment, not a guaranteed return and not a historical series.
 
 Historical cash benchmark for the breadth experiment:
 - 8% annual effective rate across the full test period.
@@ -117,7 +117,7 @@ User-run local output for 2026-11-23:
 - all 50 instruments had valid data;
 - IMOEX rose 1.30% that session (secondary-source figure from the user's prior snapshot).
 
-Interpretation: index rebound was not broad-based. The breadth state maps to the 25% multiplier, or 3% of the 12% baseline equity sleeve, under the unvalidated heuristic. This is a reason not to add risk; it is not an automatic instruction to cut existing positions to 3%.
+Interpretation: index rebound was not broad-based. The breadth state maps to the 25% multiplier under the unvalidated heuristic. Because the reference exposure has not been independently established, this does not translate into a defensible target portfolio weight. It is a negative market-regime input, not a mechanical instruction to cut positions.
 
 ### T — retain 10%, do not add
 Positive evidence:
@@ -169,7 +169,7 @@ Reassess the hold decision if any of the following occurs:
 
 ## 7. Pending work and status
 
-- Corrected breadth backtest: not yet created/run in this decision record. No sensitivity checks.
+- Corrected breadth backtest: not yet created/run in this decision record. No sensitivity checks. The earlier 3/6/9/12% mapping is withdrawn.
 - Historical cash proxy: fixed 8% annual effective, user-provided from RGBITR minus RGBI.
 - Current LQDT yield: user estimate around 12% annualized; floating/current only.
 - Qwen review: not supplied for this cycle.
@@ -178,6 +178,6 @@ Reassess the hold decision if any of the following occurs:
 
 ## 8. Confidence
 
-- Confidence in HOLD / NO CHANGE as the least-assumptive decision on the supplied evidence: moderate.
-- Confidence that 10% T and 2% GCHE are mathematically optimal weights: low; valuation, correlations, portfolio risk budget, and full candidate comparison are incomplete.
+- Confidence in the earlier HOLD / NO CHANGE as a provisional least-assumptive action: low-to-moderate; it is not a completed allocation decision.
+- Confidence that 10% T and 2% GCHE are optimal weights: not established. The tactical origin of the 12% stock allocation does not justify retaining it as a strategic target.
 - Confidence in the breadth multiplier as a live allocation rule: low until the corrected historical test is completed.
