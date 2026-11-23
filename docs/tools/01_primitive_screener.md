@@ -55,7 +55,8 @@ python scripts/experiments/primitives/05_build_primitive_features.py
 
 CSV:
 
-`data/interim/screener/latest_primitive_snapshot.csv`
+- `data/interim/screener/latest_primitive_snapshot.csv`: одна строка на участника последнего PIT TOP50 среза.
+- `data/interim/screener/latest_market_breadth.csv`: одна строка с двумя утверждёнными market breadth показателями.
 
 Одна строка соответствует одному участнику последнего PIT TOP50 среза. Основные поля:
 
