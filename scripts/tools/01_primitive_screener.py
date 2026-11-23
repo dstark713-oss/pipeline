@@ -558,7 +558,10 @@ def print_top_15(snapshot: pd.DataFrame) -> None:
             subset=[primitive]
         ).sort_values(
             [primitive, "secid"],
-            ascending=[False, True],
+            ascending=[
+                primitive == "realized_vol_60",
+                True,
+            ],
             kind="mergesort",
         ).head(TOP_N)
 
