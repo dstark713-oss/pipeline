@@ -115,3 +115,16 @@ Report in this order:
 10. Journal entry and next observation to track.
 
 Record the initial thesis, final recommendation, alternatives rejected, Qwen contribution, and later outcome/lesson. Do not rewrite old decisions to make them look prescient.
+
+## Research gap escalation
+
+If a required input or diagnostic is absent from the current tools and cannot be reliably obtained from public sources:
+
+1. State the precise research question and why its answer may change the investment decision.
+2. Identify the local source needed (database/table/file/API/cache) and the minimum fields/time range.
+3. Write a complete, one-off Python script under `scripts/one_use/` when practical. Include a repository-relative path comment at the top of the file.
+4. Default to read-only access; do not mutate production databases or canonical datasets. Use bounded queries and explicit output paths.
+5. Tell the user exactly how to run it and which output file/console section to return. The user may also pull the committed script from GitHub and run it locally.
+6. Analyze the actual returned result. Until then, mark the question unresolved and the script as not yet run.
+
+When Codex/Python access becomes available, use accessible project files directly for analysis where permitted. Until then, user-run scripts are the handoff mechanism. Do not confuse a planned future capability with current access.
