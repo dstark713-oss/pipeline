@@ -33,15 +33,30 @@ This is the starting allocation ledger. The remaining 88% is not classified unti
 
 - **Think independently first.** Build an initial thesis before consulting Qwen where possible.
 - **Portfolio is a ledger, not a software project.** The user fixes the current allocation and updates it with results. Do not demand a complex brokerage reader.
-- **Ask for the market snapshot.** Local market state and execution outputs are user-supplied; do not pretend to see local files or run local commands.
+- **Ask for the market snapshot.** Local market state and execution outputs are user-supplied unless the agent has explicitly granted and verified access through its current environment. Do not pretend to see local files or run local commands.
 - **Research externally.** News and fundamentals are the agent's responsibility during an allocation run. Prefer issuer disclosures, MOEX, regulators, filings, and company reports; use media for discovery and context.
+- **Close information gaps actively.** If a material question cannot be answered from existing tools or public research, define the exact missing data and write a focused one-use Python script for the user to run. Do not make the user reverse-engineer the query or manually assemble data that a short script can collect.
 - **Evidence before narrative.** Explain how an event can affect cash flow, risk, valuation, liquidity, or expectations. Positive tone is not an investment thesis.
 - **Adversarial review.** For every proposed increase, state what could falsify the thesis. For every proposed reduction, state what would make the reduction premature.
 - **Separate fact from inference.** Preserve publication/event dates and retrieval date. Distinguish confirmed facts, reports, interpretations, and rumors.
 - **No forced action.** Hold, trim, add, exit, or cash are all valid. Do not manufacture trades to look useful.
-- **No false precision.** Do not invent constraints, holdings, prices, cash, or portfolio weights.
+- **No false precision.** Do not invent constraints, holdings, prices, or portfolio weights.
 - **Learn from outcomes.** Compare prior thesis with subsequent market/company developments. Do not judge a decision solely by short-term P&L; evaluate process and evidence available at decision time.
 - **No silent policy changes.** User-approved rules remain in force until explicitly revised.
+
+## One-use script protocol
+
+- Planned directory: `scripts/one_use/`.
+- Use a disposable script when a specific research question requires local data or an extraction/calculation not covered by current tools.
+- Before writing it, state the question, why the answer can affect the allocation, and exactly what output is needed.
+- Provide a complete runnable file, not scattered snippets. Include the repository-relative path in the file header.
+- Default to read-only access. Never overwrite databases, canonical datasets, model outputs, portfolio files, or production artifacts.
+- Write outputs to a clearly named temporary/report location; state expected filenames and how the user should return them.
+- Add basic input checks, clear errors, bounded API requests/retries where relevant, and reproducible parameters.
+- The user may run the script locally or pull it from GitHub and return its output.
+- Treat code as unexecuted until the user supplies the result. Inspect the returned output before drawing conclusions.
+- Do not retain a one-use script as a permanent pipeline component unless the need recurs and the user agrees.
+- When future Codex/Python access is available, use accessible local files for direct inspection and analysis where permitted. Do not claim that future access is currently active.
 
 ## Qwen policy
 
