@@ -87,7 +87,7 @@ def build_breadth_daily(
             "top50_cohort_past_return_5": float(
                 pd.to_numeric(data.loc[idx, "return_5"], errors="coerce").mean()
             ),
-            "top50_cohort_past_return_20": float(
+            "top50_cohort_mean_member_return_20": float(
                 pd.to_numeric(data.loc[idx, "return_20"], errors="coerce").mean()
             ),
         }
@@ -268,18 +268,18 @@ def summarize_double_sort(daily: pd.DataFrame) -> pd.DataFrame:
     """
     Nonparametric incremental-information diagnostic:
     first bucket dates by backward-looking equal-weight TOP50 20-session
-    return, then bucket breadth within each market-momentum bucket.
+    return, then bucket breadth within each past-return bucket.
     This is a descriptive conditional sort, not a regression.
     """
     rows = []
     market_bucket = quantile_labels(
-        daily["top50_cohort_past_return_20"],
+        daily["top50_cohort_mean_member_return_20"],
         DOUBLE_SORT_MARKET_BUCKETS,
     )
 
     for feature in BREADTH_FEATURES:
         work = daily[[
-            "tradedate", "top50_cohort_past_return_20", feature,
+            "tradedate", "top50_cohort_mean_member_return_20", feature,
             "top50_cohort_forward_mean_return_5",
             "top50_cohort_forward_mean_return_10",
             "top50_cohort_forward_mean_return_20",
@@ -314,8 +314,8 @@ def summarize_double_sort(daily: pd.DataFrame) -> pd.DataFrame:
                         "breadth_bucket": f"B{int(breadth_bucket_id) + 1}",
                         "horizon": horizon,
                         "n_dates": int(len(valid)),
-                        "mean_past_market_return_20": float(
-                            group["top50_cohort_past_return_20"].mean()
+                        "mean_member_past_return_20": float(
+                            group["top50_cohort_mean_member_return_20"].mean()
                         ),
                         "mean_future_market_return": (
                             float(valid[target].mean()) if len(valid) else np.nan
@@ -411,7 +411,7 @@ def write_report(
         "- Breadth change 5/20: change in breadth_sma20 over 5/20 market sessions.",
         "- Future mean and median return: equal-weight/median outcome of the signal-date cohort.",
         "- Future positive share: fraction of that cohort with a positive forward return.",
-        "- Incremental diagnostic: double-sort by backward-looking TOP50 20-session return, then by breadth within each market-momentum bucket.",
+        "- Incremental diagnostic: double-sort by backward-looking TOP50 20-session return, then by breadth within each past-return bucket.",
         "",
         "## Time-series correlation: future mean cohort return",
         "",
