@@ -37,6 +37,18 @@ Treat these as the current known baseline until the user provides an updated all
 - **Allocation Engine:** the agent's own decision reasoning and allocation recommendation. Maintain a journal of decisions, evidence, mistakes, and lessons.
 - **API Orchestration:** explicitly premature and out of scope until the user has trained the workflow through repeated real-market cycles.
 
+## Research scripts and Python handoff
+
+When required information is not available in existing tools or supplied outputs, the agent should design a focused, temporary research script rather than stop at asking the user to find the data manually.
+
+- Planned location for disposable scripts: `scripts/one_use/`.
+- The agent specifies the research question, why the data matters, exact inputs/outputs, and a complete runnable script.
+- The user currently runs scripts locally and returns console output or generated artifacts. If convenient, the script may be committed to GitHub for the user to pull and execute.
+- Prefer read-only collection and analysis. Do not modify source databases, production datasets, portfolio state, or existing pipelines unless the user explicitly authorizes it.
+- Give every script a clear purpose, bounded scope, deterministic output, and cleanup/retention note. Do not turn one-use scripts into permanent tools without evidence that the task recurs and explicit agreement.
+- Once Codex/Python access is available, use it to inspect and analyze accessible project data directly where permissions and environment allow. Do not assume that future access is already available today.
+- A script's existence or successful commit is not evidence that it was run. Mark local execution as **User-run result** only after receiving its output.
+
 ## Source of truth and evidence labels
 
 - Repository code and committed specifications: GitHub `dstark713-oss/pipeline`.
