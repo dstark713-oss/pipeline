@@ -63,14 +63,45 @@ The resulting screener is the first runtime analytical tool, not the definition 
 
 The screener exposes three instrument-level primitives and a separate breadth context. It is descriptive; it does not generate trading actions or portfolio weights.
 
-The next research cycle must start by assessing what analytical capabilities this screener and the existing data environment now enable, what important questions remain unanswered, and which additional tools/data/methods would close the highest-value gaps. Do not automatically continue mining more price primitives or extend breadth research merely because those were the previous topics.
+## Active research: ML direction prediction
+
+**Decision date: 2026-11-23.**
+
+The next approved research project is an ML model for predicting the direction of price movement.
+
+The research starts from the earlier observation that an instrument's position within its own recent price range may contain information about the conditional distribution of future returns. This is an initial research hypothesis, not an established predictive result and not a statistical null hypothesis. The project must test whether the effect is real, stable, and adds information beyond simple baselines and existing primitives.
+
+### Evaluation firewall: portfolio metrics prohibited
+
+This is an explicit, binding project rule:
+
+- **Do not inspect, calculate, report, compare, or use portfolio-level metrics before the final model is approved.**
+- This prohibition applies throughout target design, dataset construction, feature research, model development, feature selection, hyperparameter tuning, model comparison, and WF evaluation.
+- Do not use portfolio CAGR, Sharpe, MDD, drawdown, returns, exposure, turnover, or any other portfolio application result as a feedback signal for model selection or iteration.
+- Statistical and predictive-model metrics calculated on walk-forward (WF) evaluation are permitted.
+- The user will not create a separate fixed IS/VAL dataset split. Do not impose or assume such a split as a project requirement.
+- WF statistical evaluation is the permitted model-evaluation path. Its temporal design, leakage controls, aggregation, and metrics must be specified before results are examined.
+- Only after the user approves the final model may one decisive portfolio-level run be performed.
+- That portfolio run is a one-time downstream application evaluation. It must not become another tuning loop. Do not run repeated portfolio variants to select or improve the model.
+
+If a proposed analysis would expose portfolio metrics before final model approval, do not perform it. Ask for explicit user authorization only if the user changes this rule.
+
+### Research objective and boundaries
+
+- Predict direction of movement for individual instruments; exact target definition, horizon(s), label construction, and decision threshold are research-design questions to settle before implementation.
+- First investigate the conditional future-return distribution and establish transparent statistical baselines.
+- Test incremental information, temporal robustness, cross-sectional coverage, calibration where applicable, and failure modes using WF statistical evaluation.
+- Do not assume that a binary up/down label is automatically the best target merely because the final tool is described as direction prediction.
+- Do not optimize for portfolio performance or use portfolio results to choose labels, features, horizons, thresholds, or models.
+- Keep the current screener primitives as candidate inputs/baselines, not as mandatory features.
+- The model is an analytical tool for the downstream Trading Agent; it does not itself make trades or allocations.
 
 ## Research standards
 
 - A statistically significant result is not automatically useful, causal, independent, or robust.
 - Separate descriptive snapshots, statistical validation, and illustrative portfolio applications.
 - Do not optimize analytical primitives or tools against CAGR, Sharpe, MDD, or a particular portfolio outcome as universal truth criteria.
-- Portfolio metrics may help illustrate an application; they do not establish the truth of an information effect.
+- Portfolio metrics may help illustrate an application only when explicitly permitted by the relevant project decision. The active direction-prediction project has a stricter one-run firewall defined above.
 - Preserve point-in-time universe membership and temporal alignment. Explicitly investigate lookahead, leakage, survivorship, selection, missingness, and data-quality risks.
 - Keep instrument identity at SECID unless an explicit, validated mapping rule says otherwise.
 - Distinguish observed facts, user-reported results, code-inspected behavior, hypotheses, and decisions.
