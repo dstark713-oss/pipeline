@@ -180,3 +180,19 @@ The production screener exposes only two market-level values, in a separate `MAR
 Definitions match `build_breadth_frame` in `scripts/experiments/primitives/01_research_report.py`. The daily denominator includes only PIT TOP50 members with `bar_available == 1`; only valid `price_sma20` values enter the proportion. Missing bars and unavailable SMA20 values are not treated as below-SMA observations. The five-session change uses `diff(5)` on the panel trading-date calendar, with no forward-fill.
 
 The screener does not expose breadth_sma50, breadth_sma200, breadth_change_20, daily advancing share, or any additional breadth indicators. Breadth remains a separate descriptive market-state layer, not part of per-instrument TOP15 rankings or a composite score.
+
+
+## Breadth allocation heuristic: application boundary (2026-11-23)
+
+A separate portfolio application experiment used the approved breadth state to scale base exposure:
+
+| Breadth level | Five-session breadth change | Exposure multiplier |
+|---|---|---:|
+| >= 50% | Rising (> 0) | 100% |
+| >= 50% | Flat/falling (<= 0) | 75% |
+| < 50% | Rising (> 0) | 50% |
+| < 50% | Flat/falling (<= 0) | 25% |
+
+This schedule is a **user-proposed heuristic**, not a statistically estimated or optimized risk model. The user observed that this direction of exposure scaling reduced drawdown in the tested portfolio application. Treat that as an experiment-specific observation, not proof of causality, robustness, or optimality. It may be considered as market-state context when a downstream process decides allocation size, but the screener itself does not apply the multipliers or make portfolio decisions.
+
+**Implementation audit item:** the current portfolio experiment's scripts/experiments/primitives/portfolios/data.py classifies the upper regime with breadth_level > 50.0, while the agreed user rule is breadth_sma20 >= 50%. Exactly 50% is therefore classified differently in code than in the documented rule. Do not silently treat the implementation and specification as identical. Resolve the boundary before relying on or rerunning the four-regime experiment.
