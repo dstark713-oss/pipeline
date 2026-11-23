@@ -2,183 +2,218 @@
 
 Last updated: 2026-11-23
 
-## Purpose
+## 1. Назначение и роль инструмента
 
-The Primitive Screener produces a current descriptive snapshot of the 50 instruments in the latest point-in-time (PIT) TOP50 panel.
+`scripts/tools/01_primitive_screener.py` формирует актуальный описательный срез состояния инструментов из последней даты PIT TOP50.
 
-It exposes three approved instrument-level primitives:
+Это информационный инструмент для downstream-агента. Он показывает состояние каждого инструмента по трём утверждённым примитивам. Скринер не является классической торговой стратегией, генератором сигналов, оптимизатором портфеля, модулем определения размера позиции или системой исполнения сделок.
 
-- `drawdown_60`
-- `zscore_sma20_20`
-- `realized_vol_60`
+Скринер отвечает на вопрос «что сейчас наблюдается в инструменте?», но не на вопрос «что с ним делать?». Интерпретация и решение остаются за downstream-агентом с учётом его мандата, портфеля, ограничений и других источников информации.
 
-This is an information layer for a downstream agent. It is not a trading strategy, trade signal generator, portfolio optimizer, position-sizing module, or automatic execution system.
+Скринер не рассчитывает общий балл, не ранжирует инструменты по предполагаемой доходности, не выдаёт BUY/SELL/HOLD и не предлагает целевые веса.
 
-The screener does not produce a combined score or an instruction to buy, sell, hold, increase, or reduce a position. The downstream agent is responsible for interpreting the information in the context of its own portfolio, mandate, risk limits, and other available information.
+## 2. Запуск
 
-## Implementation
-
-Script:
-
-`scripts/tools/01_primitive_screener.py`
-
-Run from the repository root:
+Из корня репозитория:
 
 ```powershell
 python scripts/tools/01_primitive_screener.py
 ```
 
-Run with interactive ticker inspection:
+Интерактивная проверка отдельных инструментов:
 
 ```powershell
 python scripts/tools/01_primitive_screener.py --inspect
 ```
 
-With `--inspect`, the tool prompts for one or more SECIDs separated by spaces:
+После запуска с `--inspect` скрипт запрашивает SECID через пробел:
 
 ```text
-SBER DOMRF
+SBER DOMRF LKOH
 ```
 
-Input is normalized to uppercase. The inspection command reports only instruments in the latest PIT TOP50 snapshot. A ticker outside the current panel is reported as not present; the tool does not silently expand the universe.
+Ввод приводится к верхнему регистру. Проверяются только инструменты, присутствующие в последнем срезе PIT TOP50. Скрипт не расширяет universe по запросу. Инструмент вне текущей панели будет обозначен как отсутствующий в срезе.
 
-## Inputs
+## 3. Источники данных
 
 - `data/processed/top50/top50_panel.parquet`
 - `data/interim/primitive_research/primitive_features.parquet`
 
-The panel defines the current PIT TOP50 cohort and its liquidity rank. The feature frame supplies primitive values calculated on the same signal date.
+Панель задаёт текущую PIT TOP50 когорту и её ранг ликвидности. Feature frame предоставляет рассчитанные значения примитивов.
 
-The screener selects the maximum `tradedate` in the panel, then left-joins feature values by `SECID` for that exact date. It retains every row in the panel, including a member without an actual bar on the snapshot date.
+Скрипт выбирает максимальную дату `tradedate` из панели и присоединяет значения признаков по `SECID` и этой же дате. Используется left join: все участники панели сохраняются, в том числе без фактического бара на дату среза.
 
-The feature frame must be current through the selected panel date. If it is stale, the screener stops and instructs the operator to rebuild it:
+Feature frame должен быть рассчитан как минимум до последней даты панели. Если он отстаёт, скрипт прекращает работу и сообщает о необходимости пересборки:
 
 ```powershell
 python scripts/experiments/primitives/05_build_primitive_features.py
 ```
 
-## Output
+Скринер не пересчитывает признаки самостоятельно.
 
-The tool writes one CSV:
+## 4. Выходные данные
+
+CSV:
 
 `data/interim/screener/latest_primitive_snapshot.csv`
 
-The CSV is a wide snapshot with one row per current PIT TOP50 member. It contains:
+Одна строка соответствует одному участнику последнего PIT TOP50 среза. Основные поля:
 
-- `snapshot_date`: panel date used for the snapshot.
-- `secid`: MOEX instrument identifier.
-- `panel_rank`: PIT TOP50 liquidity rank, not a primitive rank.
-- `bar_available`: whether the panel has an actual bar for the instrument on the snapshot date.
-- `instrument_status`: `OK`, `NO_BAR`, or `FEATURES_INCOMPLETE`.
-- `missing_primitives`: primitive columns with no valid value.
-- Each primitive value, its cross-sectional rank, and its percentile among valid current-panel observations.
+- `snapshot_date`: дата панели, использованная для среза.
+- `secid`: идентификатор инструмента MOEX.
+- `panel_rank`: PIT TOP50 ранг по ликвидности/обороту, не ранг примитива.
+- `bar_available`: наличие фактического бара инструмента на дату среза.
+- `instrument_status`: статус данных, например `OK`, `NO_BAR` или `FEATURES_INCOMPLETE`.
+- `missing_primitives`: список примитивов без валидного значения.
+- Для каждого примитива: значение, поперечный ранг и процентиль среди валидных значений текущего среза.
 
-The CSV is written atomically and encoded as UTF-8 with BOM for spreadsheet compatibility. It is a local runtime artifact and must not be committed to Git.
+CSV записывается атомарно в UTF-8 с BOM для совместимости с табличными редакторами. Это локальный расчётный артефакт. Его нельзя коммитить в Git.
 
-## Primitive definitions and interpretation
+## 5. Примитивы и интерпретация
 
-### 1. `drawdown_60`
+### 5.1. `drawdown_60`
 
-Formula:
+Формула:
 
 ```text
 Close / rolling_max(Close, 60 sessions) - 1
 ```
 
-Interpretation:
+- Обычно значение равно нулю или отрицательно.
+- Ноль означает, что Close находится на максимуме Close за 60 сессий.
+- Значение ближе к нулю означает, что цена ближе к максимуму окна.
+- Более отрицательное значение означает большее расстояние от максимума.
 
-- Values are normally zero or negative.
-- A value of zero means the close is at the highest close in the 60-session window.
-- A value closer to zero means the instrument is closer to its 60-session high.
-- A more negative value means the instrument is farther below that high.
+TOP 15 сортируется по убыванию: первыми показываются инструменты, наиболее близкие к 60-сессионному максимуму. Это не просадка от цены входа инвестора и не полная peak-to-trough оценка риска.
 
-The console TOP 15 is sorted from highest to lowest value, so it shows instruments closest to their 60-session highs. This is distance from a rolling high, not a drawdown from an investor's entry price and not a complete peak-to-trough risk measure.
+### 5.2. `zscore_sma20_20`
 
-### 2. `zscore_sma20_20`
-
-Formula:
+Формула:
 
 ```text
 (Close - SMA20) / rolling_std(Close - SMA20, 20 sessions)
 ```
 
-The rolling standard deviation uses the sample standard deviation (`ddof=1`).
+Используется выборочное стандартное отклонение (`ddof=1`).
 
-Interpretation:
+- Положительное значение: Close выше SMA20.
+- Отрицательное значение: Close ниже SMA20.
+- Большая абсолютная величина: более сильное отклонение от SMA20 относительно недавнего разброса остатков.
 
-- Positive: close is above SMA20.
-- Negative: close is below SMA20.
-- Larger absolute magnitude: larger deviation from SMA20 relative to recent residual dispersion.
+TOP 15 сортируется по убыванию и показывает наиболее сильные положительные отклонения. Это стандартизированное расстояние, а не вероятность и не статистика z-теста с гарантированной нормальностью распределения.
 
-The console TOP 15 is sorted from highest to lowest value. It therefore shows the strongest positive deviations above SMA20. The value is a standardized distance, not a probability or a normally distributed z-test statistic.
+### 5.3. `realized_vol_60`
 
-### 3. `realized_vol_60`
-
-Formula:
+Формула:
 
 ```text
 std(daily close returns, 60 sessions, ddof=1) * sqrt(252)
 ```
 
-Interpretation:
+- Оценка реализованной исторической волатильности на окне 60 торговых сессий в годовом выражении.
+- Высокое значение означает большую наблюдавшуюся изменчивость цены в этом окне.
+- Это описатель риска/состояния, а не прогноз будущей волатильности и не направленный прогноз доходности.
 
-- Annualized historical volatility estimate based on the previous 60 market sessions.
-- Higher values indicate greater realized price variability in that window.
-- It is a state/risk descriptor, not a forecast of future volatility and not a directional return signal.
+TOP 15 сортируется по убыванию.
 
-The console TOP 15 is sorted from highest to lowest value.
+## 6. Консольный отчёт и просмотр тикеров
 
-## Console output
+По умолчанию выводится отдельный TOP 15 по каждому из трёх примитивов. Для каждой строки показываются ранг примитива, SECID, значение, PIT TOP50 ранг ликвидности и статус данных.
 
-The default run prints a separate TOP 15 for each of the three primitives.
+Также выводится количество валидных наблюдений. Если валидных значений меньше 15, выводятся все доступные. Пропуски не заменяются нулями.
 
-For every primitive, the console table includes:
+Ранг 1 означает наибольшее значение соответствующего примитива. Процентили считаются только среди непустых значений этого примитива.
 
-- primitive rank within valid current-panel observations;
-- SECID;
-- primitive value;
-- PIT TOP50 liquidity rank;
-- instrument data status.
+Опция `--inspect` показывает для каждого введённого SECID:
+- дату среза;
+- PIT TOP50 ранг ликвидности;
+- наличие бара и статус данных;
+- значение, ранг и процентиль каждого примитива;
+- перечень примитивов с отсутствующими значениями.
 
-The number of valid observations is printed for each primitive. If fewer than 15 values are valid, all available observations are shown. Missing values are never replaced with zero.
+Режим read-only: он не загружает внешние данные, не пересчитывает признаки и не изменяет панель.
 
-Primitive ranks are descriptive cross-sectional ranks for the current snapshot only. Rank 1 is the highest value. Percentiles are calculated only among non-missing values for that primitive.
+## 7. Ограничения и правила работы с данными
 
-## Ticker inspection
+- Состав инструментов берётся из существующей PIT TOP50 панели. Скринер не строит ретроспективный universe.
+- SECID являются идентификаторами отдельных инструментов. Не объединять разные SECID по эмитенту, ISIN, названию или экономической связи.
+- Значения берутся из существующего feature builder.
+- Feature builder использует adjusted close и утверждённую логику обработки досок TQBR/EQBR.
+- Forward-fill цен не добавляется.
+- Отсутствующий бар или примитив остаётся пропуском. Это не ноль, не нейтральное значение и не отрицательный сигнал.
+- Не путать `panel_rank` с рангом примитива.
+- Breadth относится к отдельному рыночному слою и не смешивается с инструментальными рангами. Рыночные breadth-характеристики должны предоставляться отдельным отчётом.
+- Текущая версия скринера не использует forward returns, IC, CAGR, Sharpe, MDD, backtest results или портфельные веса.
+- Дата среза — последняя дата панели, а не обязательно текущая календарная дата.
+- Скрипт не должен изменять исходные базы, панели, feature frame или состояние портфеля агента.
 
-The `--inspect` option asks for SECIDs separated by spaces and prints, for each requested current-panel instrument:
+## 8. Статистические метрики исследовательского контура
 
-- snapshot date;
-- PIT TOP50 liquidity rank;
-- bar availability and data status;
-- value, rank, and percentile for each core primitive;
-- names of primitives with missing values.
+Следующие метрики относятся к исследованию и валидации примитивов, а не к текущему runtime-отчёту скринера. Скринер их не рассчитывает.
 
-This is a read-only inspection. It does not fetch external data, calculate new features, or alter the panel.
+### Поперечные метрики связи с будущими результатами
 
-## Data and methodology boundaries
+- **Pearson IC**: дневная корреляция Пирсона между значением примитива и forward return внутри PIT TOP50 на конкретную дату.
+- **Spearman Rank IC**: дневная ранговая корреляция Спирмена между значением примитива и forward return.
+- **IC IR**: среднее дневного IC, делённое на стандартное отклонение дневного IC. В текущем исследовательском контуре не годовая метрика.
+- **HAC / Newey-West**: тест статистической значимости с поправкой на временную зависимость; используемый лаг до H-1 для горизонта H.
+- **p-value**: двустороннее значение для HAC-теста, основанное на нормальном приближении.
+- **BH q-value**: поправка Benjamini-Hochberg на множественные проверки. Семейства Pearson IC и Rank IC корректируются отдельно.
+- **Периодная устойчивость**: сопоставление результатов на периодах 2005–2012, 2013–2019 и 2020+.
+- **Coverage**: количество валидных инструментов/наблюдений. Для дневного cross-sectional IC минимальное число валидных бумаг — 20.
+- **Forward horizons**: в базовом исследовательском контуре используются 5, 10 и 20 сессий; forward return определяется как `Close[T+H] / Open[T+1] - 1`.
 
-- Universe membership is taken from the existing PIT TOP50 panel. The screener does not construct a retrospective universe.
-- SECIDs are treated as distinct instrument identifiers. The screener does not merge instruments by issuer, ISIN, or name.
-- Feature values are taken from the established primitive feature builder. The screener does not recalculate or modify them.
-- The feature builder uses adjusted close history and the established TQBR/EQBR board-selection logic.
-- No price forward-fill is introduced.
-- A missing bar or missing primitive remains missing. It is not interpreted as zero, neutral, or a negative signal.
-- The panel liquidity rank and primitive ranks are different quantities and must not be conflated.
-- Breadth is a separate market-level state family, not an instrument-level primitive. It is intentionally not mixed into the per-ticker CSV or the three primitive rankings. A separate market-state report may expose it.
-- The screener does not use forward returns, IC, CAGR, Sharpe, MDD, backtest results, or portfolio weights in its current snapshot.
+### Рыночные breadth-метрики
 
-## Agent usage guidance
+Breadth исследуется отдельно как временной ряд:
+- Pearson и Spearman correlation с равновзвешенной forward return доходностью PIT TOP50 когорты даты сигнала;
+- HAC-тесты и BH q-values;
+- минимальное покрытие forward outcomes — 20 бумаг;
+- среднее фактическое покрытие также фиксируется.
 
-Treat the output as structured observations, not decisions.
+### Дополнительные проверки эффекта
 
-1. Read `instrument_status` before interpreting any primitive. Do not interpret missing values as zero.
-2. Use `panel_rank` only as the instrument's PIT TOP50 liquidity rank.
-3. Interpret `drawdown_60` direction correctly: higher values mean closer to the 60-session high.
-4. Interpret `zscore_sma20_20` sign and magnitude relative to SMA20 and recent residual dispersion.
-5. Interpret `realized_vol_60` as backward-looking realized variability, not a directional forecast.
-6. Compare the three dimensions rather than collapsing them into a single screener score.
-7. Do not infer a trade, target weight, or portfolio action from a primitive rank alone. Use the downstream agent's approved decision process and other context.
-8. The snapshot describes the latest panel date, not necessarily the current wall-clock date.
+Статистическая значимость сама по себе недостаточна. Для вывода об эффекте исследователь должен проверять:
+- распределения forward returns по квантилям/децилям примитива и монотонность;
+- корреляции между примитивами и избыточность информации;
+- стабильность знака и величины эффекта по временным периодам и рыночным режимам;
+- coverage и характер пропусков;
+- чувствительность к экстремальным наблюдениям и группам ликвидности;
+- возможную утечку, смещение выборки, survivorship bias и ошибки временного выравнивания;
+- экономическую интерпретацию и самостоятельность информации.
 
-The screener is a read-only information tool. It must not modify source databases, panel files, primitive feature files, or agent portfolio state.
+Перекрывающиеся forward horizons и временная зависимость ограничивают интерпретацию статистических тестов. Значимый IC или низкий q-value не доказывает причинность и не равен торговой доходности.
+
+## 9. Портфельные метрики: назначение и ограничения интерпретации
+
+Портфельные метрики могут использоваться в отдельных экспериментах как диагностический способ изучить возможную область применения информации скринера. Они не являются целью скринера и не являются критерием существования примитива.
+
+В таких экспериментах могут встречаться:
+
+- **CAGR**: геометрический среднегодовой темп роста капитала в рамках конкретной симуляции.
+- **Terminal wealth / cumulative return**: итоговый множитель капитала или накопленная доходность.
+- **Sharpe ratio**: отношение средней избыточной доходности к волатильности доходности портфеля; интерпретация зависит от частоты, risk-free rate и правил годового пересчёта.
+- **Maximum drawdown (MDD)**: максимальное падение кривой капитала от предыдущего максимума.
+- **Exposure**: доля капитала, фактически находившаяся под риском/в позициях.
+- **Turnover**: объём изменений портфельных весов за период.
+- **Transaction costs**: условные издержки, применённые к обороту в рамках симуляции.
+- **Missing return weight**: доля целевого веса, для которой не удалось получить требуемую доходность. Требует отдельной диагностики; нельзя молча считать её нулевой доходностью или автоматически перераспределять вес.
+- **Contribution / concentration**: приближённый вклад инструментов и концентрация результата по датам или тикерам.
+- **Best-day removal stress**: диагностический пересчёт с исключением лучших дней. Это не торгуемая стратегия, а проверка зависимости результата от отдельных наблюдений.
+
+Эти показатели отвечают на вопрос о поведении конкретной портфельной симуляции, а не доказывают наличие или отсутствие информационного эффекта примитива. Высокий CAGR не подтверждает качество примитива; низкий CAGR не опровергает его. Различия экспозиции, состава, оборота и обработки пропусков могут сделать сравнение портфелей несопоставимым.
+
+Не оптимизировать примитивы по CAGR, Sharpe или MDD. Не отбраковывать информационный эффект только потому, что он не даёт привлекательной доходности в выбранной портфельной конструкции. Решение о применении информации принимает downstream-агент.
+
+## 10. Инструкция downstream-агенту
+
+1. Сначала прочитать `instrument_status`. Не трактовать пропуски как нули.
+2. Использовать `panel_rank` только как PIT TOP50 ранг ликвидности.
+3. Правильно читать направление `drawdown_60`: более высокое значение означает близость к максимуму за 60 сессий.
+4. Читать знак и величину `zscore_sma20_20` относительно SMA20 и недавнего разброса остатков.
+5. Читать `realized_vol_60` как историческую реализованную изменчивость, а не направленный прогноз.
+6. Сопоставлять три измерения, не сводить их к одному score.
+7. Не выводить торговое действие или целевой вес только из ранга примитива. Использовать утверждённый процесс принятия решений downstream-агента.
+8. Помнить, что срез соответствует последней дате панели, а не обязательно текущему моменту.
+
+Итог: скринер предоставляет структурированные наблюдения о состоянии инструментов. Он не принимает портфельных решений.
