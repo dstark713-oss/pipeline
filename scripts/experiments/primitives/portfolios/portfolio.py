@@ -123,13 +123,20 @@ def simulate_strategy(
         missing_return_weight = float(target.loc[~valid].sum())
         safe_returns = daily_returns.where(valid, 0.0)
 
-        # One-way turnover includes the cash leg.
+        # If either required OPEN is missing, that allocation is treated
+        # as cash for the interval. It is not silently carried as a priced
+        # security position.
+        effective_target = target.where(valid, 0.0)
+        effective_exposure = float(effective_target.sum())
+        effective_cash = max(0.0, 1.0 - effective_exposure)
+
+        # One-way turnover includes the effective cash leg.
         turnover = 0.5 * (
-            float((target - previous_weights).abs().sum())
-            + abs(target_cash - previous_cash)
+            float((effective_target - previous_weights).abs().sum())
+            + abs(effective_cash - previous_cash)
         )
         cost_rate = turnover * float(cost_bps) / 10000.0
-        gross_return = float((target * safe_returns).sum())
+        gross_return = float((effective_target * safe_returns).sum())
         net_return = (1.0 + gross_return) * (1.0 - cost_rate) - 1.0
 
         if gross_return <= -1.0 or net_return <= -1.0:
@@ -141,8 +148,8 @@ def simulate_strategy(
         # Mark holdings to market before the next rebalance.
         growth = 1.0 + gross_return
         if growth > 0:
-            drifted = target * (1.0 + safe_returns) / growth
-            drifted_cash = target_cash / growth
+            drifted = effective_target * (1.0 + safe_returns) / growth
+            drifted_cash = effective_cash / growth
         else:
             drifted = pd.Series(0.0, index=target.index)
             drifted_cash = 1.0
@@ -161,6 +168,7 @@ def simulate_strategy(
             "turnover_one_way": turnover,
             "transaction_cost_bps": float(cost_bps),
             "target_exposure": target_exposure,
+            "effective_exposure": effective_exposure,
             "missing_return_weight": missing_return_weight,
             "equity_gross": equity_gross,
             "equity_net": equity_net,
