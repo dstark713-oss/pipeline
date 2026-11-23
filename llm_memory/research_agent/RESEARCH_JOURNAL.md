@@ -94,3 +94,37 @@ There is no internal fundamental-data dataset or pipeline. The agent retrieves m
 ### Repository maintenance
 
 Updated the Research Agent role, directory index, and next-steps file to reflect these decisions. No Python/project code was changed. No Trading Agent files or user diary artifacts were changed.
+
+
+## 2026-11-23 | Next research approved: ML direction prediction
+
+The user selected ML prediction of price-movement direction as the next research project.
+
+### Research motivation
+
+The starting observation is that an instrument's position within its own recent price range may contain information about the conditional distribution of future returns. This is an initial hypothesis to investigate, not a proven result and not the statistical null hypothesis.
+
+The research should establish a sound prediction problem and test whether candidate features add stable information. It must not jump directly from the observation to a complex model or assume a binary target is necessarily optimal without defining labels and horizons.
+
+### Binding evaluation rule: portfolio-metric firewall
+
+The user explicitly imposed a strict separation between model research and portfolio evaluation:
+
+- No portfolio-level metrics may be inspected, calculated, reported, compared, or used before the final model is approved.
+- This prohibition applies throughout dataset/target design, feature research, model development, feature selection, tuning, model comparison, and WF evaluation.
+- Portfolio CAGR, Sharpe, MDD, returns, drawdowns, exposure, turnover, and other portfolio application outputs are all prohibited during this phase.
+- Statistical and predictive-model metrics on walk-forward (WF) evaluation are permitted.
+- The user will not split the dataset into separate fixed IS/VAL subsets. Do not introduce that as a project requirement.
+- WF design, temporal boundaries, leakage controls, metrics, and aggregation must be defined before inspecting results.
+- After the final model is approved, exactly one decisive portfolio-level run is permitted.
+- The portfolio run is a downstream application check only. It must not be used for tuning, model selection, or further iteration; no repeated portfolio variants.
+
+### Immediate next work
+
+Begin by formalizing the prediction problem: label/target, horizon, prediction timestamp, neutral/ambiguous outcomes, eligible universe, baseline, WF design, statistical metrics, leakage controls, and failure criteria. Do not write or run model code until these are sufficiently specified.
+
+### Status
+
+- Direction-prediction research approved by the user.
+- Portfolio-metric firewall recorded as a binding constraint.
+- No model code or portfolio evaluation was run as part of this decision.
