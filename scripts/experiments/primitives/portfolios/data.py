@@ -17,7 +17,7 @@ from config import (
 )
 
 REQUIRED_FEATURES = [
-    "tradedate", "secid", "rank", "bar_available",
+    "tradedate", "secid", "rank",
     "drawdown_60", "zscore_sma20_20", "realized_vol_60", "price_sma20",
 ]
 
@@ -42,12 +42,20 @@ def load_features() -> pd.DataFrame:
     if missing:
         raise RuntimeError(f"Feature frame is missing required columns: {missing}")
 
-    frame = frame[REQUIRED_FEATURES].copy()
+    # The feature builder outputs only rows with an actual observed bar.
+    # Older/current parquet files may omit bar_available; derive it as 1.
+    if "bar_available" in frame.columns:
+        frame = frame[REQUIRED_FEATURES + ["bar_available"]].copy()
+        frame["bar_available"] = pd.to_numeric(
+            frame["bar_available"], errors="coerce"
+        ).fillna(0).astype(int)
+    else:
+        frame = frame[REQUIRED_FEATURES].copy()
+        frame["bar_available"] = 1
+        log("bar_available absent: deriving availability=1 from observed-bar-only feature rows.")
+
     frame["tradedate"] = pd.to_datetime(frame["tradedate"], errors="coerce")
     frame["secid"] = frame["secid"].astype(str).str.strip().str.upper()
-    frame["bar_available"] = pd.to_numeric(
-        frame["bar_available"], errors="coerce"
-    ).fillna(0).astype(int)
 
     for column in (
         "rank", "drawdown_60", "zscore_sma20_20",
