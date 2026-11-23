@@ -139,4 +139,19 @@ Treat all numbers above as first-pass descriptive results from the user's report
 6. Review breadth separately from cross-sectional features.
 7. Only then propose a small orthogonal pack and ask the user to approve/reject it.
 
-No production screener or primitive selector has been built.
+## Production screener (2026-11-23)
+
+A read-only descriptive screener has now been added:
+
+- Script: `scripts/tools/01_primitive_screener.py`
+- Agent documentation: `docs/tools/01_primitive_screener.md`
+- Output: `data/interim/screener/latest_primitive_snapshot.csv`
+- Current cohort: latest date in the PIT TOP50 panel; one row per panel member, including members without an actual bar.
+- Instrument-level pack: `drawdown_60`, `zscore_sma20_20`, `realized_vol_60`.
+- Console: separate TOP 15 for each primitive.
+- Optional `--inspect`: interactive inspection of one or more current-panel SECIDs.
+- Breadth remains a separate market-level state family and is not mixed into per-instrument rankings.
+- The screener does not calculate a composite score, trading signal, portfolio weight, or action.
+- The tool reads the prepared primitive feature frame; it does not recalculate features or mutate source data.
+
+The tool is committed to GitHub. Local execution and output validation remain pending user-run confirmation.
