@@ -267,8 +267,8 @@ def summarize_quantiles(daily: pd.DataFrame) -> pd.DataFrame:
 def summarize_double_sort(daily: pd.DataFrame) -> pd.DataFrame:
     """
     Nonparametric incremental-information diagnostic:
-    first bucket dates by backward-looking equal-weight TOP50 20-session
-    return, then bucket breadth within each past-return bucket.
+    first bucket dates by backward-looking mean 20-session return of the signal-date TOP50
+    members, then bucket breadth within each past-return bucket.
     This is a descriptive conditional sort, not a regression.
     """
     rows = []
@@ -287,11 +287,11 @@ def summarize_double_sort(daily: pd.DataFrame) -> pd.DataFrame:
             "top50_cohort_forward_n_10",
             "top50_cohort_forward_n_20",
         ]].copy()
-        work["market_momentum_bucket"] = market_bucket
-        work = work.dropna(subset=["market_momentum_bucket", feature])
+        work["past_return_bucket"] = market_bucket
+        work = work.dropna(subset=["past_return_bucket", feature])
 
         for market_bucket_id, market_group in work.groupby(
-            "market_momentum_bucket", sort=True
+            "past_return_bucket", sort=True
         ):
             breadth_bucket = quantile_labels(
                 market_group[feature],
@@ -310,14 +310,14 @@ def summarize_double_sort(daily: pd.DataFrame) -> pd.DataFrame:
                     valid = valid[valid[count] >= MIN_FORWARD_COVERAGE]
                     rows.append({
                         "breadth_feature": feature,
-                        "market_momentum_bucket": f"M{int(market_bucket_id) + 1}",
+                        "past_return_bucket": f"M{int(market_bucket_id) + 1}",
                         "breadth_bucket": f"B{int(breadth_bucket_id) + 1}",
                         "horizon": horizon,
                         "n_dates": int(len(valid)),
                         "mean_member_past_return_20": float(
                             group["top50_cohort_mean_member_return_20"].mean()
                         ),
-                        "mean_future_market_return": (
+                        "mean_future_cohort_return": (
                             float(valid[target].mean()) if len(valid) else np.nan
                         ),
                     })
@@ -447,10 +447,10 @@ def write_report(
         "",
         _markdown_table(
             double_sort.sort_values(
-                ["breadth_feature", "horizon", "market_momentum_bucket", "breadth_bucket"]
+                ["breadth_feature", "horizon", "past_return_bucket", "breadth_bucket"]
             ),
-            ["breadth_feature", "horizon", "market_momentum_bucket",
-             "breadth_bucket", "n_dates", "mean_future_market_return"],
+            ["breadth_feature", "horizon", "past_return_bucket",
+             "breadth_bucket", "n_dates", "mean_future_cohort_return"],
             150,
         ),
         "",
@@ -470,7 +470,7 @@ def write_report(
         "- Overlapping forward horizons create serial dependence; HAC uses lags up to H-1.",
         "- BH q-values are computed separately for Pearson and Spearman tests across the full breadth-feature/outcome/horizon family.",
         "- Quantile and double-sort tables are descriptive. They are not independent out-of-sample validation.",
-        "- Breadth is useful as a fourth scanner layer only if the relationship is stable, adds information within market-momentum regimes, and changes a meaningful market-level decision.",
+        "- Breadth is useful as a fourth scanner layer only if the relationship is stable, adds information within past-return regimes, and changes a meaningful market-level decision.",
         "- If breadth only tracks recent market return, it may be redundant rather than an independent layer.",
         "",
     ]
