@@ -169,3 +169,14 @@ The tool is committed to GitHub. Local execution and output validation remain pe
 Слой 2 проверяет информационное содержание и устойчивость эффекта. Слой 3 иллюстрирует возможное применение информации в конкретной портфельной конструкции, но не является критерием истинности эффекта. Не оптимизировать исследовательские примитивы по CAGR/Sharpe/MDD и не отвергать эффект только из-за слабой доходности симуляции. Решение о применении информации относится к downstream-агенту.
 
 Идентичность инструмента определяется SECID. Разные SECID не склеиваются по эмитенту, ISIN или названию без отдельного явного правила пользователя.
+
+### Runtime representation of the approved breadth pack (2026-11-23)
+
+The production screener exposes only two market-level values, in a separate `MARKET BREADTH` block:
+
+- `breadth_change_5`: `breadth_sma20[T] - breadth_sma20[T-5]`, an absolute five-trading-session change interpreted in percentage points. This is the primary breadth value.
+- `breadth_sma20`: share of valid signal-date PIT TOP50 members with `price_sma20 > 0`, shown for reference only.
+
+Definitions match `build_breadth_frame` in `scripts/experiments/primitives/01_research_report.py`. The daily denominator includes only PIT TOP50 members with `bar_available == 1`; only valid `price_sma20` values enter the proportion. Missing bars and unavailable SMA20 values are not treated as below-SMA observations. The five-session change uses `diff(5)` on the panel trading-date calendar, with no forward-fill.
+
+The screener does not expose breadth_sma50, breadth_sma200, breadth_change_20, daily advancing share, or any additional breadth indicators. Breadth remains a separate descriptive market-state layer, not part of per-instrument TOP15 rankings or a composite score.
