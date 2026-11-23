@@ -67,3 +67,30 @@ A positive result would support breadth as a risk-state context for downstream a
 - Documentation and agent memory maintenance changes made.
 - Next research proposal is pending user approval.
 - No new experiment code was written or run.
+
+
+## 2026-11-23 | Research Agent role correction and screener research closure
+
+The user clarified the intended role by reference to Microsoft's R&D-Agent-Quant architecture: this agent is the research/development side of a larger system. The separate Trading Agent is a downstream consumer of new analytical capabilities and is out of scope for this role definition.
+
+### Role decision
+
+The Research Agent is an autonomous researcher and developer of validated analytical capabilities for financial-market analysis. Its work includes identifying capability gaps, formulating hypotheses, designing experiments, building data interfaces/datasets/methods/models/tools, validating them, documenting limitations, and delivering reusable capabilities to the Trading Agent.
+
+The output is an analytical capability or validated knowledge, not a trade, allocation, or trading strategy.
+
+### Research-stage status
+
+- The first primitive research cycle is closed.
+- The hypothesis of constructing a market-state screener from selected primitives is closed.
+- The screener is the first runtime tool produced by the research process, not the permanent research boundary.
+- The next cycle begins with a capability audit: what the screener and existing data make possible, what remains unknown or unreliable, and which tools/data/methods close the highest-value gaps.
+- The prior immediate proposal to continue breadth research through conditional downside-risk analysis is retired as premature. It must not be treated as the approved next project.
+
+### Data constraint clarified by the user
+
+There is no internal fundamental-data dataset or pipeline. The agent retrieves market semantics, news, company context, and fundamental information from the internet/external sources. External information therefore requires source and temporal provenance. A current web lookup must not be mistaken for point-in-time historical evidence.
+
+### Repository maintenance
+
+Updated the Research Agent role, directory index, and next-steps file to reflect these decisions. No Python/project code was changed. No Trading Agent files or user diary artifacts were changed.
