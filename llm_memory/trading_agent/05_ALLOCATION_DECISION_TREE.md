@@ -1,190 +1,162 @@
 # Allocation Decision Tree
 
 Last updated: 2026-11-24
-Decision state: INCOMPLETE / PROVISIONAL (the earlier HOLD / NO CHANGE is withdrawn as a final decision)
-Evidence cutoff: latest user-provided local market snapshot dated 2026-11-23; issuer information checked through 2026-11-24.
+Decision state: FINAL RECOMMENDATION — HOLD CURRENT WEIGHTS
+Evidence cutoff: latest user-provided local market snapshot 2026-11-23; public issuer information checked 2026-11-24.
 
-This document records the current decision logic and the allocation decision. It is a working policy, not a claim that the rules have been statistically validated.
+This is a reasoned recommendation, not an optimized portfolio or an order. The 12% equity allocation resulted from a tactical reduction on Friday, 2026-11-20. It is not a strategic baseline. The final 12% equity weight below is an independent bottom-up conclusion, not a multiplier applied to 12%.
 
-## 1. Current portfolio state
+## 1. Current known portfolio
 
-User-reported portfolio snapshot, 2026-11-23:
+User-reported snapshot, 2026-11-23:
 - T: 10%
 - GCHE: 2%
 - LQDT: 88%
 
-Current equity allocation: 12%. This is the result of a tactical position reduction made on Friday, 2026-11-20, as reported by the user. It is not a strategic baseline, target exposure, or validated risk budget. LQDT is a money-market fund, not idle cash. The user estimates its current effective yield at approximately 12% annualized (key rate less fund expenses); this is a user estimate for the current environment, not a guaranteed return and not a historical series.
+LQDT is a money-market fund, not idle cash. A public comparison dated 2026-11-23 reported its last-30-day price growth annualized at 13.57% net of management fee, and 90-day annualized growth at 14.59%. These are backward-looking rates, not guaranteed forward returns; the fund follows money-market rates and reprices as policy rates/RUSFAR change.
 
-Historical cash benchmark for the breadth experiment:
-- 8% annual effective rate across the full test period.
-- User-provided estimate derived from the difference between RGBITR and RGBI.
-- This is not actual LQDT performance. Do not relabel it as LQDT history.
-- No sensitivity analysis is authorized for the current run.
+Separate historical cash benchmark for breadth research: fixed 8% annual effective across the full historical test, user-provided from RGBITR minus RGBI. This is not actual historical LQDT performance. No sensitivity checks are authorized for the current run.
 
-## 2. Portfolio construction constraints supplied by the user
+## 2. User-supplied portfolio constraints
 
 - Maximum 10 simultaneously held equity names.
-- Total portfolio loading range: -0.5 to +1.5.
-- Interpret loading as the signed aggregate of position weights unless the user later defines it differently.
-- No per-security weight limit has been supplied.
-- No separate gross-exposure limit has been supplied. Do not invent one.
-- Negative weights are permitted (short exposure); loading above +1.0 permits leverage.
-- These are portfolio-model constraints, not a mandate to use shorts or leverage.
+- Aggregate signed portfolio loading range: -0.5 to +1.5.
+- No per-security weight limit supplied.
+- No separate gross-exposure limit supplied.
+- Do not invent either missing limit. Shorts and leverage are mathematically permitted but not required.
 
-Do not confuse:
-- historical breadth-test equity sleeve scenarios (3%, 6%, 9%, 12%);
-- portfolio-level signed loading constraint (-0.5 to +1.5);
-- a per-security weight constraint (none supplied).
+## 3. Breadth rule status and correction
 
-## 3. Breadth rule and origin of 3/6/9/12%
+The documented heuristic maps breadth and its five-session change to a multiplier of 25%, 50%, 75%, or 100%, but its reference exposure has not been independently established.
 
-The documented breadth heuristic uses a 12% baseline equity sleeve and a multiplier:
-- breadth >= 0.50 and breadth_change_5 > 0: multiplier 1.00;
-- breadth >= 0.50 and breadth_change_5 <= 0: multiplier 0.75;
-- breadth < 0.50 and breadth_change_5 > 0: multiplier 0.50;
-- breadth < 0.50 and breadth_change_5 <= 0: multiplier 0.25.
+The user clarified that 12% was a tactical position reduction on Friday, 2026-11-20, not a strategic baseline. The former mapping of those multipliers to 3%, 6%, 9%, and 12% by multiplying by 12% is withdrawn. Do not use it.
 
-Therefore the historical exposure scenarios are:
-- 12% x 0.25 = 3%;
-- 12% x 0.50 = 6%;
-- 12% x 0.75 = 9%;
-- 12% x 1.00 = 12%.
-
-These are not optimized weights, forecasts, or independent portfolio constraints. They are simply the four exposure levels implied by applying the documented multiplier to the current 12% equity baseline. The 50% breadth threshold is fixed for this test; no threshold grid or sensitivity sweep is to be run.
-
-## 4. Decision sequence
-
-### Step A — Verify the decision frame
-1. Record decision date, market-data cutoff, and latest user-provided portfolio snapshot.
-2. Reconcile all known holdings and weights. Never infer an unreported position or cash balance.
-3. Mark local screener data stale if it does not include the latest completed session.
-4. Distinguish the live LQDT yield estimate from the fixed 8% historical cash benchmark.
-
-### Step B — Assess broad market regime
-1. Read breadth level and its 5-session change.
-2. Treat index return and breadth as separate evidence. A rising index with weak breadth is a narrow rebound, not broad risk-on.
-3. Apply the documented multiplier only as an exposure-control hypothesis. Do not treat it as validated until the corrected historical test has been run and audited.
-4. Do not increase exposure solely because of one positive index session.
-
-### Step C — Assess each held security
-For each holding:
-1. Check latest official financial results and material disclosures.
-2. Map results into earnings, cash flow, balance sheet, credit/operating risk, valuation, and expectations.
-3. Compare technical state with the fundamental thesis; neither alone is sufficient.
-4. Record the strongest counterargument and explicit thesis-break conditions.
-5. Separate confirmed issuer facts from analyst interpretations and unverified hypotheses.
-
-### Step D — Compare equity risk with the alternative
-1. Compare expected equity return with the current LQDT alternative, net of fees/taxes/transaction costs where known.
-2. Use the 8% historical benchmark only in the historical breadth experiment.
-3. Do not assume that a strong company is attractive at any price.
-4. If the expected edge is unclear, no-change or cash is a valid decision.
-
-### Step E — Portfolio synthesis
-1. Respect the maximum of 10 simultaneous equity names.
-2. Keep aggregate signed loading within [-0.5, +1.5].
-3. Do not add an individual-position or gross-exposure limit unless the user supplies one.
-4. Check concentration, correlation, liquidity, turnover, and implementation costs using available evidence.
-5. A new position requires a positive thesis and a reason to prefer it over the existing holdings and LQDT.
-6. A reduction requires a broken/weakened thesis, excessive risk, or a better use of capital; do not sell solely because a technical indicator looks stretched.
-
-### Step F — Record the decision
-State:
-- target weights and change from baseline;
-- facts supporting the decision;
-- strongest opposing case;
-- invalidation conditions;
-- confidence and missing evidence;
-- whether the decision was recommended or actually executed (execution is user-reported only).
-
-## 5. Provisional assessment for 2026-11-24 (not a final allocation)
-
-### Provisional snapshot only
-The last known weights were:
-- T: 10%
-- GCHE: 2%
-- LQDT: 88%
-- Equity sleeve: 12%
-
-This is not a final recommendation. Candidate research and valuation comparison remain incomplete.
-
-This decision uses the latest local market snapshot supplied by the user on 2026-11-23. No local snapshot for the 2026-11-24 session was supplied in this decision cycle, so the decision must not be described as based on 2026-11-24 breadth or closing prices.
-
-### Market evidence
-User-run local output for 2026-11-23:
-- breadth above SMA20: 0.12 (6 of 50);
-- 5-session breadth change: -0.42;
+Latest user-run local snapshot, 2026-11-23:
+- breadth above SMA20: 12% (6/50);
+- five-session breadth change: -42 percentage points;
 - all 50 instruments had valid data;
-- IMOEX rose 1.30% that session (secondary-source figure from the user's prior snapshot).
+- IMOEX +1.30% that session (secondary-source figure from prior snapshot).
 
-Interpretation: index rebound was not broad-based. The breadth state maps to the 25% multiplier under the unvalidated heuristic. Because the reference exposure has not been independently established, this does not translate into a defensible target portfolio weight. It is a negative market-regime input, not a mechanical instruction to cut positions.
+Interpretation: the index rebound was narrow. Breadth is a negative market-regime input and argues against adding broad market risk. It does not produce a target portfolio weight until the reference exposure is independently defined and the rule validated.
 
-### T — retain 10%, do not add
+## 4. Final recommendation for 2026-11-24
+
+| Instrument | Current | Target | Action |
+|---|---:|---:|---|
+| T | 10% | 10% | Hold |
+| GCHE | 2% | 2% | Hold |
+| LQDT | 88% | 88% | Hold |
+| Total | 100% | 100% | No change |
+
+No new equity positions. No leverage or short exposure recommended.
+
+The 12% equity sleeve is not used as a starting assumption. It is retained because the existing holdings still have defensible theses and none of the reviewed candidates clears the current LQDT hurdle with a sufficiently clear risk-adjusted premium. The same 12% as Friday's tactical reduction is coincidental, not the calculation basis.
+
+### T — retain 10%
+
 Positive evidence:
-- Official 3Q/9M 2026 results: 9M net revenue +26% YoY to RUB 648.3bn; operating net profit +35% to RUB 162.2bn; 3Q operating net profit +41% to RUB 63.6bn; 9M ROE 29.1%, 3Q ROE 32.3%.
-- Management raised 2026 guidance to operating net profit and aggregate dividends per share growth above 25%, with ROE around 30%.
-- Board recommended a quarterly dividend of RUB 4.8 per share.
-- The company reported credit-risk cost of 5.0% for 9M versus 6.0% a year earlier; NPL ratio was 7.0% at 30 September.
-- Official report: https://t-technologies.ru/press-releases/ (10 November 2026, 3Q 2026 IFRS release).
+- Official 3Q/9M 2026 IFRS results: 9M net revenue +26% YoY to RUB 648.3bn; operating net profit +35% to RUB 162.2bn; 3Q operating net profit +41% to RUB 63.6bn; 9M ROE 29.1%, 3Q ROE 32.3%.
+- Management raised 2026 guidance: operating net profit and total dividends per share expected to grow more than 25%, ROE around 30%.
+- Credit-risk cost 5.0% for 9M versus 6.0% a year earlier; NPL ratio 7.0% at 30 September.
+- Secondary market data around 22 November indicated P/E around 3.6x and P/B around 0.97x. Approximate vendor ratios, not a substitute for normalized bank valuation.
+- Local technical state: return_20 +1.53%, return_60 +6.93%, price 0.64% below SMA20, 60-day volatility 21.98%.
 
-Counterevidence / risks:
-- The loan portfolio grew while customer funds declined during the first nine months; an external analysis of the 9M report highlighted loan-to-customer-funds rising to 98.4%. Funding structure and liquidity therefore deserve monitoring.
-- Cost of risk remains material even though it improved year over year; deterioration in credit quality could reverse earnings momentum.
-- The acquisition/integration agenda (Tochka, Auto.ru, CIAN proposal) adds execution and capital-allocation complexity. The Tochka transaction includes share issuance; monitor final dilution and EPS accretion rather than assuming management's forecast will be achieved.
-- No current valuation analysis in this decision packet establishes that adding at today's price has positive expected excess return versus LQDT.
+Risks:
+- Credit costs/NPLs remain material; deterioration can reverse earnings momentum.
+- Loan growth alongside slower customer-funds growth raises funding-mix/liquidity questions.
+- Acquisitions and integration (including Tochka and other ecosystem initiatives) add execution and capital-allocation complexity; monitor actual dilution and EPS accretion.
+- Low P/E is not automatically a margin of safety at a cyclical credit point.
 
-Conclusion: fundamentals support retaining the existing position; they do not by themselves justify increasing it from 10%.
+Decision: retain 10%; no increase. Strong profitability and apparently undemanding valuation make T the strongest existing equity thesis, but LQDT's current return is unusually competitive and market breadth remains weak.
 
-### GCHE — retain 2%, do not add
+Primary source: https://tinkoff-group.com/press-center/company-news/10112026-t-technologies-announces-ifrs-financial-results-for-3q-and-9m-2026-eng/
+
+### GCHE — retain 2%
+
 Positive evidence:
-- Official 9M 2026 disclosure dated 17 November: revenue +6.4% to RUB 224.2bn; adjusted gross profit +26.1%; adjusted EBITDA +28.5%; adjusted net profit RUB 24.2bn versus RUB 10.3bn; adjusted FCF RUB 19.8bn versus RUB 5.2bn.
-- Net debt declined 7.9% to RUB 131.1bn; net debt/adjusted EBITDA 1.9x.
-- Primary disclosure: https://www.e-disclosure.ru/portal/event.aspx?EventId=JWyX1VWphUOrx7O5ugOm6g-B-B
+- Official 9M 2026 disclosure: revenue +6.4% to RUB 224.2bn; adjusted gross profit +26.1%; adjusted EBITDA +28.5%; adjusted net profit RUB 24.2bn vs RUB 10.3bn; adjusted FCF RUB 19.8bn vs RUB 5.2bn.
+- Net debt down 7.9% to RUB 131.1bn; net debt/adjusted EBITDA 1.9x; interest coverage 3.4x.
+- Secondary data showed P/E near 4.1x, though the earnings base includes adjusted/cyclical metrics.
+- Local technical state: price +4.71% above SMA20; z-score +2.61 under the project's standardized-distance formula; 60-day volatility 25.45%.
 
-Counterevidence / risks:
-- Physical sales declined 0.3%; export sales declined 10.1%, and food-service sales declined 0.9%.
-- Management cited restrictions on poultry shipments to China, competition from imported Chinese chicken fillet, weak food-service demand, oversupply in pork, and weaker crop-segment economics.
-- Interest coverage was 3.4x, materially below the 2020-2022 range cited by the company.
-- Capex declined 8.2%; this supported FCF but may constrain capacity growth if sustained.
-- Local technical output showed price +4.71% above SMA20 and z-score +2.61 under the project's nonstandard standardized-distance formula. This is not a probability, classical statistical test, or stand-alone sell signal.
+Risks:
+- Physical sales -0.3%; export sales -10.1%; food-service sales -0.9%.
+- China export restrictions, imported chicken competition, weak food-service demand, pork oversupply, and weaker crop economics.
+- Interest coverage 3.4x leaves less room for financing shocks.
+- Lower capex supported FCF but may constrain future capacity if sustained.
+- The z-score is not a probability, classical z-test, or stand-alone sell signal. Third-party free-float/liquidity data are inconsistent.
 
-Conclusion: improved profitability and FCF support keeping a small position. Export, demand, leverage-cost, and capex risks do not support increasing it.
+Decision: retain the existing 2% as a small exposure; do not add.
 
-### Why no new position
-The local candidate comparison showed several strong momentum names (including HYDR, POSI, CNRU, FIXR, LSRG), but no complete fundamental and valuation review for them has been completed. Technical ranking alone is insufficient to displace LQDT or justify adding a new name. The maximum of 10 names is a ceiling, not a target.
+Primary disclosure: https://www.e-disclosure.ru/portal/event.aspx?EventId=JWyX1VWphUOrx7O5ugOm6g-B-B
 
-### Why not cut existing positions immediately
-- No verified thesis break was identified for T or GCHE in the reviewed disclosures.
-- The breadth rule is an unvalidated exposure hypothesis, not a proven forced de-risking rule.
-- Cutting to the rule-implied 3% equity sleeve would turn an unvalidated backtest hypothesis into a live trading mandate.
+## 5. Candidate review
 
-## 6. Work required before final allocation
+### CNRU — watch, no entry
+Local technicals: return_20 +28.23%, return_60 +46.03%, price +2.68% above SMA20, realized volatility 43.48%.
 
-1. Complete fundamental and valuation review of the strongest candidates from the local technical comparison, prioritizing HYDR, POSI, X5, and selectively CNRU/FIXR/LSRG where liquidity and business risks justify further work.
-2. Reassess T and GCHE against those candidates and the current LQDT alternative; do not preserve their current weights merely because they are the known holdings.
-3. Form target weights from expected return, downside, liquidity, correlation, and portfolio constraints, not from the tactical 12% Friday reduction.
-4. State explicitly if a security cannot be valued responsibly with available data. Do not invent target weights to fill the allocation.
+Official 9M results: revenue +18.9% to RUB 13.1bn; adjusted EBITDA +50.7% to RUB 4.2bn; adjusted EBITDA margin 31.8%; net profit +45.3% to RUB 3.0bn; cash RUB 3.7bn. But primary-market transactions in Moscow/St Petersburg fell 14% in Q3 and 16% over 9M. Operating cash flow declined 1.9%; cash fell after dividends and buybacks.
 
-## 7. Invalidation and review triggers
+Dividend correction: the 33 RUB proposed dividend is about 3.7% of a ~901 RUB share price, not 14.2%. The issuer's 14.2% headline used expected full-year dividends of 86 RUB and the average 9M price of 605.4 RUB. At 901 RUB, 86 RUB is ~9.5% before tax and is not a guaranteed forward yield. Secondary vendor P/E was around 18x. The recent sharp rally raises entry risk.
 
-Reassess the hold decision if any of the following occurs:
-- New local snapshot shows a materially different breadth regime, especially persistent deterioration or broad recovery; do not act on one day alone.
-- T reports material deterioration in cost of risk, NPLs, funding mix, capital adequacy, or guidance; or dilution/integration terms change materially.
-- GCHE reports sustained weakness in poultry pricing/volumes, export restrictions worsen, adjusted FCF reverses, net debt rises, or interest coverage deteriorates.
-- The expected net return on equities no longer compensates for LQDT's current yield and portfolio risk.
-- The corrected breadth experiment, once actually run, contradicts the heuristic or reveals material timing/coverage bias.
+Decision: watch, no buy. Strong business metrics and momentum, but valuation, 43.5% volatility, housing cyclicality, and LQDT's current yield leave insufficient demonstrated premium.
 
-## 8. Pending work and status
+Issuer source: https://corp.cian.ru/news/press-reliz-cian-q3-2026-financial-results-rus
 
-- Corrected breadth backtest: not yet created/run in this decision record. No sensitivity checks. The earlier 3/6/9/12% mapping is withdrawn.
-- Historical cash proxy: fixed 8% annual effective, user-provided from RGBITR minus RGBI.
-- Current LQDT yield: user estimate around 12% annualized; floating/current only.
-- Qwen review: not supplied for this cycle.
-- Local 2026-11-24 market snapshot: not supplied.
+### POSI — watch, no entry
+Local technicals: return_20 +6.25%, return_60 +29.65%, price +1.71% above SMA20, volatility 34.51%.
+
+9M 2026 revenue +48% to RUB 16.1bn; shipments +54% to RUB 18.3bn; expenses -4%; IFRS net loss narrowed to RUB 0.7bn from RUB 5.8bn; net debt/EBITDA LTM 0.76x. FY shipment guidance remains RUB 40–45bn; Q4 is seasonally decisive and the 9M result does not yet prove the annual target. Secondary valuation around 12 November indicated P/E ~13x and only modest base-case upside; this is a vendor estimate, not issuer guidance.
+
+Decision: no position. Growth/deleveraging are positive, but seasonality, negative IFRS earnings, volatility, and uncertain valuation premium do not clearly beat cash.
+
+Issuer source: https://ptsecurity.com/about/news/the-volume-of-pt-shipments-for-9-months-of-2026-increased-by-54-to-18-3-billion-rubles/
+
+### X5 — no entry
+Local technicals: return_20 -1.21%, return_60 +29.15%, price 0.79% below SMA20, volatility 23.61%.
+
+9M revenue +11.4%; adjusted EBITDA +12.0%; adjusted EBITDA margin 6.0% before IFRS 16; net debt/EBITDA 1.20x. Independent analysis noted FCF of RUB 18.3bn over 9M against RUB 148.5bn dividends paid and a RUB 133bn increase in net debt. Issuer guidance implies ~12% FY revenue growth and ~6% adjusted EBITDA margin. Proposed 204 RUB dividend is ~8.9% at ~2,288 RUB, below current LQDT 30-day annualized return.
+
+Decision: no entry. Good operator and low headline multiples do not erase financing, FCF, and dividend-cover concerns; short-term technical momentum is fading.
+
+Issuer source: https://www.x5.ru/ru/news/x5-obyavlyaet-o-roste-vyruchki-na-130-v-3-kv-2026-g-rentabelnost-skorr-ebitda-do-primeneniya-msfo-ifrs-16-sostavila-67/
+
+### HYDR — no entry despite strong momentum
+Local technicals: return_20 +18.95%, return_60 +48.16%, price +3.14% above SMA20, volatility 41.04%. 9M RAS revenue +20%, net profit +62%, operating cash flow +88%. Counterevidence: debt grew with the investment program; 1H IFRS financial debt around RUB 883bn and net debt/EBITDA around 2.8x; heavy capex and constrained dividends.
+
+Decision: momentum does not compensate for leverage, capital intensity, and weak shareholder cash distribution.
+
+### FIXR — no entry despite strong momentum
+Local technicals: return_20 +37.77%, return_60 +53.85%, price +6.32% above SMA20, volatility 43.87%. 9M revenue +6.3%; adjusted EBITDA +8.5%; operating profit -1.4%; net profit -24.2%; net debt/EBITDA 0.3x. Better gross margin and low leverage are positives, but earnings decline and volatility weaken the case.
+
+### LSRG — no entry
+Local technicals: return_20 +19.60%, return_60 +62.97%, volatility 48.02%. Available 1H IFRS data showed substantial net loss, weak cash generation, and rising net debt. Real-estate development is highly sensitive to financing costs and demand.
+
+## 6. Why no new position
+
+- CNRU and POSI have the best growth/momentum combination, but valuation, volatility, and execution risks leave no sufficiently clear expected-return premium over LQDT.
+- X5's operating quality is offset by cash conversion, debt, and dividend-cover concerns.
+- HYDR and LSRG have leverage/capex/balance-sheet risks; FIXR's earnings are declining.
+- Market breadth remains very weak.
+- No candidate needs to be purchased simply because the portfolio has room for up to 10 names. Ten is a ceiling, not a target.
+
+## 7. Review triggers
+
+Reassess if:
+- breadth recovers materially and persistently, not on one index session;
+- T's cost of risk, NPLs, funding mix, capital adequacy, or guidance deteriorate;
+- T rerates enough to remove expected return premium;
+- GCHE export volumes, pricing, FCF, debt, or interest coverage deteriorate;
+- CNRU valuation cools while fundamentals remain intact or housing transaction data improve;
+- POSI converts shipments into revenue/cash flow and reaches FY guidance;
+- LQDT net yield falls materially as policy rates change;
+- corrected breadth research contradicts the heuristic.
+
+## 8. Evidence and confidence boundaries
+
+- Latest local snapshot: 2026-11-23; no local snapshot for 2026-11-24 was supplied.
+- Public issuer results and market references checked through 2026-11-24.
+- Qwen review not supplied; this is the agent's independent assessment.
+- Corrected breadth backtest not yet run. The former 3/6/9/12% mapping is withdrawn.
 - No orders placed or execution claimed.
-
-## 9. Confidence
-
-- Confidence in the earlier HOLD / NO CHANGE as a provisional least-assumptive action: low-to-moderate; it is not a completed allocation decision.
-- Confidence that 10% T and 2% GCHE are optimal weights: not established. The tactical origin of the 12% stock allocation does not justify retaining it as a strategic target.
-- Confidence in the breadth multiplier as a live allocation rule: low until the corrected historical test is completed.
+- Confidence: moderate that no reviewed new candidate currently clears the LQDT hurdle; moderate in retaining T and GCHE; low that exact weights are mathematically optimal because full covariance, detailed forward valuation, and user-specific transaction costs are unavailable.
