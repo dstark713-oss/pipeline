@@ -229,6 +229,74 @@ def save_board_state(
 # INCREMENTAL MOEX DOWNLOAD
 # ============================================================
 
+def ensure_raw_source_column(connection: sqlite3.Connection) -> None:
+    """Tag rows by endpoint without changing existing observations."""
+    columns = {
+        row[1]
+        for row in connection.execute(
+            "PRAGMA table_info(daily_bars_raw)"
+        ).fetchall()
+    }
+    if "data_source" not in columns:
+        connection.execute(
+            "ALTER TABLE daily_bars_raw "
+            "ADD COLUMN data_source TEXT NOT NULL DEFAULT 'history'"
+        )
+        connection.commit()
+
+
+def build_candles_url(
+    secid: str,
+    board: str,
+    from_date: str,
+    till_date: str,
+    start: int,
+) -> str:
+    import urllib.parse
+
+    params = {
+        "from": from_date,
+        "till": till_date,
+        "interval": "24",
+        "start": str(start),
+        "limit": str(PAGE_SIZE),
+        "iss.meta": "off",
+    }
+    return (
+        "https://iss.moex.com/iss/engines/stock/markets/shares/"
+        f"boards/{urllib.parse.quote(board, safe='')}/"
+        f"securities/{urllib.parse.quote(secid, safe='')}/candles.json?"
+        f"{urllib.parse.urlencode(params)}"
+    )
+
+
+def parse_candles(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    block = payload.get("candles")
+    if not isinstance(block, dict):
+        raise ValueError("MOEX candles response has no candles block.")
+
+    columns = block.get("columns")
+    data = block.get("data")
+    if not isinstance(columns, list) or not isinstance(data, list):
+        raise ValueError("Invalid MOEX candles response structure.")
+
+    result = []
+    for values in data:
+        if len(values) != len(columns):
+            raise ValueError("Candle row length does not match columns.")
+        result.append(dict(zip(columns, values)))
+    return result
+
+
+def _as_float(value: Any) -> float | None:
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 def fetch_board_range(
     downloader,
     connection: sqlite3.Connection,
@@ -237,12 +305,15 @@ def fetch_board_range(
     start_date: str,
     end_date: str,
 ) -> tuple[int, int]:
+    """Fetch daily candles; historical backfill remains on /history."""
+    import hashlib
+
     offset = 0
     received_total = 0
     inserted_total = 0
 
     while True:
-        url = downloader.build_history_url(
+        url = build_candles_url(
             secid=secid,
             board=board,
             from_date=start_date,
@@ -254,79 +325,119 @@ def fetch_board_range(
             max_retries=MAX_RETRIES,
             delay=REQUEST_DELAY_SECONDS,
         )
-        _, rows = downloader.parse_history(payload)
-
-        if rows:
-            dates = sorted(str(row.get("TRADEDATE")) for row in rows)
-            LOG.info(
-                "%s/%s returned dates: %s",
-                secid, board, dates,
-            )
-
-        if not rows:
+        candles = parse_candles(payload)
+        if not candles:
             break
 
-        # Raw observations are append-only. If MOEX republishes a
-        # different value for an already stored SECID/BOARDID/TRADEDATE,
-        # do not silently create a second daily row. Stop and require a
-        # separate correction review instead.
-        new_rows = []
-        for row in rows:
-            tradedate = row.get("TRADEDATE")
-            if not tradedate:
+        for candle in candles:
+            begin = candle.get("begin")
+            if not begin:
                 raise RuntimeError(
-                    f"MOEX row has no TRADEDATE: {secid}/{board}"
+                    f"Candle has no begin timestamp: {secid}/{board}"
                 )
 
-            incoming_hash = downloader.make_row_hash(
-                secid=secid,
-                board=board,
-                row=row,
-            )
+            tradedate = str(begin)[:10]
+            date.fromisoformat(tradedate)
+
+            normalized = {
+                "TRADEDATE": tradedate,
+                "OPEN": _as_float(candle.get("open")),
+                "HIGH": _as_float(candle.get("high")),
+                "LOW": _as_float(candle.get("low")),
+                "CLOSE": _as_float(candle.get("close")),
+                "VOLUME": _as_float(candle.get("volume")),
+                "VALUE": _as_float(candle.get("value")),
+                "BEGIN": str(begin),
+                "END": candle.get("end"),
+                "INTERVAL": candle.get("interval"),
+            }
+
+            # Keep exactly one downstream daily observation per
+            # SECID/BOARDID/TRADEDATE. Historical rows are never replaced.
             existing = connection.execute(
                 """
-                SELECT row_hash
+                SELECT row_hash, data_source, open, high, low, close, volume, value
                 FROM daily_bars_raw
                 WHERE secid = ? AND boardid = ? AND tradedate = ?
                 """,
-                (secid, board, str(tradedate)),
+                (secid, board, tradedate),
             ).fetchall()
-            existing_hashes = {item[0] for item in existing}
 
-            if existing_hashes:
-                if incoming_hash not in existing_hashes:
-                    raise RuntimeError(
-                        "MOEX revised an already stored daily observation; "
-                        "raw data was not overwritten or duplicated. "
-                        f"Manual correction review required: "
-                        f"{secid}/{board}/{tradedate}"
+            if existing:
+                candle_rows = [
+                    row for row in existing if row[1] == "candles"
+                ]
+                if candle_rows:
+                    expected = (
+                        normalized["OPEN"], normalized["HIGH"],
+                        normalized["LOW"], normalized["CLOSE"],
+                        normalized["VOLUME"], normalized["VALUE"],
                     )
+                    for stored in candle_rows:
+                        if tuple(stored[2:8]) != expected:
+                            raise RuntimeError(
+                                "MOEX revised a previously stored candle; "
+                                "raw data was not overwritten. "
+                                f"Manual correction review required: "
+                                f"{secid}/{board}/{tradedate}"
+                            )
                 continue
 
-            new_rows.append(row)
+            hash_payload = {
+                "SECID": secid,
+                "BOARDID": board,
+                "SOURCE": "candles",
+                "ROW": normalized,
+            }
+            serialized = json.dumps(
+                hash_payload,
+                sort_keys=True,
+                ensure_ascii=False,
+                default=str,
+                separators=(",", ":"),
+            )
+            row_hash = hashlib.sha256(
+                serialized.encode("utf-8")
+            ).hexdigest()
 
-        inserted = downloader.insert_history_rows(
-            connection=connection,
-            secid=secid,
-            board=board,
-            rows=new_rows,
-        )
+            connection.execute(
+                """
+                INSERT INTO daily_bars_raw (
+                    row_hash, secid, boardid, tradedate,
+                    value, volume, open, low, high, close,
+                    raw_json, data_source
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'candles')
+                """,
+                (
+                    row_hash, secid, board, tradedate,
+                    normalized["VALUE"], normalized["VOLUME"],
+                    normalized["OPEN"], normalized["LOW"],
+                    normalized["HIGH"], normalized["CLOSE"],
+                    json.dumps(
+                        normalized,
+                        ensure_ascii=False,
+                        default=str,
+                        separators=(",", ":"),
+                    ),
+                ),
+            )
+            inserted_total += 1
+
         connection.commit()
-
-        received_total += len(rows)
-        inserted_total += inserted
-        offset += len(rows)
+        received_total += len(candles)
+        offset += len(candles)
 
         LOG.info(
-            "%s/%s %s..%s | received=%d inserted=%d",
-            secid, board, start_date, end_date, len(rows), inserted,
+            "%s/%s candles %s..%s | received=%d inserted_total=%d",
+            secid, board, start_date, end_date,
+            len(candles), inserted_total,
         )
 
-        if len(rows) < PAGE_SIZE:
+        if len(candles) < PAGE_SIZE:
             break
 
     return received_total, inserted_total
-
 
 def update_raw_database() -> dict[str, Any]:
     if not RAW_DB_PATH.is_file():
@@ -364,6 +475,7 @@ def update_raw_database() -> dict[str, Any]:
         ).fetchone()
         if required is None:
             raise RuntimeError("daily_bars_raw table is missing from raw database.")
+        ensure_raw_source_column(connection)
 
         for index, pair in enumerate(pairs, start=1):
             secid = pair["secid"]
@@ -472,6 +584,9 @@ def update_raw_database() -> dict[str, Any]:
         "end_date_checked": END_DATE.isoformat(),
         "overlap_calendar_days": OVERLAP_DAYS,
         "checkpoint_policy": "rolling_overlap; checkpoint is not treated as proof of permanent completeness",
+        "refresh_endpoint": "MOEX ISS /candles.json",
+        "candle_interval": 24,
+        "raw_source_column": "data_source (history/candles)",
         "board_pairs_total": len(pairs),
         "attempted": attempted,
         "successful": successful,
