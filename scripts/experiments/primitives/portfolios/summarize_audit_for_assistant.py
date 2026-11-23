@@ -155,17 +155,21 @@ def build_report() -> str:
         if recent.empty:
             recent = years.copy()
         lines += [
-            "| Strategy | Year | Return | CAGR | MDD | Worst day | Best day |",
-            "|---|---:|---:|---:|---:|---:|---:|",
+            "| Strategy | Годы в плюсе | Средняя годовая доходность | Лучший год | Худший год | Худший годовой MDD |",
+            "|---|---:|---:|---:|---:|---:|",
         ]
-        for _, x in recent.sort_values(["strategy", "year"]).iterrows():
+        for strategy, g in recent.groupby("strategy"):
+            best = g.loc[g["total_return"].idxmax()]
+            worst = g.loc[g["total_return"].idxmin()]
+            positive_years = int((g["total_return"] > 0).sum())
             lines.append(
-                f"| {x['strategy']} | {int(x['year'])} | {fmt_pct(x['total_return'])} "
-                f"| {fmt_pct(x['cagr_252'])} | {fmt_pct(x['max_drawdown'])} "
-                f"| {fmt_pct(x['worst_day'])} | {fmt_pct(x['best_day'])} |"
+                f"| {strategy} | {positive_years}/{len(g)} | {fmt_pct(g['total_return'].mean())} "
+                f"| {int(best['year'])}: {fmt_pct(best['total_return'])} "
+                f"| {int(worst['year'])}: {fmt_pct(worst['total_return'])} "
+                f"| {fmt_pct(g['max_drawdown'].min())} |"
             )
         lines.append("")
-        lines.append("Примечание: последний календарный год в данных может быть неполным.")
+        lines.append("Агрегировано по календарным годам с 2020; последний год может быть неполным.")
     else:
         lines.append("Нет данных.")
 
