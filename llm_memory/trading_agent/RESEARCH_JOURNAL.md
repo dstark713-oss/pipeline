@@ -112,3 +112,26 @@ The prior mapping of breadth multipliers 25/50/75/100% to portfolio equity expos
 The user also clarified that the allocation decision was not final and asked the agent to return to substantive security/portfolio research rather than continue discussing theoretical exposure-limit definitions. The earlier HOLD / NO CHANGE should be treated as provisional and incomplete, not as the final decision.
 
 Next work: complete issuer/fundamental/valuation review of the current holdings and strongest candidates from the local technical screen, compare them against LQDT, then formulate a defensible target allocation. Do not anchor target equity exposure to the Friday 12% tactical state. Do not ask the user to repeat already supplied portfolio constraints.
+
+
+## 2026-11-24 | Completed bottom-up allocation review
+
+The 12% equity weight was a tactical reduction on Friday, 2026-11-20, not a strategic base. The former 3/6/9/12% mapping from applying breadth multipliers to that 12% is withdrawn.
+
+LQDT's 30-day price return annualized was reported at 13.57% as of 2026-11-23, net of management fee; 90-day annualized was 14.59%. These are backward-looking floating rates, not guaranteed forward returns. The historical breadth-test cash proxy remains a separate fixed 8% assumption from the user's RGBITR-minus-RGBI calculation.
+
+Candidate review:
+- CNRU: 9M revenue +18.9%, adjusted EBITDA +50.7%, net profit +45.3%; but 43.48% realized volatility, P/E around 18x, strong recent rally, and primary-market housing transaction weakness. The 33 RUB proposed dividend is ~3.7% at ~901 RUB; the 14.2% headline used expected annual RUB 86 and average 9M price RUB 605.4. No entry.
+- POSI: 9M revenue +48%, shipments +54%, costs -4%, net IFRS loss narrowed to RUB 0.7bn, net debt/EBITDA 0.76x; Q4 is decisive and IFRS earnings remain negative. No entry.
+- X5: 9M revenue +11.4%, adjusted EBITDA +12%, but net debt/EBITDA 1.20x, weak FCF versus dividends, rising debt, and proposed dividend yield below LQDT. No entry.
+- HYDR: strong momentum and RAS profit growth, but high debt, heavy capex, constrained dividends. No entry.
+- FIXR: strong momentum but 9M net profit -24.2%, operating profit -1.4%. No entry.
+- LSRG: high momentum but weak available IFRS profitability and leverage/cash-flow risks. No entry.
+
+Existing holdings:
+- T: 9M net revenue +26%, operating net profit +35%, ROE 29.1%, raised FY guidance. Retain 10%; no increase while breadth is weak and funding/credit risks remain.
+- GCHE: 9M adjusted EBITDA +28.5%, adjusted FCF RUB 19.8bn vs 5.2bn, net debt -7.9%; offset by export sales -10.1%, physical sales -0.3%, interest coverage 3.4x. Retain 2%; no increase.
+
+Final recommendation: T 10%, GCHE 2%, LQDT 88%; no new positions, leverage, or shorts. The 12% equity sleeve is not a base assumption. It is retained after bottom-up review because current holdings remain defensible and no reviewed candidate offers a sufficiently clear risk-adjusted premium over current LQDT.
+
+Confidence: moderate that no reviewed candidate clears the cash hurdle; moderate in retaining T and GCHE; low that exact weights are mathematically optimal. No Qwen review or 2026-11-24 local snapshot supplied. No trades executed or claimed.
