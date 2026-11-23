@@ -19,7 +19,8 @@ This directory is the persistent working context for the Research Agent in `dsta
 3. [Primitive research](03_PRIMITIVE_RESEARCH.md)
 4. [Refresh mechanism](04_REFRESH_MECHANISM.md)
 5. [Next steps and open risks](05_NEXT_STEPS.md)
-6. [Change log](CHANGELOG.md)
+6. [Research journal](RESEARCH_JOURNAL.md)
+7. [Change log](CHANGELOG.md)
 
 ## Evidence labels
 
@@ -47,4 +48,4 @@ Never promote a hypothesis into a fact. Never claim a script was executed merely
 
 The immediate research problem is to build and validate a compact set of interpretable instrument-state primitives from the point-in-time TOP50 dataset. The primitives are information inputs for later agent reasoning, not standalone trading strategies and not an automatic trade/weight generator.
 
-The production screener is deliberately deferred until experiments are reviewed and a compact, non-redundant primitive set is selected.
+The read-only production screener now exists at scripts/tools/01_primitive_screener.py. Its downstream specification is in docs/tools/01_primitive_screener.md. It exposes three instrument-level primitives and a separate two-value breadth context. The screener is descriptive only; it does not choose trades or weights.
