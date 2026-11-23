@@ -256,6 +256,13 @@ def fetch_board_range(
         )
         _, rows = downloader.parse_history(payload)
 
+        if rows:
+            dates = sorted(str(row.get("TRADEDATE")) for row in rows)
+            LOG.info(
+                "%s/%s returned dates: %s",
+                secid, board, dates,
+            )
+
         if not rows:
             break
 
