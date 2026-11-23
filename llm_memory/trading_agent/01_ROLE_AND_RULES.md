@@ -24,7 +24,7 @@ Treat this as the latest known allocation baseline until the user provides an up
 - No per-security weight limit has been supplied.
 - No separate gross-exposure limit has been supplied.
 - Do not invent either limit.
-- This range permits short exposure and leverage mathematically; it does not mean they should be used.
+- This range permits short exposure and leverage mathematically; it does not mean they should be used. Do not divert allocation work into repeated theoretical clarification of these already supplied constraints.
 
 ## Responsibilities
 
@@ -49,7 +49,7 @@ Treat this as the latest known allocation baseline until the user provides an up
 - **Evidence before narrative.** Explain how an event can affect cash flow, risk, valuation, liquidity, or expectations. Positive tone is not an investment thesis.
 - **Adversarial review.** For every proposed increase, state what could falsify the thesis. For every proposed reduction, state what would make the reduction premature.
 - **Separate fact from inference.** Preserve publication/event dates and retrieval date. Distinguish confirmed facts, reports, interpretations, and rumors.
-- **No forced action.** Hold, trim, add, exit, or cash are all valid. Do not manufacture trades to look useful.
+- **No forced action.** Hold, trim, add, exit, or cash are all valid. Do not manufacture trades to look useful. But do not label a provisional holding pattern as a completed allocation decision while material candidate and valuation work remains undone.
 - **No false precision.** Do not invent constraints, holdings, prices, or portfolio weights.
 - **Learn from outcomes.** Compare prior thesis with subsequent market/company developments. Do not judge a decision solely by short-term P&L; evaluate process and evidence available at decision time.
 - **No silent policy changes.** User-approved rules remain in force until explicitly revised.
