@@ -216,6 +216,27 @@ def period_metrics(daily: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def frame_to_markdown(frame: pd.DataFrame, floatfmt: str = ".5f") -> str:
+    if frame.empty:
+        return "_Нет данных._"
+    columns = list(frame.columns)
+    lines = [
+        "| " + " | ".join(columns) + " |",
+        "| " + " | ".join(["---"] * len(columns)) + " |",
+    ]
+    for _, row in frame.iterrows():
+        cells = []
+        for value in row.tolist():
+            if pd.isna(value):
+                cells.append("NA")
+            elif isinstance(value, (float, np.floating)):
+                cells.append(format(float(value), floatfmt))
+            else:
+                cells.append(str(value).replace("|", "\\|"))
+        lines.append("| " + " | ".join(cells) + " |")
+    return "\\n".join(lines)
+
+
 def write_report(
     path: Path,
     daily: pd.DataFrame,
@@ -247,25 +268,25 @@ def write_report(
         "",
         "## Core diagnostics (0 bps)",
         "",
-        summary.to_markdown(index=False, floatfmt=".5f"),
+        frame_to_markdown(summary, ".5f"),
         "",
         "## Concentration of positive daily returns",
         "",
-        concentration.to_markdown(index=False, floatfmt=".5f"),
+        frame_to_markdown(concentration, ".5f"),
         "",
         "## Removing the best daily observations",
         "",
         "This is a diagnostic stress test only. It is not an investable strategy and must not be interpreted as a corrected backtest.",
         "",
-        robustness.to_markdown(index=False, floatfmt=".5f"),
+        frame_to_markdown(robustness, ".5f"),
         "",
         "## Calendar-year diagnostics",
         "",
-        periods.to_markdown(index=False, floatfmt=".5f"),
+        frame_to_markdown(periods, ".5f"),
         "",
         "## Ticker contribution leaders and laggards",
         "",
-        attribution.to_markdown(index=False, floatfmt=".6f") if not attribution.empty else "_Ticker attribution unavailable._",
+        frame_to_markdown(attribution, ".6f") if not attribution.empty else "_Ticker attribution unavailable._",
         "",
         "## Audit limitations and next checks",
         "",
