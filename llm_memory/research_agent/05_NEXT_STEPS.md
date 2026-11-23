@@ -1,92 +1,60 @@
-# Next Steps and Open Questions
+# Next Steps and Open Risks
 
 Last updated: 2026-11-23
 
 ## Current research state
 
-The initial primitive discovery and diagnostic cycle has produced a compact runtime screener. Do not restart broad feature mining or repeat completed first-pass analyses without a specific unresolved question.
+The first primitive research cycle and the hypothesis of building a market-state screener from selected primitives are closed.
 
 Current runtime information layer:
-- Instrument state: drawdown_60, zscore_sma20_20, realized_vol_60.
-- Separate market-state context: breadth_change_5 (primary) and breadth_sma20 (reference).
-- Screener: scripts/tools/01_primitive_screener.py.
-- Downstream specification: docs/tools/01_primitive_screener.md.
+- Instrument state: `drawdown_60`, `zscore_sma20_20`, `realized_vol_60`.
+- Separate market-state context: `breadth_change_5` (primary) and `breadth_sma20` (reference).
+- Screener: `scripts/tools/01_primitive_screener.py`.
+- Downstream specification: `docs/tools/01_primitive_screener.md`.
 
-The breadth-based 100/75/50/25% exposure schedule is a user-proposed heuristic from a portfolio application test. It is not an approved statistically validated allocation model and is not implemented as a screener decision.
+The screener is descriptive only. It does not generate trades, portfolio weights, or allocation instructions. The user's 100/75/50/25% breadth exposure schedule remains a separate heuristic, not an approved statistically validated allocation model.
 
-## Recommended next research: conditional downside-risk information in breadth regimes
+## Next research cycle: analytical capability and gap assessment
 
-### Research question
+The next task is **not** to mine another primitive family by default. First establish what the completed screener and current data environment have made possible, then identify the most consequential capability gaps.
 
-Do the four states defined by the level and five-session change of PIT TOP50 breadth contain stable, incremental information about the future downside-risk distribution of the market cohort, beyond recent cohort returns and the distribution of the three approved instrument-level primitives?
+The assessment should answer:
 
-This is the most useful next step because existing breadth work has already examined mean/median forward returns, positive-return share, incremental return associations, and cross-sectional market structure. The remaining question most directly connected to the user's sizing hypothesis is whether breadth regimes distinguish future downside risk, not merely average forward return.
+1. **What can the system now know?**
+   - What can be calculated directly from the internal historical market dataset?
+   - What does the screener reveal at runtime, at instrument and market level?
+   - Which questions can be answered historically and reproducibly?
+   - Which outputs are descriptive, statistically validated, or merely illustrative?
 
-### Hypothesis
+2. **What can the system not know reliably yet?**
+   - Which market questions are blocked by missing variables, insufficient history, poor coverage, or absent data sources?
+   - Which questions require external context or semantic interpretation?
+   - Which answers are currently dependent on one-off web retrieval rather than a repeatable data/tool interface?
+   - Where are temporal provenance, source reliability, entity mapping, or update frequency weak?
 
-A weak or deteriorating breadth state may be associated with worse future downside outcomes or a fatter left tail. A rising breadth state may indicate improving participation, but the strength of that relationship may depend on whether breadth is already above or below 50%.
+3. **Which capabilities should be built next?**
+   - Identify concrete candidate tools, data interfaces, methods, or research subsystems.
+   - For each, state the capability gap, required inputs, expected output, validation design, dependencies, and likely failure modes.
+   - Distinguish foundational infrastructure from an analytical tool that depends on it.
+   - Prioritize by expected expansion of reliable analytical capability, not by novelty or apparent sophistication.
 
-This is a hypothesis to test, not a conclusion.
+4. **What should the next experiment establish?**
+   - Select one bounded research question that closes a demonstrated gap.
+   - Define a test that can reject the idea, not merely produce an interesting chart.
+   - Do not begin implementation until the research question, data requirements, and validation logic are clear.
 
-### Predefined regime map
+## Data reality and constraints
 
-Use the user's existing thresholds and directions without optimization:
+- The repository contains an internal historical market-data pipeline. Its exact coverage and limitations are recorded in `02_DATASET_PIPELINE.md`.
+- There is **no internal fundamental-data dataset or fundamental-data pipeline**.
+- News, company context, market semantics, and fundamental information are retrieved from the internet/external sources in the agent workflow.
+- Current web retrieval is not equivalent to a persistent, timestamped historical dataset. Do not use present-day information to support historical point-in-time claims.
+- Any future external-data tool must consider source quality, retrieval/publication timestamps, entity resolution, temporal availability, update cadence, reproducibility, and failure handling.
+- Do not assume that a new data source is useful merely because it is accessible. Establish coverage and reliability.
 
-| Regime | Breadth level | Five-session change |
-|---|---|---|
-| A | >= 50% | > 0 |
-| B | >= 50% | <= 0 |
-| C | < 50% | > 0 |
-| D | < 50% | <= 0 |
+## Explicitly retired proposal
 
-Do not search for a better threshold or tune the four exposure multipliers during this research.
-
-### Outcomes to test
-
-For fixed signal-date PIT TOP50 cohorts and horizons 5/10/20 sessions, examine:
-- Equal-weight cohort forward return distribution, including lower quantiles.
-- Share of constituents with negative forward returns.
-- Cross-sectional downside tail measures, such as 10th-percentile return and expected shortfall of the worst decile, with coverage reported.
-- Cohort downside semivariance / downside realized volatility over the forward window, using only observed valid outcomes.
-- If adjusted OHLC history supports a clean definition, forward maximum adverse excursion from the next-session OPEN. Define the calculation before running it; do not mix close-to-close and open-to-low measures.
-
-These are market-risk/state outcomes, not strategy returns or portfolio CAGR targets.
-
-### Controls and inference
-
-- Preserve PIT membership at signal date; do not require a security to remain in TOP50 during the outcome window.
-- Keep SECID as the instrument identity. Never merge different SECIDs by issuer or ISIN.
-- Use the same signal timing and forward outcome convention as existing research unless a separate, explicitly documented risk outcome requires another definition.
-- Control for past cohort returns and cross-sectional medians of the three approved core primitives, matching the existing breadth incremental-analysis design where appropriate.
-- Report regime counts, valid cohort coverage, and missingness for every horizon.
-- Use HAC inference for suitable time-series mean comparisons and a block bootstrap for differences in tail/downside statistics. Account for overlapping forward horizons.
-- Apply multiple-testing correction within clearly declared outcome/horizon families.
-- Report full-sample results and established periods 2005–2012, 2013–2019, and 2020–2026. Do not interpret a sparse regime-period cell as evidence of no effect.
-- Check sensitivity to extreme observations and coverage without deleting plausible market events.
-
-### What would count as useful evidence
-
-A regime difference should be directionally interpretable, have adequate coverage, survive dependence-aware uncertainty estimates, and show at least some consistency across periods. A result that exists only in one period or only for one arbitrarily chosen tail statistic should be treated as weak evidence.
-
-A positive result would support breadth as a market-risk context for downstream allocation decisions. It would not validate the exact 100/75/50/25% multipliers. A negative or unstable result would weaken the case for relying on breadth as a downside-risk classifier, but would not invalidate its descriptive market-state role.
-
-### Required preflight correction
-
-Before running the experiment, reconcile the 50% boundary:
-- User-approved rule: breadth_sma20 >= 0.50 is the upper-level regime.
-- Current portfolio experiment code: breadth_level > 50.0 is the upper-level regime.
-- Exactly 50% currently falls into the lower regime in code.
-
-Confirm the intended inclusive boundary and make the experiment implementation match the approved specification before using its outputs. Do not change code until the user authorizes that implementation step.
-
-## Secondary work after the downside-risk study
-
-Only if the risk-state evidence is credible, run a narrowly scoped application sensitivity check:
-- Keep the four regime definitions fixed.
-- Compare the user's original heuristic with neutral/full exposure as a diagnostic.
-- Do not optimize multipliers or threshold against MDD.
-- Report exposure path, downside outcomes, missing-return treatment, turnover/cost assumptions, and drawdown as application diagnostics only.
-- Keep this separate from the test of whether breadth contains information.
+The previous proposal to make conditional downside-risk analysis across breadth regimes the immediate next research project is **not the current plan**. It was a premature continuation of the previous breadth topic and did not follow from a full assessment of the system's capability gaps. Do not treat it as approved or automatically resume it.
 
 ## Dataset and operational risks
 
@@ -99,7 +67,8 @@ Only if the risk-state evidence is credible, run a narrowly scoped application s
 ## Research discipline
 
 - No broad feature fishing.
-- No linear regression as a primitive-discovery direction, no Hurst exponent, no sentiment layer, and no IMOEX until the user changes the scope.
-- Do not optimize primitives for CAGR, Sharpe, MDD, or portfolio return.
+- Do not restrict future research to price-derived primitives or breadth.
+- Do not assume internal fundamental data exists.
+- Do not optimize analytical tools for CAGR, Sharpe, MDD, or portfolio return as universal truth criteria.
 - Distinguish information validation from a portfolio application experiment.
 - The Research Agent recommends; the user approves scope changes and production promotion.
