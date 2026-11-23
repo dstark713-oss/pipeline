@@ -51,7 +51,7 @@ def summarize_period(group: pd.DataFrame) -> dict:
         ),
         "max_drawdown": max_drawdown(equity),
         "positive_share": float((returns > 0).mean()),
-        "average_exposure": float(group["target_exposure"].mean()),
+        "average_exposure": float(group["effective_exposure"].mean()),
         "average_turnover": float(group["turnover_one_way"].mean()),
         "average_missing_return_weight": float(
             group["missing_return_weight"].mean()
@@ -142,7 +142,7 @@ def write_assistant_report(
         "- Primitive portfolios: TOP10/BOTTOM10, 10% per selected constituent.",
         "- Signal after close T; entry OPEN T+1; exit/rebalance OPEN T+2.",
         "- Daily returns are sequential open-to-open holding intervals, not overlapping H5/H10/H20 forecasts.",
-        "- Missing forward OPEN returns are not filled; affected target weight is treated as cash and reported.",
+        "- If either required forward OPEN is missing, the affected target weight is treated as cash for that interval and reported.",
         "- Breadth level: share of PIT TOP50 with price_sma20 > 0.",
         "- Breadth change: five-session change in breadth level, percentage points.",
         "- Sizing: >50% and rising = 100%; >50% and flat/falling = 75%; <=50% and rising = 50%; <=50% and flat/falling = 25%.",
