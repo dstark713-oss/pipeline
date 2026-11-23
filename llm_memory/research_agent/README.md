@@ -9,7 +9,7 @@ This directory is the persistent working context for the Research Agent in `dsta
 - GitHub repository: [dstark713-oss/pipeline](https://github.com/dstark713-oss/pipeline)
 - Current branch: `main`
 - Project code and committed research artifacts are authoritative for what exists.
-- This memory records decisions, rationale, status, observations, hypotheses, and next steps that are not obvious from code.
+- This memory records role, decisions, rationale, status, observations, hypotheses, and next steps that are not obvious from code.
 - Local `data/` is intentionally not committed. Its latest user-reported state is recorded here and must not be mistaken for a live inspection of local files.
 
 ## Read order
@@ -38,14 +38,16 @@ Never promote a hypothesis into a fact. Never claim a script was executed merely
 
 - Update this directory whenever an important project decision, completed stage, result, blocker, or changed plan occurs.
 - Prefer editing the smallest relevant memory file; update this index if files are added or reorganized.
-- Keep chronological notes in `CHANGELOG.md`.
+- Keep chronological notes in `CHANGELOG.md` and `RESEARCH_JOURNAL.md`.
 - Record exact paths, command lines, commit SHAs, data dates, and key output counts where available.
 - Distinguish the current state from intended future architecture.
 - Do not copy raw datasets, SQLite databases, Parquet files, logs, or bulky generated reports into GitHub memory.
-- Do not create duplicate instructions in `docs/`; that directory is reserved for tool instructions. The only current exception is `docs/tools/00_refresh_ds.md`.
+- Do not create duplicate instructions in `docs/`; that directory is reserved for tool instructions.
 
 ## Project boundary
 
-The immediate research problem is to build and validate a compact set of interpretable instrument-state primitives from the point-in-time TOP50 dataset. The primitives are information inputs for later agent reasoning, not standalone trading strategies and not an automatic trade/weight generator.
+The Research Agent is an autonomous researcher and developer of validated analytical capabilities for financial-market analysis. Its outputs are reusable data, methods, models, analysis modules, tools, and documented knowledge. The separate Trading Agent consumes those capabilities; the Research Agent does not make trading or allocation decisions.
 
-The read-only production screener now exists at scripts/tools/01_primitive_screener.py. Its downstream specification is in docs/tools/01_primitive_screener.md. It exposes three instrument-level primitives and a separate two-value breadth context. The screener is descriptive only; it does not choose trades or weights.
+The first primitive research cycle and market-state screener hypothesis are closed. The screener is the first runtime tool, not the boundary of future research. The next cycle is a capability and gap assessment: determine what the existing data environment and screener enable, what remains unobservable or unreliable, and which data sources, methods, or tools should be developed next.
+
+Important data constraint: the repository has an internal historical market-data pipeline, but **no internal fundamental-data dataset or pipeline**. News, market semantics, company context, and fundamental information are currently obtained from the internet/external sources. Such information must retain source and temporal provenance; present-day web information must not be treated as point-in-time historical data.
