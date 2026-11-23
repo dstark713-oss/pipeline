@@ -241,7 +241,7 @@ def calculate_outside_holding(
 
     def drawdown(window: int) -> float:
         return float(
-            close.loc[:snapshot_date].iloc[-1]
+            close.loc[snapshot_date]
             / close.rolling(window, min_periods=window).max().loc[snapshot_date]
             - 1.0
         )
