@@ -2,7 +2,11 @@
 
 ## 2026-11-23
 - Created the Trading Agent's dedicated memory directory.
-- Defined mandate, human-orchestrated daily allocation protocol, Qwen-only second-opinion policy, tool registry, portfolio data contract, and research journal.
+- Defined the initial human-orchestrated daily allocation protocol and Qwen-only second-opinion policy.
 - Recorded existing deterministic market-state tools and their limitations.
-- Recorded missing tool families as "not identified in inspected repository", not as globally unavailable.
-- No project code or existing agent memory was modified.
+- Corrected the operating priority: the agent's sole current job is supervised real-market allocation reasoning and learning.
+- Replaced complex portfolio-reader assumptions with a simple user-updated allocation ledger.
+- Established user-supplied Daily Market Snapshot, agent-led internet research for news/fundamentals, direct LLM semantic reasoning, and user-operated Qwen review.
+- Deferred API orchestration and tool-building until repeated manual allocation cycles reveal a concrete need.
+- Recorded current user-reported baseline: T 10%, GCHE 2%; remaining 88% unclassified.
+- No project code, research methodology, or order-execution capability was added.
