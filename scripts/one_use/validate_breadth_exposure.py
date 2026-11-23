@@ -487,8 +487,8 @@ def main() -> int:
     log("Loading PIT panel and primitive features...")
     panel, features = load_inputs()
     panel_dates = sorted(panel["tradedate"].unique())
-    start_date = pd.Timestamp(args.start_date).normalize() if args.start_date else panel_dates[0]
-    end_date = pd.Timestamp(args.end_date).normalize() if args.end_date else panel_dates[-1]
+    start_date = pd.Timestamp(args.start_date).normalize() if args.start_date else pd.Timestamp(panel_dates[0]).normalize()
+    end_date = pd.Timestamp(args.end_date).normalize() if args.end_date else pd.Timestamp(panel_dates[-1]).normalize()
     if start_date >= end_date:
         raise ValueError("start-date must be earlier than end-date.")
 
