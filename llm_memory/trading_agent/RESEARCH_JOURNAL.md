@@ -1,69 +1,61 @@
 # Trading Agent Research Journal
 
-Chronological log of role setup, daily allocation investigations, tool audits, decisions, and unresolved risks. This is the Trading Agent's journal and is separate from the user's `daily_report.txt` and the Research Agent's journal.
+Chronological log of role setup, daily allocation investigations, decisions, tool audits, and lessons. This journal belongs to the Trading Agent and is separate from the user's daily report and the Research Agent's journal.
 
 ## 2026-11-23 | Agent initialization and repository reconnaissance
 
-### User mandate
+### Initial setup
 
-The user defined a daily workflow triggered by "Аллокация на сегодня". The Trading Agent is to:
-- identify and request required local tool runs;
-- collect and analyze news;
-- review fundamentals;
-- perform semantic/contextual analysis;
-- request a second opinion from Qwen only;
-- synthesize and propose portfolio allocation;
-- maintain its own persistent context and research journal;
-- work toward future API-driven autonomy.
-
-The user currently orchestrates the workflow and shares tool outputs. Decisions remain collaborative. No autonomous order execution is authorized.
+The user defined a daily workflow triggered by "Аллокация на сегодня". The initial setup documented portfolio review, local market tools, news, fundamentals, semantic analysis, Qwen-only review, allocation synthesis, and a future API direction.
 
 ### Repository reconnaissance
 
-Inspected the repository root, `llm_memory/`, existing specialist-agent memories, the deterministic screener specification, the dataset refresh implementation, and the relevant script directory inventories.
+Inspected the repository root, `llm_memory/`, existing specialist-agent memories, the deterministic screener specification, the dataset refresh implementation, and relevant script inventories.
 
 Existing deterministic stack:
 - `scripts/dataset/fresh/refresh_pipeline.py`
-- `scripts/experiments/primitives/05_build_primitive_features.py` (referenced by screener documentation; execution not verified)
+- `scripts/experiments/primitives/05_build_primitive_features.py`
 - `scripts/tools/01_primitive_screener.py`
 - `docs/tools/01_primitive_screener.md`
 
-The screener exposes:
-- instrument state: `drawdown_60`, `zscore_sma20_20`, `realized_vol_60`;
-- separate market context: `breadth_change_5`, `breadth_sma20`.
+The screener exposes instrument state (`drawdown_60`, `zscore_sma20_20`, `realized_vol_60`) and separate market context (`breadth_change_5`, `breadth_sma20`). It is descriptive/read-only and does not generate buy/sell signals or portfolio weights. Local runtime status is not established by repository inspection.
 
-It is descriptive/read-only and does not generate buy/sell signals or portfolio weights.
+## 2026-11-23 | Role correction: learn allocation through real-market cycles
 
-The refresh script appends raw observations and rebuilds adjusted data and PIT TOP50. Its current documented/code-inspected limitations include no onboarding/backfill for SECID/board pairs without existing raw rows, a calendar-yesterday cutoff, and checkpoint advancement after an empty response. Local runtime status is not established by repository inspection.
+### User correction
 
-### Important gaps
+The user clarified that the Trading Agent's immediate and only responsibility is to learn to trade through supervised, repeated allocation decisions. Building infrastructure, complex portfolio ingestion, and API orchestration are not current tasks.
 
-No dedicated portfolio snapshot reader, news collector, fundamental/disclosure normalizer, semantic event store, Qwen adapter, allocation engine, or daily run manifest was identified in the inspected repository paths. These may exist outside this repository; do not claim they do not exist globally.
+### Current allocation baseline
 
-The current portfolio holdings, cash, account constraints, and position-level snapshot were not present in the inspected repository content. Precise target weights cannot be responsibly calculated until the user provides a portfolio export or a supported read-only source.
+User-reported:
+- T: 10%
+- GCHE: 2%
 
-### Initial architecture decision
+The remaining 88% is not classified. Do not call it cash or assume it is deployable.
 
-Build the agent as a layered decision-support workflow:
-1. portfolio and constraints;
-2. deterministic market-state snapshot;
-3. news and official disclosures;
-4. normalized fundamental facts;
-5. semantic event interpretation;
-6. Qwen-only adversarial review;
-7. constrained allocation synthesis;
-8. run manifest, decision report, and journal.
+### Agreed operating split
 
-Keep deterministic facts separate from LLM interpretation. Keep raw/local outputs outside Git. No trade execution.
+- Portfolio Reader: maintain a simple allocation ledger from the user's updates; no complex reader.
+- Daily Market Snapshot: request local market/screener outputs from the user.
+- News & Fundamentals: agent gathers current public information from the internet.
+- Semantic Engine: agent performs direct LLM reasoning over sourced facts and events.
+- Qwen Reviewer: user runs Qwen and supplies its response; Qwen is the only second-opinion LLM.
+- Allocation Engine: agent's own reasoning and recommendation; maintain this journal.
+- API Orchestration: deferred until the user has trained the agent through repeated real-market cycles.
 
-### Next action
+### Learning protocol
 
-Establish the portfolio snapshot format and current holdings source. Then map existing local tools and implement the first read-only portfolio validator / daily run manifest only after the user confirms the available export and authorizes code implementation.
+The agent should form an independent thesis before reading Qwen's response where practical, request adversarial review from Qwen, compare both views against primary evidence, propose an allocation with counterarguments and invalidation conditions, then preserve the decision and later evaluate the outcome. Do not confuse a profitable outcome with a sound process or a loss with a bad decision.
+
+### Next practical step
+
+On the next "Аллокация на сегодня" request, ask for the current Daily Market Snapshot outputs needed for the decision, research current news and fundamentals independently, and run the supervised allocation cycle. Do not start portfolio-reader or API implementation absent a demonstrated need.
 
 ### Evidence status
 
-- Repository paths and committed docs: inspected in GitHub.
-- Local Python execution: not performed.
-- Current local database freshness: unknown.
-- Current portfolio holdings/weights/cash: not supplied in this inspection.
-- Qwen API availability/credentials: not established.
+- Current allocation T 10%, GCHE 2%: user-reported.
+- Local market snapshot for this decision: not yet supplied.
+- Full composition of remaining 88%: unknown.
+- No Qwen review result yet supplied for this cycle.
+- No allocation change has been recommended or executed.
