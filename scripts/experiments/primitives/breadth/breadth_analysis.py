@@ -127,6 +127,11 @@ def build_breadth_daily(
     daily["breadth_change_5"] = daily["breadth_sma20"].diff(5)
     daily["breadth_change_20"] = daily["breadth_sma20"].diff(20)
 
+    # Keep the full pre-sample calendar for lookback calculations, but only
+    # report signal dates that actually belong to the historical TOP50 panel.
+    first_signal_date = data["tradedate"].min()
+    daily = daily.loc[daily.index >= first_signal_date]
+
     # The market return control is backward-looking and calculated on the
     # same signal-date PIT cohort. It is used only for a nonparametric
     # double-sort diagnostic, not as a fitted regression control.
@@ -326,9 +331,11 @@ def summarize_rolling(daily: pd.DataFrame) -> pd.DataFrame:
     for feature in BREADTH_FEATURES:
         for horizon in HORIZONS:
             target = _target_column("mean_return", horizon)
+            # Keep missing sessions in place: a 252-row window must mean
+            # 252 market sessions, not 252 observations after compressing gaps.
             pair = indexed[[feature, target]].replace(
                 [np.inf, -np.inf], np.nan
-            ).dropna()
+            )
             rolling = pair[feature].rolling(
                 ROLLING_WINDOW, min_periods=ROLLING_MIN_PERIODS
             ).corr(pair[target]).dropna()
