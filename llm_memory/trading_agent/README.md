@@ -20,14 +20,16 @@ This is a human-in-the-loop training workflow. API orchestration and autonomous 
 6. [Research journal](RESEARCH_JOURNAL.md)
 7. [Change log](CHANGELOG.md)
 
-## Current portfolio baseline
+## Current portfolio snapshot and final recommendation (2026-11-24)
 
 User-reported on 2026-11-23:
 - T: 10%
 - GCHE: 2%
 - LQDT: 88%
 
-Treat these as the latest known baseline until the user provides an updated allocation or snapshot. LQDT is a money-market fund, not idle cash.
+This is the latest known portfolio snapshot and final recommendation: hold T 10%, GCHE 2%, LQDT 88%. The 12% equity sleeve resulted from a tactical reduction on Friday 2026-11-20 and is not a strategic baseline. The same 12% is retained only after bottom-up review of holdings and candidates, not by anchoring to the tactical cut. LQDT is a money-market fund, not idle cash.
+
+See [the allocation decision tree](05_ALLOCATION_DECISION_TREE.md) for the full rationale, candidate review, invalidation triggers, and evidence boundaries.
 
 ## Daily division of work
 
