@@ -58,7 +58,7 @@ def build_breadth_daily(
     leaves TOP50. No future membership is used to define the cohort.
     """
     _require_columns(frame)
-    data = frame.loc[frame["bar_available"].eq(1)].copy()
+    data = frame.loc[frame["bar_available"].eq(1)].copy().reset_index(drop=True)
     data["tradedate"] = pd.to_datetime(data["tradedate"])
     data = data.sort_values(["tradedate", "secid"])
 
