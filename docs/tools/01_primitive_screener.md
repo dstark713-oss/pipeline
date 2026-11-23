@@ -8,9 +8,9 @@ The Primitive Screener produces a current descriptive snapshot of the 50 instrum
 
 It exposes three approved instrument-level primitives:
 
-- \`drawdown_60\`
-- \`zscore_sma20_20\`
-- \`realized_vol_60\`
+- `drawdown_60`
+- `zscore_sma20_20`
+- `realized_vol_60`
 
 This is an information layer for a downstream agent. It is not a trading strategy, trade signal generator, portfolio optimizer, position-sizing module, or automatic execution system.
 
@@ -20,70 +20,70 @@ The screener does not produce a combined score or an instruction to buy, sell, h
 
 Script:
 
-\`scripts/tools/01_primitive_screener.py\`
+`scripts/tools/01_primitive_screener.py`
 
 Run from the repository root:
 
-\`\`\`powershell
+```powershell
 python scripts/tools/01_primitive_screener.py
-\`\`\`
+```
 
 Run with interactive ticker inspection:
 
-\`\`\`powershell
+```powershell
 python scripts/tools/01_primitive_screener.py --inspect
-\`\`\`
+```
 
-With \`--inspect\`, the tool prompts for one or more SECIDs separated by spaces:
+With `--inspect`, the tool prompts for one or more SECIDs separated by spaces:
 
-\`\`\`text
+```text
 SBER DOMRF
-\`\`\`
+```
 
 Input is normalized to uppercase. The inspection command reports only instruments in the latest PIT TOP50 snapshot. A ticker outside the current panel is reported as not present; the tool does not silently expand the universe.
 
 ## Inputs
 
-- \`data/processed/top50/top50_panel.parquet\`
-- \`data/interim/primitive_research/primitive_features.parquet\`
+- `data/processed/top50/top50_panel.parquet`
+- `data/interim/primitive_research/primitive_features.parquet`
 
 The panel defines the current PIT TOP50 cohort and its liquidity rank. The feature frame supplies primitive values calculated on the same signal date.
 
-The screener selects the maximum \`tradedate\` in the panel, then left-joins feature values by \`SECID\` for that exact date. It retains every row in the panel, including a member without an actual bar on the snapshot date.
+The screener selects the maximum `tradedate` in the panel, then left-joins feature values by `SECID` for that exact date. It retains every row in the panel, including a member without an actual bar on the snapshot date.
 
 The feature frame must be current through the selected panel date. If it is stale, the screener stops and instructs the operator to rebuild it:
 
-\`\`\`powershell
+```powershell
 python scripts/experiments/primitives/05_build_primitive_features.py
-\`\`\`
+```
 
 ## Output
 
 The tool writes one CSV:
 
-\`data/interim/screener/latest_primitive_snapshot.csv\`
+`data/interim/screener/latest_primitive_snapshot.csv`
 
 The CSV is a wide snapshot with one row per current PIT TOP50 member. It contains:
 
-- \`snapshot_date\`: panel date used for the snapshot.
-- \`secid\`: MOEX instrument identifier.
-- \`panel_rank\`: PIT TOP50 liquidity rank, not a primitive rank.
-- \`bar_available\`: whether the panel has an actual bar for the instrument on the snapshot date.
-- \`instrument_status\`: \`OK\`, \`NO_BAR\`, or \`FEATURES_INCOMPLETE\`.
-- \`missing_primitives\`: primitive columns with no valid value.
+- `snapshot_date`: panel date used for the snapshot.
+- `secid`: MOEX instrument identifier.
+- `panel_rank`: PIT TOP50 liquidity rank, not a primitive rank.
+- `bar_available`: whether the panel has an actual bar for the instrument on the snapshot date.
+- `instrument_status`: `OK`, `NO_BAR`, or `FEATURES_INCOMPLETE`.
+- `missing_primitives`: primitive columns with no valid value.
 - Each primitive value, its cross-sectional rank, and its percentile among valid current-panel observations.
 
 The CSV is written atomically and encoded as UTF-8 with BOM for spreadsheet compatibility. It is a local runtime artifact and must not be committed to Git.
 
 ## Primitive definitions and interpretation
 
-### 1. \`drawdown_60\`
+### 1. `drawdown_60`
 
 Formula:
 
-\`\`\`text
+```text
 Close / rolling_max(Close, 60 sessions) - 1
-\`\`\`
+```
 
 Interpretation:
 
@@ -94,15 +94,15 @@ Interpretation:
 
 The console TOP 15 is sorted from highest to lowest value, so it shows instruments closest to their 60-session highs. This is distance from a rolling high, not a drawdown from an investor's entry price and not a complete peak-to-trough risk measure.
 
-### 2. \`zscore_sma20_20\`
+### 2. `zscore_sma20_20`
 
 Formula:
 
-\`\`\`text
+```text
 (Close - SMA20) / rolling_std(Close - SMA20, 20 sessions)
-\`\`\`
+```
 
-The rolling standard deviation uses the sample standard deviation (\`ddof=1\`).
+The rolling standard deviation uses the sample standard deviation (`ddof=1`).
 
 Interpretation:
 
@@ -112,13 +112,13 @@ Interpretation:
 
 The console TOP 15 is sorted from highest to lowest value. It therefore shows the strongest positive deviations above SMA20. The value is a standardized distance, not a probability or a normally distributed z-test statistic.
 
-### 3. \`realized_vol_60\`
+### 3. `realized_vol_60`
 
 Formula:
 
-\`\`\`text
+```text
 std(daily close returns, 60 sessions, ddof=1) * sqrt(252)
-\`\`\`
+```
 
 Interpretation:
 
@@ -146,7 +146,7 @@ Primitive ranks are descriptive cross-sectional ranks for the current snapshot o
 
 ## Ticker inspection
 
-The \`--inspect\` option asks for SECIDs separated by spaces and prints, for each requested current-panel instrument:
+The `--inspect` option asks for SECIDs separated by spaces and prints, for each requested current-panel instrument:
 
 - snapshot date;
 - PIT TOP50 liquidity rank;
@@ -172,11 +172,11 @@ This is a read-only inspection. It does not fetch external data, calculate new f
 
 Treat the output as structured observations, not decisions.
 
-1. Read \`instrument_status\` before interpreting any primitive. Do not interpret missing values as zero.
-2. Use \`panel_rank\` only as the instrument's PIT TOP50 liquidity rank.
-3. Interpret \`drawdown_60\` direction correctly: higher values mean closer to the 60-session high.
-4. Interpret \`zscore_sma20_20\` sign and magnitude relative to SMA20 and recent residual dispersion.
-5. Interpret \`realized_vol_60\` as backward-looking realized variability, not a directional forecast.
+1. Read `instrument_status` before interpreting any primitive. Do not interpret missing values as zero.
+2. Use `panel_rank` only as the instrument's PIT TOP50 liquidity rank.
+3. Interpret `drawdown_60` direction correctly: higher values mean closer to the 60-session high.
+4. Interpret `zscore_sma20_20` sign and magnitude relative to SMA20 and recent residual dispersion.
+5. Interpret `realized_vol_60` as backward-looking realized variability, not a directional forecast.
 6. Compare the three dimensions rather than collapsing them into a single screener score.
 7. Do not infer a trade, target weight, or portfolio action from a primitive rank alone. Use the downstream agent's approved decision process and other context.
 8. The snapshot describes the latest panel date, not necessarily the current wall-clock date.
