@@ -234,7 +234,7 @@ def frame_to_markdown(frame: pd.DataFrame, floatfmt: str = ".5f") -> str:
             else:
                 cells.append(str(value).replace("|", "\\|"))
         lines.append("| " + " | ".join(cells) + " |")
-    return "\\n".join(lines)
+    return "\n".join(lines)
 
 
 def write_report(
