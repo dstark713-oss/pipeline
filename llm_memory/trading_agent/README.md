@@ -1,6 +1,6 @@
 # Trading Agent Memory
 
-Last updated: 2026-11-23
+Last updated: 2026-11-24
 
 Persistent operating context for the Trading Agent in `dstark713-oss/pipeline`.
 
@@ -16,38 +16,32 @@ This is a human-in-the-loop training workflow. API orchestration and autonomous 
 2. [Daily allocation protocol](02_DAILY_ALLOCATION_PROTOCOL.md)
 3. [Tool registry](03_TOOL_REGISTRY.md)
 4. [Portfolio and data contract](04_PORTFOLIO_AND_DATA_CONTRACT.md)
-5. [Research journal](RESEARCH_JOURNAL.md)
-6. [Change log](CHANGELOG.md)
+5. [Allocation decision tree and current decision](05_ALLOCATION_DECISION_TREE.md)
+6. [Research journal](RESEARCH_JOURNAL.md)
+7. [Change log](CHANGELOG.md)
 
 ## Current portfolio baseline
 
-User-reported starting allocation on 2026-11-23:
+User-reported on 2026-11-23:
 - T: 10%
 - GCHE: 2%
+- LQDT: 88%
 
-Treat these as the current known baseline until the user provides an updated allocation or snapshot. Do not infer that the remaining 88% is cash; its composition is not yet established. The daily allocation is the working portfolio state: update it from user-provided results and agreed decisions, rather than designing an elaborate brokerage reader.
+Treat these as the latest known baseline until the user provides an updated allocation or snapshot. LQDT is a money-market fund, not idle cash.
 
 ## Daily division of work
 
-- **Portfolio Reader:** simple baseline/current-allocation ledger maintained from the allocation and updates supplied by the user. No complex reader is needed now.
-- **Daily Market Snapshot:** request the relevant local market/screener outputs from the user.
-- **News & Fundamentals:** independently research current public information on the internet, prioritizing primary sources.
-- **Semantic Engine:** the agent's own reasoning over facts, events, narratives, and issuer impact. LLM reasoning is the semantic engine; do not wait for a separate software service.
-- **Qwen Reviewer:** Qwen is the only second-opinion LLM. The user currently runs it and supplies its response.
-- **Allocation Engine:** the agent's own decision reasoning and allocation recommendation. Maintain a journal of decisions, evidence, mistakes, and lessons.
-- **API Orchestration:** explicitly premature and out of scope until the user has trained the workflow through repeated real-market cycles.
+- **Portfolio Reader:** simple ledger.
+- **Daily Market Snapshot:** user supplies local outputs.
+- **News & Fundamentals:** agent independently researches current public information, prioritizing primary sources.
+- **Semantic Engine:** agent's own reasoning.
+- **Qwen Reviewer:** Qwen is the only second-opinion LLM; user currently runs it and supplies the result.
+- **Allocation Engine:** agent's own decision reasoning and recommendation; maintain the journal.
+- **API Orchestration:** explicitly premature and out of scope until repeated real-market cycles show a concrete need.
 
 ## Research scripts and Python handoff
 
-When required information is not available in existing tools or supplied outputs, the agent should design a focused, temporary research script rather than stop at asking the user to find the data manually.
-
-- Planned location for disposable scripts: `scripts/one_use/`.
-- The agent specifies the research question, why the data matters, exact inputs/outputs, and a complete runnable script.
-- The user currently runs scripts locally and returns console output or generated artifacts. If convenient, the script may be committed to GitHub for the user to pull and execute.
-- Prefer read-only collection and analysis. Do not modify source databases, production datasets, portfolio state, or existing pipelines unless the user explicitly authorizes it.
-- Give every script a clear purpose, bounded scope, deterministic output, and cleanup/retention note. Do not turn one-use scripts into permanent tools without evidence that the task recurs and explicit agreement.
-- Once Codex/Python access is available, use it to inspect and analyze accessible project data directly where permissions and environment allow. Do not assume that future access is already available today.
-- A script's existence or successful commit is not evidence that it was run. Mark local execution as **User-run result** only after receiving its output.
+When required information is not available in existing tools or supplied outputs, design a focused one-use research script under `scripts/one_use/`. Explain the question and required output, prefer read-only access, and do not modify source databases, production datasets, or portfolio state. The user runs scripts locally and returns results. A script's existence or successful commit is not evidence that it was run.
 
 ## Source of truth and evidence labels
 
