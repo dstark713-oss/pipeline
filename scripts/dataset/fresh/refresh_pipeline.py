@@ -60,6 +60,7 @@ ALLOWED_BOARDS = {"TQBR", "EQBR"}
 REQUEST_DELAY_SECONDS = 0.25
 MAX_RETRIES = 5
 PAGE_SIZE = 100
+OVERLAP_DAYS = 10
 
 # Refresh through the current calendar date. This updater is expected to run
 # after the MOEX trading session has ended; otherwise today's candles may be
@@ -362,12 +363,10 @@ def update_raw_database() -> dict[str, Any]:
             board = pair["boardid"]
 
             checked_through = get_checked_through(state_connection, secid, board)
-            if checked_through is None:
-                checked_through = get_last_observation(connection, secid, board)
+            last_observation = get_last_observation(connection, secid, board)
 
-            if checked_through is None:
+            if last_observation is None:
                 # No raw observations exist for this historical board pair.
-                # Do not unexpectedly download decades of history here.
                 # Historical coverage is handled by stage 02.
                 skipped += 1
                 LOG.warning(
@@ -377,9 +376,25 @@ def update_raw_database() -> dict[str, Any]:
                 )
                 continue
 
-            start_date = (
-                date.fromisoformat(checked_through) + timedelta(days=1)
-            ).isoformat()
+            history_from = date.fromisoformat(pair["history_from"])
+
+            if checked_through is not None:
+                # Resume from the last checked date with a rolling overlap.
+                # Include the latest actual observation as a safeguard if
+                # the state database is older than the raw database.
+                anchor = max(
+                    date.fromisoformat(checked_through),
+                    date.fromisoformat(last_observation),
+                )
+                anchor = min(anchor, END_DATE)
+                start = anchor - timedelta(days=OVERLAP_DAYS)
+            else:
+                # Bootstrap state without downloading the full history again.
+                # Historical coverage belongs to stage 02; refresh only the
+                # recent window and establish a resumable checkpoint.
+                start = END_DATE - timedelta(days=OVERLAP_DAYS)
+
+            start_date = max(history_from, start).isoformat()
 
             if start_date > END_DATE.isoformat():
                 skipped += 1
@@ -402,8 +417,9 @@ def update_raw_database() -> dict[str, Any]:
                 if received == 0:
                     empty += 1
 
-                # Advance the checkpoint even when there were no trades:
-                # this avoids repeatedly querying inactive securities.
+                # The checkpoint records the last attempted end date, not
+                # proof that the entire interval is permanently complete.
+                # The next run deliberately re-queries the overlap window.
                 save_board_state(
                     state_connection,
                     secid,
@@ -447,6 +463,8 @@ def update_raw_database() -> dict[str, Any]:
 
     result = {
         "end_date_checked": END_DATE.isoformat(),
+        "overlap_calendar_days": OVERLAP_DAYS,
+        "checkpoint_policy": "rolling_overlap; checkpoint is not treated as proof of permanent completeness",
         "board_pairs_total": len(pairs),
         "attempted": attempted,
         "successful": successful,
