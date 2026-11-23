@@ -402,6 +402,9 @@ def load_market_breadth(snapshot_date: pd.Timestamp) -> pd.DataFrame:
             breadth_sma20_valid_n="count",
         ).reindex(calendar)
 
+    daily["breadth_sma20"] = pd.to_numeric(
+        daily["breadth_sma20"], errors="coerce"
+    )
     daily["breadth_change_5"] = daily["breadth_sma20"].diff(5)
     if snapshot_date not in daily.index:
         raise RuntimeError(
@@ -528,7 +531,7 @@ def build_snapshot(
 def print_market_breadth(breadth: pd.DataFrame) -> None:
     row = breadth.iloc[0]
     level = f"{row['breadth_sma20']:.2%}" if pd.notna(row["breadth_sma20"]) else "N/A"
-    change = f"{row['breadth_change_5']:+.2%} п.п." if pd.notna(row["breadth_change_5"]) else "N/A"
+    change = f"{row['breadth_change_5'] * 100:+.2f} п.п." if pd.notna(row["breadth_change_5"]) else "N/A"
     n = int(row["breadth_sma20_valid_n"]) if pd.notna(row["breadth_sma20_valid_n"]) else 0
     total = int(row["breadth_sma20_universe_n"])
     print()
@@ -607,11 +610,7 @@ def print_top_15(snapshot: pd.DataFrame) -> None:
 # OPTIONAL TICKER INSPECTION
 # ============================================================
 
-def inspect_tickers(
-    snapshot: pd.DataFrame,
-    breadth: pd.DataFrame,
-) -> None:
-    print_market_breadth(breadth)
+def inspect_tickers(snapshot: pd.DataFrame) -> None:
     print()
     raw = input(
         "Введи SECID через пробел (например: SBER DOMRF): "
@@ -742,7 +741,7 @@ def main() -> int:
         print_top_15(snapshot)
 
         if args.inspect:
-            inspect_tickers(snapshot, breadth)
+            inspect_tickers(snapshot)
 
         return 0
 
