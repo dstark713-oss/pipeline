@@ -111,10 +111,10 @@ Selected first-pass results (mean daily IC / Rank IC, horizon 20 unless otherwis
 - `return_5`, `return_60`: mostly weak.
 - `rebound_20/60`, `turnover_ratio_20`, `efficiency_ratio_20`, `momentum_acceleration_20`, `up_down_turnover_ratio_20`: weak or statistically insignificant in the first pass. `return_5` Rank IC showed some significance despite weak Pearson IC.
 
-Breadth first-pass observations:
-- `breadth_change_5`: correlation with equal-weight future TOP50 cohort return about +0.091 (H5), +0.067 (H10), +0.058 (H20); Spearman about +0.085, +0.073, +0.076. Reported BH q-values were significant at H5 and mostly H10/H20.
-- `breadth_change_20`: H5 Pearson about +0.071 and Spearman +0.076; longer horizons weaker.
-- `breadth_sma20`: H5 Pearson about +0.078 and Spearman +0.079; longer horizons weaker.
+Breadth first-pass observations (exact values from the user-provided report):
+- `breadth_change_5`: Pearson correlation +0.09098 (H5), +0.06743 (H10), +0.05843 (H20); Spearman +0.08489, +0.07263, +0.07632. BH q-values: Pearson 0.01271 / 0.09291 / 0.11610; Spearman 0.00825 / 0.02535 / 0.02535. Thus H5 survives BH for both methods; H10/H20 survive only for Spearman, not Pearson.
+- `breadth_change_20`: H5 Pearson +0.07139 and Spearman +0.07608, but BH q-values are 0.09291 and 0.02535 respectively. H10/H20 are not significant after BH.
+- `breadth_sma20`: H5 Pearson +0.07804 and Spearman +0.07935; BH q-values 0.09291 and 0.02535 respectively. H10/H20 are not significant after BH.
 - `breadth_sma50` and `breadth_sma200`: weak in the first pass.
 - Average forward coverage for breadth was about 43.4 securities.
 
