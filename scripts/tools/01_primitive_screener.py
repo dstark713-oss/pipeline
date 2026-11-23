@@ -9,6 +9,7 @@
 #
 # Output:
 #   data/interim/screener/latest_primitive_snapshot.csv
+#   data/interim/screener/latest_market_breadth.csv
 #
 # Run:
 #   python scripts/tools/01_primitive_screener.py
@@ -52,6 +53,14 @@ OUTPUT_PATH = (
     / "interim"
     / "screener"
     / "latest_primitive_snapshot.csv"
+)
+
+BREADTH_OUTPUT_PATH = (
+    PROJECT_ROOT
+    / "data"
+    / "interim"
+    / "screener"
+    / "latest_market_breadth.csv"
 )
 
 TOP_N = 15
@@ -330,6 +339,93 @@ def load_features(
     return current
 
 
+
+# ============================================================
+# LOAD HISTORICAL MARKET BREADTH
+# ============================================================
+
+def load_market_breadth(snapshot_date: pd.Timestamp) -> pd.DataFrame:
+    """Reproduce the approved PIT breadth definitions from research."""
+    panel = pd.read_parquet(PANEL_PATH)
+    features = pd.read_parquet(FEATURE_PATH)
+
+    ph = panel[
+        [resolve_column(panel, "tradedate"),
+         resolve_column(panel, "secid"),
+         resolve_column(panel, "bar_available")]
+    ].copy()
+    ph.columns = ["tradedate", "secid", "bar_available"]
+
+    fh = features[
+        [resolve_column(features, "tradedate"),
+         resolve_column(features, "secid"),
+         resolve_column(features, "price_sma20")]
+    ].copy()
+    fh.columns = ["tradedate", "secid", "price_sma20"]
+
+    ph["tradedate"] = normalize_date(ph["tradedate"])
+    ph["secid"] = normalize_secid(ph["secid"])
+    ph["bar_available"] = pd.to_numeric(
+        ph["bar_available"], errors="coerce"
+    ).fillna(0).astype(int)
+    fh["tradedate"] = normalize_date(fh["tradedate"])
+    fh["secid"] = normalize_secid(fh["secid"])
+    fh["price_sma20"] = pd.to_numeric(
+        fh["price_sma20"], errors="coerce"
+    ).replace([np.inf, -np.inf], np.nan)
+
+    ph = ph.dropna(subset=["tradedate", "secid"])
+    fh = fh.dropna(subset=["tradedate", "secid"])
+
+    if ph.duplicated(["tradedate", "secid"]).any():
+        raise RuntimeError("Дубликаты SECID/TRADEDATE в исторической TOP50 panel.")
+    if fh.duplicated(["tradedate", "secid"]).any():
+        raise RuntimeError("Дубликаты SECID/TRADEDATE в primitive feature frame.")
+
+    history = ph.merge(
+        fh, on=["tradedate", "secid"], how="left", validate="one_to_one"
+    )
+    # Exactly as in research: actual bars only; missing bars are not negatives.
+    history = history[history["bar_available"].eq(1)].copy()
+
+    calendar = pd.DatetimeIndex(sorted(ph["tradedate"].unique()))
+    valid = history.dropna(subset=["price_sma20"])
+
+    if valid.empty:
+        daily = pd.DataFrame(
+            index=calendar,
+            columns=["breadth_sma20", "breadth_sma20_valid_n"],
+        )
+    else:
+        daily = valid.groupby("tradedate")["price_sma20"].agg(
+            breadth_sma20=lambda values: float((values > 0).mean()),
+            breadth_sma20_valid_n="count",
+        ).reindex(calendar)
+
+    daily["breadth_change_5"] = daily["breadth_sma20"].diff(5)
+    if snapshot_date not in daily.index:
+        raise RuntimeError(
+            f"Дата {snapshot_date:%Y-%m-%d} отсутствует в календаре breadth."
+        )
+
+    pos = daily.index.get_loc(snapshot_date)
+    lag_date = daily.index[pos - 5] if pos >= 5 else pd.NaT
+    current = daily.loc[[snapshot_date]].reset_index()
+    current = current.rename(columns={"index": "snapshot_date"})
+    current["snapshot_date"] = current["snapshot_date"].dt.strftime("%Y-%m-%d")
+    current["breadth_sma20_universe_n"] = int(
+        ph.loc[ph["tradedate"].eq(snapshot_date), "secid"].nunique()
+    )
+    current["breadth_change_5_base_date"] = (
+        lag_date.strftime("%Y-%m-%d") if pd.notna(lag_date) else ""
+    )
+    return current[
+        ["snapshot_date", "breadth_sma20", "breadth_sma20_valid_n",
+         "breadth_sma20_universe_n", "breadth_change_5",
+         "breadth_change_5_base_date"]
+    ]
+
+
 # ============================================================
 # BUILD SNAPSHOT
 # ============================================================
@@ -428,6 +524,22 @@ def build_snapshot(
 # CONSOLE REPORT
 # ============================================================
 
+
+def print_market_breadth(breadth: pd.DataFrame) -> None:
+    row = breadth.iloc[0]
+    level = f"{row['breadth_sma20']:.2%}" if pd.notna(row["breadth_sma20"]) else "N/A"
+    change = f"{row['breadth_change_5']:+.2%} п.п." if pd.notna(row["breadth_change_5"]) else "N/A"
+    n = int(row["breadth_sma20_valid_n"]) if pd.notna(row["breadth_sma20_valid_n"]) else 0
+    total = int(row["breadth_sma20_universe_n"])
+    print()
+    print("=" * 88)
+    print("MARKET BREADTH")
+    print("=" * 88)
+    print(f"breadth_change_5: {change} (5 торговых сессий; база: {row['breadth_change_5_base_date'] or 'N/A'})")
+    print(f"breadth_sma20:    {level} (справочно; валидно: {n}/{total})")
+    print("=" * 88)
+
+
 def print_top_15(snapshot: pd.DataFrame) -> None:
     print()
     print("=" * 88)
@@ -495,7 +607,11 @@ def print_top_15(snapshot: pd.DataFrame) -> None:
 # OPTIONAL TICKER INSPECTION
 # ============================================================
 
-def inspect_tickers(snapshot: pd.DataFrame) -> None:
+def inspect_tickers(
+    snapshot: pd.DataFrame,
+    breadth: pd.DataFrame,
+) -> None:
+    print_market_breadth(breadth)
     print()
     raw = input(
         "Введи SECID через пробел (например: SBER DOMRF): "
@@ -614,18 +730,19 @@ def main() -> int:
             features,
             snapshot_date,
         )
+        breadth = load_market_breadth(snapshot_date)
 
-        atomic_write_csv(
-            snapshot,
-            OUTPUT_PATH,
-        )
+        atomic_write_csv(snapshot, OUTPUT_PATH)
+        atomic_write_csv(breadth, BREADTH_OUTPUT_PATH)
 
         log(f"CSV saved: {OUTPUT_PATH}")
+        log(f"Market breadth CSV saved: {BREADTH_OUTPUT_PATH}")
 
+        print_market_breadth(breadth)
         print_top_15(snapshot)
 
         if args.inspect:
-            inspect_tickers(snapshot)
+            inspect_tickers(snapshot, breadth)
 
         return 0
 
