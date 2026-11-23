@@ -61,9 +61,10 @@ REQUEST_DELAY_SECONDS = 0.25
 MAX_RETRIES = 5
 PAGE_SIZE = 100
 
-# Do not request the current calendar day. MOEX daily candles can still be
-# incomplete while the session is in progress. Yesterday is a safe cutoff.
-END_DATE = date.today() - timedelta(days=1)
+# Refresh through the current calendar date. This updater is expected to run
+# after the MOEX trading session has ended; otherwise today's candles may be
+# incomplete. Non-trading days simply return no rows for the requested dates.
+END_DATE = date.today()
 
 LOG = logging.getLogger("pipeline.fresh_refresh")
 
@@ -564,7 +565,7 @@ def main() -> int:
         "rebuild": rebuild_summary,
         "raw_database_modified_only_by_appending_new_rows": True,
         "raw_observations_deleted_or_updated": False,
-        "current_calendar_day_requested": False,
+        "current_calendar_day_requested": END_DATE == date.today(),
         "forward_fill_applied": False,
     }
 
