@@ -47,7 +47,8 @@ A statistically significant result is not automatically useful. IC is not standa
 
 ## Production boundary
 
-- Experiments belong under `scripts/experiments/`.
-- Production launchers belong under `scripts/tools/` or the later agreed `tools/01_screener` location, only after the research and primitive selection are complete.
-- Do not create a screener launcher or production selector before the user approves the selected primitive pack.
-- A state screener is a descriptive snapshot of instrument states. It is not a trade generator and must not silently decide position weights.
+- Experiments belong under scripts/experiments/.
+- The current read-only screener is scripts/tools/01_primitive_screener.py; its downstream-facing specification is docs/tools/01_primitive_screener.md.
+- Do not add new production selectors or expand the approved primitive pack without research review and explicit user approval.
+- A state screener is a descriptive snapshot of instrument and market states. It is not a trade generator and must not silently decide position weights.
+- The breadth-based 100/75/50/25% allocation schedule is a separate user-proposed heuristic tested in an application experiment. It is not an automatic screener output, a statistically optimized rule, or a production mandate.
