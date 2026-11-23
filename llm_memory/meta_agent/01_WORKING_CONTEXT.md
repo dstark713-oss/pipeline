@@ -4,7 +4,7 @@ Last updated: 2026-11-23
 
 ## Source of truth and operating boundaries
 
-- Main project repository: \`dstark713-oss/pipeline\`.
+- Main project repository: `dstark713-oss/pipeline`.
 - GitHub is the source of truth for committed code and project context.
 - The user runs Python locally in VS Code and supplies execution output for diagnosis.
 - Never claim local runtime validation unless the user has supplied the result.
@@ -24,13 +24,13 @@ The downstream agent decides what to do with scanner information in the context 
 
 ## Approved instrument-level core primitives
 
-1. \`drawdown_60\`
+1. `drawdown_60`
    - Close / rolling 60-session maximum close - 1.
    - Higher values mean closer to the 60-session high.
-2. \`zscore_sma20_20\`
+2. `zscore_sma20_20`
    - (Close - SMA20) / rolling 20-session sample standard deviation of the residual (Close - SMA20).
    - Positive means above SMA20; negative means below.
-3. \`realized_vol_60\`
+3. `realized_vol_60`
    - 60-session sample standard deviation of daily close returns multiplied by sqrt(252).
    - Backward-looking annualized realized volatility, a state/risk descriptor rather than a return forecast.
 
@@ -38,20 +38,20 @@ Breadth is a separate market-level state family. Do not mix it into per-instrume
 
 ## Screener implementation
 
-- Main tool: \`scripts/tools/01_primitive_screener.py\`.
-- User-facing option: \`--inspect\`, which prompts for one or more SECIDs separated by spaces.
-- Current snapshot source: latest date in \`data/processed/top50/top50_panel.parquet\`.
-- Primitive values: \`data/interim/primitive_research/primitive_features.parquet\`.
-- Output: \`data/interim/screener/latest_primitive_snapshot.csv\`.
+- Main tool: `scripts/tools/01_primitive_screener.py`.
+- User-facing option: `--inspect`, which prompts for one or more SECIDs separated by spaces.
+- Current snapshot source: latest date in `data/processed/top50/top50_panel.parquet`.
+- Primitive values: `data/interim/primitive_research/primitive_features.parquet`.
+- Output: `data/interim/screener/latest_primitive_snapshot.csv`.
 - One row per current PIT TOP50 member; retains members with no bar and reports missingness explicitly.
 - Console prints TOP 15 separately for each primitive, sorted descending. For drawdown_60, descending means closest to the 60-session high.
 - Ticker inspection reports snapshot date, PIT liquidity rank, bar availability, primitive values, cross-sectional ranks, percentiles, and missing-value status.
 - No composite score, strategy logic, weights, or automatic action.
-- Screener documentation: \`docs/tools/01_primitive_screener.md\`.
+- Screener documentation: `docs/tools/01_primitive_screener.md`.
 
 ## Important distinctions
 
-- \`panel_rank\` is the PIT TOP50 turnover/liquidity rank, not a primitive rank.
+- `panel_rank` is the PIT TOP50 turnover/liquidity rank, not a primitive rank.
 - Primitive ranks are current cross-sectional descriptions among valid values only.
 - Missing data is not zero and is not a neutral signal.
 - The screener does not merge SECIDs by issuer or ISIN.
