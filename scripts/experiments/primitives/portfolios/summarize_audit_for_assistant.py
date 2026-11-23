@@ -30,6 +30,8 @@ KEY_STRATEGIES = [
 ]
 FILES = {
     "extremes": AUDIT_DIR / "daily_extremes_top20.csv",
+    "concentration": AUDIT_DIR / "daily_concentration.csv",
+    "stress": AUDIT_DIR / "best_day_removal_stress.csv",
     "years": AUDIT_DIR / "calendar_year_diagnostics.csv",
     "tickers": AUDIT_DIR / "ticker_contribution_diagnostics.csv",
     "daily": OUTPUT_DIR / "daily_equity_curves.csv",
@@ -91,6 +93,8 @@ def daily_summary(daily: pd.DataFrame) -> pd.DataFrame:
 
 def build_report() -> str:
     extremes = select_strategies(read_csv("extremes"))
+    concentration = select_strategies(read_csv("concentration"))
+    stress = select_strategies(read_csv("stress"))
     years = select_strategies(read_csv("years"))
     tickers = select_strategies(read_csv("tickers"))
     daily = select_strategies(read_csv("daily"))
@@ -119,7 +123,42 @@ def build_report() -> str:
     else:
         lines.append("Нет данных для общей сводки.")
 
-    lines += ["", "## 2. Экстремальные дни", ""]
+    lines += ["", "## 2. Зависимость от лучших дней", ""]
+    if not stress.empty:
+        stress["removed_best_days"] = pd.to_numeric(stress["removed_best_days"], errors="coerce")
+        stress["cagr_252"] = pd.to_numeric(stress["cagr_252"], errors="coerce")
+        stress["total_return"] = pd.to_numeric(stress["total_return"], errors="coerce")
+        stress20 = stress[stress["removed_best_days"].eq(20)]
+        lines += [
+            "| Strategy | CAGR исходный | CAGR без 20 лучших дней | Return без 20 лучших дней |",
+            "|---|---:|---:|---:|",
+        ]
+        base_cagr = stress[stress["removed_best_days"].eq(0)].set_index("strategy")["cagr_252"]
+        for _, x in stress20.iterrows():
+            original = base_cagr.get(x["strategy"], np.nan)
+            lines.append(
+                f"| {x['strategy']} | {fmt_pct(original)} | {fmt_pct(x['cagr_252'])} "
+                f"| {fmt_pct(x['total_return'])} |"
+            )
+    else:
+        lines.append("Нет данных для stress-test.")
+    lines += ["", "## 3. Концентрация положительных дней", ""]
+    if not concentration.empty:
+        for c in ["top_1pct_positive_day_share", "top_5pct_positive_day_share", "top_10pct_positive_day_share"]:
+            concentration[c] = pd.to_numeric(concentration[c], errors="coerce")
+        lines += [
+            "| Strategy | Top 1% days share | Top 5% days share | Top 10% days share |",
+            "|---|---:|---:|---:|",
+        ]
+        for _, x in concentration.iterrows():
+            lines.append(
+                f"| {x['strategy']} | {fmt_pct(x['top_1pct_positive_day_share'])} "
+                f"| {fmt_pct(x['top_5pct_positive_day_share'])} "
+                f"| {fmt_pct(x['top_10pct_positive_day_share'])} |"
+            )
+    else:
+        lines.append("Нет данных для concentration.")
+    lines += ["", "## 4. Экстремальные дни", ""]
     if not extremes.empty:
         extremes["net_return"] = pd.to_numeric(extremes["net_return"], errors="coerce")
         for strategy in KEY_STRATEGIES:
@@ -146,7 +185,7 @@ def build_report() -> str:
     else:
         lines.append("Нет данных.")
 
-    lines += ["## 3. Годовая устойчивость", ""]
+    lines += ["## 5. Годовая устойчивость", ""]
     if not years.empty:
         for c in ["year", "total_return", "cagr_252", "max_drawdown", "worst_day", "best_day"]:
             if c in years:
@@ -173,7 +212,7 @@ def build_report() -> str:
     else:
         lines.append("Нет данных.")
 
-    lines += ["", "## 4. Концентрация на отдельных тикерах", ""]
+    lines += ["", "## 6. Концентрация на отдельных тикерах", ""]
     if not tickers.empty:
         tickers["summed_gross_contribution"] = pd.to_numeric(
             tickers["summed_gross_contribution"], errors="coerce"
@@ -202,7 +241,7 @@ def build_report() -> str:
 
     # Machine-generated flags: intentionally conservative; these identify what to inspect,
     # not proof of a bug.
-    lines += ["", "## 5. Автоматические флаги для проверки", ""]
+    lines += ["", "## 7. Автоматические флаги для проверки", ""]
     flags = []
     if not core.empty:
         focus = core[core["strategy"].eq("drawdown60_top10")]
@@ -231,7 +270,7 @@ def build_report() -> str:
 
     lines += [
         "",
-        "## 6. Что эта сводка НЕ проверяет",
+        "## 8. Что эта сводка НЕ проверяет",
         "",
         "- Не сверяет adjusted OPEN с raw OHLC и corporate action register.",
         "- Не доказывает отсутствие lookahead и не реконструирует сделки независимо от исходного simulator.",
