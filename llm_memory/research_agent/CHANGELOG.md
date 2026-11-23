@@ -13,3 +13,13 @@
 - Updated screener documentation: realized_vol_60 TOP 15 is ascending (quietest to more volatile), matching the implementation.
 - Recorded the user-proposed breadth allocation heuristic and the exact-50% boundary mismatch between the agreed >= 50% rule and portfolio code's > 50% classification.
 - Replaced stale deferred-screener next steps with a proposed conditional downside-risk study of the four breadth regimes. This is a proposal, not an approved implementation.
+
+
+## 2026-11-23 | Research Agent role and scope correction
+
+- Rewrote `01_ROLE_AND_RULES.md` to define the Research Agent as an autonomous researcher/developer of validated analytical capabilities, with the Trading Agent as a separate downstream consumer.
+- Updated the directory index and project boundary in `README.md`.
+- Recorded closure of the first primitive research and market-state screener hypothesis.
+- Replaced the premature breadth-downside follow-up with a capability/gap assessment as the next research cycle.
+- Explicitly recorded that no internal fundamental-data dataset or pipeline exists; semantic, news, company, and fundamental context is retrieved from external internet sources and must retain temporal/source provenance.
+- No Python/project code, Trading Agent files, or user diary artifacts were changed.
