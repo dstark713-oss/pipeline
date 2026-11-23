@@ -21,3 +21,14 @@
 - Deferred API orchestration and tool-building until repeated manual allocation cycles reveal a concrete need.
 - Added the one-use research-script handoff: agent identifies the gap and writes a complete script under `scripts/one_use/`; user runs it and returns outputs.
 - Recorded future Codex/Python access as a later capability, not a current assumption.
+
+
+## 2026-11-24 (continued)
+- Completed bottom-up review of current holdings and strongest local technical candidates against LQDT.
+- Corrected the misinterpretation of Friday 2026-11-20 tactical 12% equity reduction as a strategic baseline.
+- Withdrew the invalid 3/6/9/12% portfolio exposure mapping.
+- Compared T, GCHE, CNRU, POSI, X5, HYDR, FIXR, and LSRG using local technical outputs and recent issuer results/valuation evidence.
+- Final recommendation: retain T 10%, GCHE 2%, LQDT 88%; no new positions, leverage, or shorts.
+- Rationale: existing theses remain defensible; no reviewed candidate clears the current floating LQDT hurdle with a sufficiently clear risk-adjusted premium; market breadth remains weak.
+- Recorded LQDT 30-day annualized return of 13.57% as of 2026-11-23 as backward-looking, not guaranteed.
+- Qwen review and 2026-11-24 local market snapshot were not supplied. No execution claimed.
