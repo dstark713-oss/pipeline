@@ -101,3 +101,14 @@ Rationale:
 - Qwen review was not supplied for this cycle.
 - No orders were placed and no execution is claimed.
 - Confidence: moderate in no-change as the least-assumptive action; low in the claim that the exact 10%/2% stock weights are optimal.
+
+
+## 2026-11-24 | Correction: tactical 12% reduction is not a strategic baseline
+
+The user corrected a material reasoning error: the 12% equity allocation was a tactical reduction of positions on Friday, 2026-11-20. It was not a strategic baseline, target exposure, or validated risk budget.
+
+The prior mapping of breadth multipliers 25/50/75/100% to portfolio equity exposures 3/6/9/12% by multiplying them by 12% was therefore invalid. The decision-tree document was amended to withdraw that mapping. Do not use those exposures in allocation reasoning or historical testing as if they were justified by the strategy.
+
+The user also clarified that the allocation decision was not final and asked the agent to return to substantive security/portfolio research rather than continue discussing theoretical exposure-limit definitions. The earlier HOLD / NO CHANGE should be treated as provisional and incomplete, not as the final decision.
+
+Next work: complete issuer/fundamental/valuation review of the current holdings and strongest candidates from the local technical screen, compare them against LQDT, then formulate a defensible target allocation. Do not anchor target equity exposure to the Friday 12% tactical state. Do not ask the user to repeat already supplied portfolio constraints.
