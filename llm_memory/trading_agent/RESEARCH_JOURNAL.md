@@ -24,7 +24,7 @@ The screener exposes instrument state (`drawdown_60`, `zscore_sma20_20`, `realiz
 
 ### User correction
 
-The user clarified that the Trading Agent's immediate and only responsibility is to learn to trade through supervised, repeated allocation decisions. Building infrastructure, complex portfolio ingestion, and API orchestration are not current tasks.
+The user clarified that the Trading Agent's immediate and only responsibility is supervised allocation reasoning on the real market. The user also clarified the practical research handoff: when information is missing from existing tools, the agent should create a focused one-use script, the user runs it locally, and returns the result. The script may be provided in chat or committed to GitHub for the user to pull. Future Codex/Python access should enable direct analysis of accessible project data.
 
 ### Current allocation baseline
 
@@ -42,15 +42,16 @@ The remaining 88% is not classified. Do not call it cash or assume it is deploya
 - Semantic Engine: agent performs direct LLM reasoning over sourced facts and events.
 - Qwen Reviewer: user runs Qwen and supplies its response; Qwen is the only second-opinion LLM.
 - Allocation Engine: agent's own reasoning and recommendation; maintain this journal.
-- API Orchestration: deferred until the user has trained the agent through repeated real-market cycles.
+- Research gaps: agent specifies the missing information and creates a complete, read-only one-use script where practical; user executes and returns outputs.
+- API orchestration: deferred until the agent has been trained through repeated real-market cycles.
+
+### One-use script policy
+
+Planned path: `scripts/one_use/`. Create the directory with the first actual script rather than adding empty scaffolding. Scripts must have a narrow research question, explain decision relevance, use read-only access by default, avoid production data mutation, define outputs and run instructions, and remain marked unexecuted until the user returns results.
 
 ### Learning protocol
 
 The agent should form an independent thesis before reading Qwen's response where practical, request adversarial review from Qwen, compare both views against primary evidence, propose an allocation with counterarguments and invalidation conditions, then preserve the decision and later evaluate the outcome. Do not confuse a profitable outcome with a sound process or a loss with a bad decision.
-
-### Next practical step
-
-On the next "Аллокация на сегодня" request, ask for the current Daily Market Snapshot outputs needed for the decision, research current news and fundamentals independently, and run the supervised allocation cycle. Do not start portfolio-reader or API implementation absent a demonstrated need.
 
 ### Evidence status
 
@@ -59,3 +60,4 @@ On the next "Аллокация на сегодня" request, ask for the curren
 - Full composition of remaining 88%: unknown.
 - No Qwen review result yet supplied for this cycle.
 - No allocation change has been recommended or executed.
+- No one-use script has been required or created yet.
