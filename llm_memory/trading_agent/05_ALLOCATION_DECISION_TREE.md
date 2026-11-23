@@ -1,7 +1,7 @@
 # Allocation Decision Tree
 
 Last updated: 2026-11-24
-Decision state: HOLD / NO CHANGE
+Decision state: INCOMPLETE / PROVISIONAL (the earlier HOLD / NO CHANGE is withdrawn as a final decision)
 Evidence cutoff: latest user-provided local market snapshot dated 2026-11-23; issuer information checked through 2026-11-24.
 
 This document records the current decision logic and the allocation decision. It is a working policy, not a claim that the rules have been statistically validated.
@@ -97,16 +97,16 @@ State:
 - confidence and missing evidence;
 - whether the decision was recommended or actually executed (execution is user-reported only).
 
-## 5. Decision for 2026-11-24
+## 5. Provisional assessment for 2026-11-24 (not a final allocation)
 
-### Decision
-HOLD / NO CHANGE:
+### Provisional snapshot only
+The last known weights were:
 - T: 10%
 - GCHE: 2%
 - LQDT: 88%
 - Equity sleeve: 12%
 
-No new positions. No leverage or short exposure recommended.
+This is not a final recommendation. Candidate research and valuation comparison remain incomplete.
 
 This decision uses the latest local market snapshot supplied by the user on 2026-11-23. No local snapshot for the 2026-11-24 session was supplied in this decision cycle, so the decision must not be described as based on 2026-11-24 breadth or closing prices.
 
@@ -158,7 +158,14 @@ The local candidate comparison showed several strong momentum names (including H
 - The breadth rule is an unvalidated exposure hypothesis, not a proven forced de-risking rule.
 - Cutting to the rule-implied 3% equity sleeve would turn an unvalidated backtest hypothesis into a live trading mandate.
 
-## 6. Invalidation and review triggers
+## 6. Work required before final allocation
+
+1. Complete fundamental and valuation review of the strongest candidates from the local technical comparison, prioritizing HYDR, POSI, X5, and selectively CNRU/FIXR/LSRG where liquidity and business risks justify further work.
+2. Reassess T and GCHE against those candidates and the current LQDT alternative; do not preserve their current weights merely because they are the known holdings.
+3. Form target weights from expected return, downside, liquidity, correlation, and portfolio constraints, not from the tactical 12% Friday reduction.
+4. State explicitly if a security cannot be valued responsibly with available data. Do not invent target weights to fill the allocation.
+
+## 7. Invalidation and review triggers
 
 Reassess the hold decision if any of the following occurs:
 - New local snapshot shows a materially different breadth regime, especially persistent deterioration or broad recovery; do not act on one day alone.
@@ -167,7 +174,7 @@ Reassess the hold decision if any of the following occurs:
 - The expected net return on equities no longer compensates for LQDT's current yield and portfolio risk.
 - The corrected breadth experiment, once actually run, contradicts the heuristic or reveals material timing/coverage bias.
 
-## 7. Pending work and status
+## 8. Pending work and status
 
 - Corrected breadth backtest: not yet created/run in this decision record. No sensitivity checks. The earlier 3/6/9/12% mapping is withdrawn.
 - Historical cash proxy: fixed 8% annual effective, user-provided from RGBITR minus RGBI.
@@ -176,7 +183,7 @@ Reassess the hold decision if any of the following occurs:
 - Local 2026-11-24 market snapshot: not supplied.
 - No orders placed or execution claimed.
 
-## 8. Confidence
+## 9. Confidence
 
 - Confidence in the earlier HOLD / NO CHANGE as a provisional least-assumptive action: low-to-moderate; it is not a completed allocation decision.
 - Confidence that 10% T and 2% GCHE are optimal weights: not established. The tactical origin of the 12% stock allocation does not justify retaining it as a strategic target.
