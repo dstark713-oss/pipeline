@@ -1,162 +1,319 @@
-# Allocation Decision Tree
+# Trading Agent — End-to-End Allocation Decision Tree
 
 Last updated: 2026-11-24
-Decision state: FINAL RECOMMENDATION — HOLD CURRENT WEIGHTS
-Evidence cutoff: latest user-provided local market snapshot 2026-11-23; public issuer information checked 2026-11-24.
+Status: canonical operating decision tree
+Decision horizons: 1 / 5 / 20 trading sessions
 
-This is a reasoned recommendation, not an optimized portfolio or an order. The 12% equity allocation resulted from a tactical reduction on Friday, 2026-11-20. It is not a strategic baseline. The final 12% equity weight below is an independent bottom-up conclusion, not a multiplier applied to 12%.
+## 0. Mission and decision frame
 
-## 1. Current known portfolio
+The agent receives the current portfolio state and the latest available market/research inputs, then recommends whether to hold, add, trim, exit, or open positions. The objective is to improve short-horizon portfolio decisions, not to maximize the number of trades.
 
-User-reported snapshot, 2026-11-23:
+The three horizons are evaluated separately:
+- **1 session:** immediate tactical risk, overnight/event gap exposure, execution timing.
+- **5 sessions:** short swing setup and near-term catalyst window.
+- **20 sessions:** broader swing thesis and opportunity cost versus the money-market alternative.
+
+Do not silently substitute a multi-year investment horizon. Fundamental information remains relevant when it can affect price, liquidity, volatility, event risk, or the probability distribution over these horizons. It is not automatically the primary signal.
+
+LQDT is an investable money-market alternative and the default opportunity-cost benchmark for unallocated capital. Its yield is floating; use the best current, source-backed estimate available and never treat the key rate as identical to LQDT's net return.
+
+The agent recommends. The user decides and executes. Never claim an order was placed.
+
+## 1. Incoming contract: establish the portfolio state
+
+### 1.1 Required portfolio input
+
+Use the latest user-supplied portfolio state. Minimum useful contract:
+
+- effective date and time, including timezone;
+- each holding's ticker/instrument and current portfolio weight;
+- current LQDT weight (or separately identified cash, if any);
+- total portfolio allocation or an explicit statement that the snapshot is partial;
+- changes since the previous snapshot: trades, deposits, withdrawals, corporate actions, or other weight changes, if known.
+
+Useful but not mandatory:
+- market value and quantity;
+- average cost / entry price;
+- available cash and settlement constraints;
+- intended restrictions or near-term liquidity needs;
+- transaction costs, commissions, taxes, spread and typical execution liquidity.
+
+Do not request sensitive credentials or unnecessary account identifiers. Do not infer missing quantities, cost basis, cash, or holdings from weights.
+
+### 1.2 Contract validation
+
+Check in order:
+
+1. Is the snapshot timestamp explicit and relevant to the decision session?
+2. Are instruments identified unambiguously?
+3. Do reported weights sum to approximately 100%, allowing for stated rounding?
+4. Is every residual weight explicitly classified (LQDT, cash, other asset, or unknown)?
+5. Are any positions or weights stale, missing, duplicated, or inconsistent with the previous ledger?
+6. Have trades, deposits, withdrawals, corporate actions, splits, or ticker changes been accounted for where relevant?
+
+**Self-check:** Am I treating an unknown residual as cash? Am I mixing a target allocation with actual executed holdings? Am I using an old snapshot as if it were current?
+
+If a material discrepancy exists, do not fabricate a corrected portfolio. State the discrepancy and ask only for the missing information that can change the decision. If the snapshot is partial but still usable, proceed with explicit limitations.
+
+## 2. Freeze the information set
+
+Record:
+- decision date/time and timezone;
+- latest completed market session;
+- local market snapshot timestamp and coverage;
+- public-information cutoff;
+- stale, missing, delayed, or unavailable fields.
+
+Separate evidence labels:
+- **User-reported:** portfolio or context supplied by the user;
+- **User-run result:** local script/screener output supplied by the user;
+- **Live external source:** current public disclosure, exchange, regulator, or market source;
+- **Verified calculation:** reproducible arithmetic from stated inputs;
+- **Inference:** interpretation supported by facts;
+- **Hypothesis:** plausible but unverified explanation;
+- **Unknown:** unavailable or not established.
+
+Do not claim access to local files or execution of local scripts unless the user supplied the output or the environment actually provided access.
+
+**Self-check:** Are the dates aligned? Am I comparing a live price with a stale indicator? Did I mistake publication date for event date? Is any conclusion dependent on data that is missing or delayed?
+
+If a key input is unavailable, assess whether it can be obtained externally. If it requires local data, specify the exact gap and request a bounded read-only one-use script/output. Do not block the entire decision over a non-material missing field.
+
+## 3. Build the market-state picture
+
+Use the available Daily Market Snapshot and current external evidence. Examine:
+
+- index direction and structure;
+- breadth levels and changes, including the project's defined breadth measures;
+- sector and constituent dispersion;
+- volume and turnover, where available and comparable;
+- realized and implied volatility, where available;
+- gaps, range expansion/contraction, and market liquidity;
+- relevant macro, rates, currency, commodity, regulatory, geopolitical, and exchange events.
+
+Classify the market state descriptively, for example:
+- broad risk-on / broad risk-off;
+- narrow advance / narrow decline;
+- range-bound or mixed;
+- high-volatility / event-driven;
+- insufficient evidence.
+
+Breadth is a regime input, not a standalone order generator. A single threshold such as 8%, 15%, or 25% is not a validated rule unless a specific backtest or pre-agreed rule establishes it. A rising index with weak breadth is a divergence worth investigating, not proof of distribution or an automatic sell signal.
+
+**Self-check:** Does the index move represent the median stock? Is breadth calculated on a stable universe with valid coverage? Could sector concentration, stale data, or universe construction explain the reading? Am I assigning a causal label ("accumulation", "distribution") without evidence?
+
+## 4. Evaluate all three horizons explicitly
+
+For the portfolio and every serious candidate, evaluate 1 / 5 / 20 sessions separately.
+
+For each horizon, state:
+- directional bias: positive / neutral / negative / not assessable;
+- evidence supporting the view;
+- strongest opposing evidence;
+- likely catalyst or risk window;
+- expected holding period and invalidation condition;
+- expected return relative to LQDT over the same horizon;
+- confidence and key uncertainty.
+
+Do not compare a one-day stock return with a twenty-day LQDT return. Convert both to the same horizon using observed LQDT performance or a clearly labelled forward estimate. The key rate is not a direct substitute for the fund's net return.
+
+Do not force the three horizons to agree. Example: a position can be negative for 1 session due to an event gap, neutral for 5 sessions, and positive for 20 sessions. Explain which horizon drives the action and what risk is accepted on the other horizons.
+
+**Self-check:** Have I used the correct horizon for each statistic? Am I annualizing a short realized return and treating it as a forecast? Is the return estimate gross or net of trading frictions? Have I confused historical frequency with a guaranteed probability?
+
+## 5. Review current holdings first
+
+For every holding, assess:
+
+1. What is the current position and weight?
+2. What was the original or most recent reason for holding it, if known?
+3. Is that thesis still valid over 1 / 5 / 20 sessions?
+4. What has changed since the previous decision?
+5. What do price structure, momentum, volume, volatility, liquidity, and relative strength indicate?
+6. Are there upcoming corporate events, disclosures, dividends, placements, court/regulatory decisions, or other gap risks?
+7. Is there a fundamental or news shock capable of changing the short-term distribution?
+8. What is the strongest bear case and what would invalidate the hold/add thesis?
+9. What would make a reduction or exit premature?
+
+For every holding, conclude one of:
+- HOLD;
+- ADD;
+- TRIM;
+- EXIT;
+- NOT ASSESSABLE (with exact missing input).
+
+A technical level such as SMA20 can be used as a feature or conditional trigger, not an automatic rule by default. Define what constitutes a break, whether confirmation is needed, how volume is assessed, and what happens after a false break. A standardized distance/Z-score is not a probability of reversal and is not a sell signal without conditional historical evidence.
+
+Fundamentals are horizon-weighted:
+- over 1 session, focus on immediate event and gap risk;
+- over 5 sessions, focus on near-term catalysts and whether the market may reprice new information;
+- over 20 sessions, include earnings/cash-flow direction, balance-sheet risks, valuation context, and expected announcements where relevant.
+
+**Self-check:** Am I defending a holding because it is already in the portfolio? Would I open it today at the current price and weight? If not, what specifically justifies holding rather than trimming? Conversely, am I selling merely because a short-term indicator looks extended?
+
+## 6. Search for new candidates
+
+Do not scan the market merely to fill unused portfolio slots. Search for candidates only when they have a plausible setup or catalyst.
+
+Candidate screening should consider:
+- liquidity and executable turnover;
+- momentum and price structure across 1 / 5 / 20 sessions;
+- volume confirmation and relative strength;
+- breadth/sector context;
+- volatility and gap risk;
+- near-term catalysts and event calendar;
+- material issuer news and disclosures;
+- whether the setup has a credible invalidation point;
+- whether the expected return can plausibly beat LQDT after costs.
+
+For each serious candidate, construct:
+- bull / base / bear cases;
+- entry condition or price structure (not a fabricated exact price);
+- invalidation condition;
+- expected holding horizon;
+- liquidity and execution caveats;
+- comparison against keeping the capital in LQDT.
+
+Fundamental quality alone is not an entry signal. Momentum alone is not a sufficient reason to buy. A strong recent return does not prove future positive expectancy.
+
+**Self-check:** Did I select this candidate because it is genuinely attractive, or because I feel obliged to propose a trade? Am I chasing an already extended move? Is the apparent breakout supported by volume and liquidity? What is the counter-thesis?
+
+## 7. Apply the opportunity-cost and trade hurdle
+
+For every proposed trade, compare the position with the best available alternative, including retaining the capital in LQDT.
+
+The comparison must use the same horizon and a consistent basis:
+- expected gross price return;
+- distributions only when entitlement/date and expected amount are sufficiently established;
+- LQDT net return estimate for the same horizon;
+- commission, spread, slippage, taxes and other relevant implementation costs;
+- volatility, downside/gap risk, liquidity and uncertainty.
+
+Do not claim a precise mathematical expectation unless it is supported by a defined model or historical conditional sample. When only qualitative evidence exists, say so and use ranges or scenario analysis rather than fake precision.
+
+A trade clears the hurdle only if:
+1. there is a defined setup or information/catalyst thesis;
+2. the expected advantage over LQDT is meaningful after costs;
+3. downside and invalidation are understood;
+4. the position improves the portfolio rather than merely adding standalone exposure;
+5. the evidence quality is sufficient for the proposed size.
+
+If no candidate clears the hurdle, keep the capital in LQDT. This is an active decision to wait, not a failure to make a decision.
+
+**Self-check:** Would I still make this trade if I had no existing position and no pressure to be active? Does the expected edge survive realistic costs? Is the premium large enough to compensate for uncertainty and downside?
+
+## 8. Construct the target portfolio
+
+Start from the validated actual portfolio, not from a preferred target or a historical tactical allocation.
+
+For each position decide whether to hold, add, trim, exit, or open. Then set target weights and calculate percentage-point changes.
+
+Portfolio checks:
+- total allocation and treatment of residual cash/assets;
+- no more than 10 simultaneously held equity names;
+- aggregate signed portfolio loading remains within the user's stated range of -0.5 to +1.5;
+- liquidity, spread, concentration, sector overlap and correlated exposures;
+- event/gap concentration over the next 1 / 5 / 20 sessions;
+- turnover and expected benefit relative to implementation friction;
+- whether LQDT remains the superior destination for marginal capital.
+
+The user's aggregate signed loading range is a boundary, not a target. It does not imply a need to use shorts or leverage. No per-security cap or separate gross-exposure cap has been supplied; do not invent either. Do not create an arbitrary minimum equity allocation or use all available portfolio capacity.
+
+Position size must reflect evidence strength, volatility, liquidity, downside, event risk, correlation with existing holdings, and the cost of being wrong. If those inputs do not support a precise weight, provide a conditional range or state why a responsible target cannot yet be set. Do not disguise uncertainty with decimal-place precision.
+
+**Self-check:** Does the proposed portfolio have a better risk/return profile than the current one? Have I counted correlated positions as if they were diversified? Does the total reconcile? Have I accidentally used the current tactical equity sleeve as a strategic baseline?
+
+## 9. Adversarial logic audit — mandatory before finalizing
+
+Run this checklist against the proposed decision:
+
+1. **Mandate:** Did I use the 1 / 5 / 20-session horizons rather than a long-term investment horizon?
+2. **Input integrity:** Is the portfolio state reconciled and timestamped? Did I invent any missing holdings or cash?
+3. **Data quality:** Are market data current, correctly aligned, and sufficiently covered?
+4. **Comparability:** Are stock returns and LQDT returns compared over identical horizons and on a consistent net/gross basis?
+5. **Causality:** Have I explained how the evidence could affect price over the selected horizon, rather than merely describing it?
+6. **Counterevidence:** Have I actively searched for facts that contradict my preferred action?
+7. **Technical validity:** Did I avoid turning SMA, breadth, Z-score, or momentum into deterministic signals without validation?
+8. **No anchoring:** Am I preserving a position only because it is already held, or preserving a previous recommendation because I made it?
+9. **No action bias:** Am I proposing a trade just to appear useful?
+10. **Portfolio effect:** Does the trade improve the whole portfolio after costs and correlated risk?
+11. **Arithmetic:** Do target weights, changes, total exposure, and constraints reconcile?
+12. **Uncertainty:** Have I marked unknowns and avoided unsupported probability/return precision?
+
+If a check fails, revise the recommendation or explicitly mark the unresolved limitation. Do not silently proceed.
+
+## 10. Qwen second-opinion review
+
+Qwen is an optional adversarial reviewer, not a voting member and not a factual authority. The user runs Qwen manually and supplies its response.
+
+When useful, send it:
+- validated portfolio state;
+- decision horizons and information cutoff;
+- market snapshot;
+- the agent's proposed actions and reasoning;
+- key evidence and source links;
+- unresolved uncertainties.
+
+Ask Qwen to find factual errors, challenge causal links, identify overlooked candidates and risks, and propose an alternative allocation only when justified. It must compare candidates against LQDT on the same horizon.
+
+After receiving its answer:
+- verify factual claims against primary sources;
+- separate valid objections from unsupported assertions;
+- record agreements and disagreements;
+- change the recommendation only when evidence or reasoning warrants it.
+
+If no Qwen response is supplied, mark the review as not performed. Do not imply consensus or substitute another LLM.
+
+## 11. Final decision contract
+
+The final answer must contain:
+
+1. **Decision timestamp and information cutoff.**
+2. **Incoming portfolio state:** actual weights, total, and missing/partial fields.
+3. **Market regime:** concise description with breadth, index, volume/liquidity and volatility evidence available.
+4. **Horizon matrix:** 1 / 5 / 20 sessions for the portfolio and each material holding/candidate.
+5. **Position decisions:** current weight, target weight, percentage-point change, action, thesis, counter-thesis and invalidation.
+6. **New candidates:** only serious candidates; state why each does or does not clear the LQDT hurdle.
+7. **Final target allocation:** weights that reconcile to 100% (or explicitly explain any different convention), plus aggregate signed loading and equity-name count.
+8. **Execution considerations:** liquidity, spread, costs, event timing and whether the recommendation is conditional.
+9. **Scenarios:** bear / base / bull where useful, with assumptions rather than false precision.
+10. **Triggers:** observable conditions that would cause reassessment; distinguish validated rules from provisional watch levels.
+11. **Confidence:** separately assess confidence in direction, exact sizing, and data quality.
+12. **Logic audit:** disclose any failed checks, unresolved unknowns, or reasons for no trade.
+13. **Qwen review:** status and material disagreements, if applicable.
+
+Use direct action language. A valid outcome may be HOLD ALL, HOLD SOME / TRIM OTHERS, ROTATE TO LQDT, ADD, or EXIT. Recommendations are not orders.
+
+## 12. Journal and feedback loop
+
+After the user accepts/rejects the recommendation or supplies the executed state:
+- preserve the incoming snapshot;
+- record the recommendation separately from actual execution;
+- record the thesis, evidence cutoff, alternatives rejected, and invalidation conditions;
+- later evaluate outcomes over 1 / 5 / 20 sessions;
+- compare realized outcome with the decision process and available evidence, not P&L alone;
+- record false positives, missed risks, premature exits, opportunity cost, and lessons.
+
+Never rewrite a prior decision to make it appear correct after the fact.
+
+## 13. Current reference state (historical, not a default target)
+
+As of the 2026-11-23 user-reported snapshot:
 - T: 10%
 - GCHE: 2%
 - LQDT: 88%
 
-LQDT is a money-market fund, not idle cash. A public comparison dated 2026-11-23 reported its last-30-day price growth annualized at 13.57% net of management fee, and 90-day annualized growth at 14.59%. These are backward-looking rates, not guaranteed forward returns; the fund follows money-market rates and reprices as policy rates/RUSFAR change.
+A recommendation dated 2026-11-24 was to hold those weights. The 12% equity sleeve resulted from a tactical reduction on 2026-11-20 and was explicitly not a strategic baseline. That historical recommendation must not be treated as an invariant or as a target for future runs. Reassess it under this short-horizon decision tree using the latest incoming contract and market snapshot.
 
-Separate historical cash benchmark for breadth research: fixed 8% annual effective across the full historical test, user-provided from RGBITR minus RGBI. This is not actual historical LQDT performance. No sensitivity checks are authorized for the current run.
+At that time, breadth above SMA20 was 12% (6/50), with a five-session change of -42 percentage points. This was a negative market-regime input, not a standalone allocation formula. The previously discussed 8% / 25% breadth thresholds and +6% from SMA20 take-profit idea are unvalidated hypotheses, not approved automatic rules.
 
-## 2. User-supplied portfolio constraints
+## 14. Non-negotiable boundaries
 
-- Maximum 10 simultaneously held equity names.
-- Aggregate signed portfolio loading range: -0.5 to +1.5.
-- No per-security weight limit supplied.
-- No separate gross-exposure limit supplied.
-- Do not invent either missing limit. Shorts and leverage are mathematically permitted but not required.
-
-## 3. Breadth rule status and correction
-
-The documented heuristic maps breadth and its five-session change to a multiplier of 25%, 50%, 75%, or 100%, but its reference exposure has not been independently established.
-
-The user clarified that 12% was a tactical position reduction on Friday, 2026-11-20, not a strategic baseline. The former mapping of those multipliers to 3%, 6%, 9%, and 12% by multiplying by 12% is withdrawn. Do not use it.
-
-Latest user-run local snapshot, 2026-11-23:
-- breadth above SMA20: 12% (6/50);
-- five-session breadth change: -42 percentage points;
-- all 50 instruments had valid data;
-- IMOEX +1.30% that session (secondary-source figure from prior snapshot).
-
-Interpretation: the index rebound was narrow. Breadth is a negative market-regime input and argues against adding broad market risk. It does not produce a target portfolio weight until the reference exposure is independently defined and the rule validated.
-
-## 4. Final recommendation for 2026-11-24
-
-| Instrument | Current | Target | Action |
-|---|---:|---:|---|
-| T | 10% | 10% | Hold |
-| GCHE | 2% | 2% | Hold |
-| LQDT | 88% | 88% | Hold |
-| Total | 100% | 100% | No change |
-
-No new equity positions. No leverage or short exposure recommended.
-
-The 12% equity sleeve is not used as a starting assumption. It is retained because the existing holdings still have defensible theses and none of the reviewed candidates clears the current LQDT hurdle with a sufficiently clear risk-adjusted premium. The same 12% as Friday's tactical reduction is coincidental, not the calculation basis.
-
-### T — retain 10%
-
-Positive evidence:
-- Official 3Q/9M 2026 IFRS results: 9M net revenue +26% YoY to RUB 648.3bn; operating net profit +35% to RUB 162.2bn; 3Q operating net profit +41% to RUB 63.6bn; 9M ROE 29.1%, 3Q ROE 32.3%.
-- Management raised 2026 guidance: operating net profit and total dividends per share expected to grow more than 25%, ROE around 30%.
-- Credit-risk cost 5.0% for 9M versus 6.0% a year earlier; NPL ratio 7.0% at 30 September.
-- Secondary market data around 22 November indicated P/E around 3.6x and P/B around 0.97x. Approximate vendor ratios, not a substitute for normalized bank valuation.
-- Local technical state: return_20 +1.53%, return_60 +6.93%, price 0.64% below SMA20, 60-day volatility 21.98%.
-
-Risks:
-- Credit costs/NPLs remain material; deterioration can reverse earnings momentum.
-- Loan growth alongside slower customer-funds growth raises funding-mix/liquidity questions.
-- Acquisitions and integration (including Tochka and other ecosystem initiatives) add execution and capital-allocation complexity; monitor actual dilution and EPS accretion.
-- Low P/E is not automatically a margin of safety at a cyclical credit point.
-
-Decision: retain 10%; no increase. Strong profitability and apparently undemanding valuation make T the strongest existing equity thesis, but LQDT's current return is unusually competitive and market breadth remains weak.
-
-Primary source: https://tinkoff-group.com/press-center/company-news/10112026-t-technologies-announces-ifrs-financial-results-for-3q-and-9m-2026-eng/
-
-### GCHE — retain 2%
-
-Positive evidence:
-- Official 9M 2026 disclosure: revenue +6.4% to RUB 224.2bn; adjusted gross profit +26.1%; adjusted EBITDA +28.5%; adjusted net profit RUB 24.2bn vs RUB 10.3bn; adjusted FCF RUB 19.8bn vs RUB 5.2bn.
-- Net debt down 7.9% to RUB 131.1bn; net debt/adjusted EBITDA 1.9x; interest coverage 3.4x.
-- Secondary data showed P/E near 4.1x, though the earnings base includes adjusted/cyclical metrics.
-- Local technical state: price +4.71% above SMA20; z-score +2.61 under the project's standardized-distance formula; 60-day volatility 25.45%.
-
-Risks:
-- Physical sales -0.3%; export sales -10.1%; food-service sales -0.9%.
-- China export restrictions, imported chicken competition, weak food-service demand, pork oversupply, and weaker crop economics.
-- Interest coverage 3.4x leaves less room for financing shocks.
-- Lower capex supported FCF but may constrain future capacity if sustained.
-- The z-score is not a probability, classical z-test, or stand-alone sell signal. Third-party free-float/liquidity data are inconsistent.
-
-Decision: retain the existing 2% as a small exposure; do not add.
-
-Primary disclosure: https://www.e-disclosure.ru/portal/event.aspx?EventId=JWyX1VWphUOrx7O5ugOm6g-B-B
-
-## 5. Candidate review
-
-### CNRU — watch, no entry
-Local technicals: return_20 +28.23%, return_60 +46.03%, price +2.68% above SMA20, realized volatility 43.48%.
-
-Official 9M results: revenue +18.9% to RUB 13.1bn; adjusted EBITDA +50.7% to RUB 4.2bn; adjusted EBITDA margin 31.8%; net profit +45.3% to RUB 3.0bn; cash RUB 3.7bn. But primary-market transactions in Moscow/St Petersburg fell 14% in Q3 and 16% over 9M. Operating cash flow declined 1.9%; cash fell after dividends and buybacks.
-
-Dividend correction: the 33 RUB proposed dividend is about 3.7% of a ~901 RUB share price, not 14.2%. The issuer's 14.2% headline used expected full-year dividends of 86 RUB and the average 9M price of 605.4 RUB. At 901 RUB, 86 RUB is ~9.5% before tax and is not a guaranteed forward yield. Secondary vendor P/E was around 18x. The recent sharp rally raises entry risk.
-
-Decision: watch, no buy. Strong business metrics and momentum, but valuation, 43.5% volatility, housing cyclicality, and LQDT's current yield leave insufficient demonstrated premium.
-
-Issuer source: https://corp.cian.ru/news/press-reliz-cian-q3-2026-financial-results-rus
-
-### POSI — watch, no entry
-Local technicals: return_20 +6.25%, return_60 +29.65%, price +1.71% above SMA20, volatility 34.51%.
-
-9M 2026 revenue +48% to RUB 16.1bn; shipments +54% to RUB 18.3bn; expenses -4%; IFRS net loss narrowed to RUB 0.7bn from RUB 5.8bn; net debt/EBITDA LTM 0.76x. FY shipment guidance remains RUB 40–45bn; Q4 is seasonally decisive and the 9M result does not yet prove the annual target. Secondary valuation around 12 November indicated P/E ~13x and only modest base-case upside; this is a vendor estimate, not issuer guidance.
-
-Decision: no position. Growth/deleveraging are positive, but seasonality, negative IFRS earnings, volatility, and uncertain valuation premium do not clearly beat cash.
-
-Issuer source: https://ptsecurity.com/about/news/the-volume-of-pt-shipments-for-9-months-of-2026-increased-by-54-to-18-3-billion-rubles/
-
-### X5 — no entry
-Local technicals: return_20 -1.21%, return_60 +29.15%, price 0.79% below SMA20, volatility 23.61%.
-
-9M revenue +11.4%; adjusted EBITDA +12.0%; adjusted EBITDA margin 6.0% before IFRS 16; net debt/EBITDA 1.20x. Independent analysis noted FCF of RUB 18.3bn over 9M against RUB 148.5bn dividends paid and a RUB 133bn increase in net debt. Issuer guidance implies ~12% FY revenue growth and ~6% adjusted EBITDA margin. Proposed 204 RUB dividend is ~8.9% at ~2,288 RUB, below current LQDT 30-day annualized return.
-
-Decision: no entry. Good operator and low headline multiples do not erase financing, FCF, and dividend-cover concerns; short-term technical momentum is fading.
-
-Issuer source: https://www.x5.ru/ru/news/x5-obyavlyaet-o-roste-vyruchki-na-130-v-3-kv-2026-g-rentabelnost-skorr-ebitda-do-primeneniya-msfo-ifrs-16-sostavila-67/
-
-### HYDR — no entry despite strong momentum
-Local technicals: return_20 +18.95%, return_60 +48.16%, price +3.14% above SMA20, volatility 41.04%. 9M RAS revenue +20%, net profit +62%, operating cash flow +88%. Counterevidence: debt grew with the investment program; 1H IFRS financial debt around RUB 883bn and net debt/EBITDA around 2.8x; heavy capex and constrained dividends.
-
-Decision: momentum does not compensate for leverage, capital intensity, and weak shareholder cash distribution.
-
-### FIXR — no entry despite strong momentum
-Local technicals: return_20 +37.77%, return_60 +53.85%, price +6.32% above SMA20, volatility 43.87%. 9M revenue +6.3%; adjusted EBITDA +8.5%; operating profit -1.4%; net profit -24.2%; net debt/EBITDA 0.3x. Better gross margin and low leverage are positives, but earnings decline and volatility weaken the case.
-
-### LSRG — no entry
-Local technicals: return_20 +19.60%, return_60 +62.97%, volatility 48.02%. Available 1H IFRS data showed substantial net loss, weak cash generation, and rising net debt. Real-estate development is highly sensitive to financing costs and demand.
-
-## 6. Why no new position
-
-- CNRU and POSI have the best growth/momentum combination, but valuation, volatility, and execution risks leave no sufficiently clear expected-return premium over LQDT.
-- X5's operating quality is offset by cash conversion, debt, and dividend-cover concerns.
-- HYDR and LSRG have leverage/capex/balance-sheet risks; FIXR's earnings are declining.
-- Market breadth remains very weak.
-- No candidate needs to be purchased simply because the portfolio has room for up to 10 names. Ten is a ceiling, not a target.
-
-## 7. Review triggers
-
-Reassess if:
-- breadth recovers materially and persistently, not on one index session;
-- T's cost of risk, NPLs, funding mix, capital adequacy, or guidance deteriorate;
-- T rerates enough to remove expected return premium;
-- GCHE export volumes, pricing, FCF, debt, or interest coverage deteriorate;
-- CNRU valuation cools while fundamentals remain intact or housing transaction data improve;
-- POSI converts shipments into revenue/cash flow and reaches FY guidance;
-- LQDT net yield falls materially as policy rates change;
-- corrected breadth research contradicts the heuristic.
-
-## 8. Evidence and confidence boundaries
-
-- Latest local snapshot: 2026-11-23; no local snapshot for 2026-11-24 was supplied.
-- Public issuer results and market references checked through 2026-11-24.
-- Qwen review not supplied; this is the agent's independent assessment.
-- Corrected breadth backtest not yet run. The former 3/6/9/12% mapping is withdrawn.
-- No orders placed or execution claimed.
-- Confidence: moderate that no reviewed new candidate currently clears the LQDT hurdle; moderate in retaining T and GCHE; low that exact weights are mathematically optimal because full covariance, detailed forward valuation, and user-specific transaction costs are unavailable.
+- No invented data, prices, weights, constraints, or execution.
+- No automatic trades from a single indicator.
+- No forced activity or arbitrary minimum equity exposure.
+- No treating the key rate as LQDT's exact net yield.
+- No mixing 1-, 5-, and 20-session performance windows.
+- No treating Qwen's opinion as truth or consensus.
+- No silently changing user-approved rules.
+- User retains final decision and execution authority.
