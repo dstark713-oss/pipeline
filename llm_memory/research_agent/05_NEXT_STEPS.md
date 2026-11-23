@@ -2,46 +2,59 @@
 
 Last updated: 2026-11-23
 
-## Current research state
+## Active project: ML direction prediction
 
-The first primitive research cycle and the hypothesis of building a market-state screener from selected primitives are closed.
+<decision>Approved by the user on 2026-11-23.</decision>
 
-Current runtime information layer:
+Build and validate an ML model that predicts the direction of price movement for individual instruments.
+
+The initial research motivation is the earlier observation that an instrument's position within its own recent price range may contain information about the conditional distribution of future returns. This is a starting hypothesis to test, not a proven predictive relationship. Do not confuse it with the statistical null hypothesis.
+
+The first stage is research design, not immediate model fitting. Settle and document:
+
+1. Prediction target and label construction (including treatment of near-zero returns and ambiguous cases).
+2. Forecast horizon or horizons and why they are relevant.
+3. Eligible instrument universe and point-in-time availability rules.
+4. Feature candidates, beginning with the range-position hypothesis and existing screener primitives, without assuming all are useful.
+5. Simple statistical and ML baselines.
+6. WF temporal evaluation design, leakage controls, metrics, aggregation, and failure criteria.
+7. Reproducibility requirements and experiment registry fields.
+
+Do not begin broad feature fishing or complex model search before these definitions are fixed.
+
+## Mandatory evaluation firewall
+
+The user explicitly prohibited portfolio-level metrics before approval of the final model.
+
+- Before final model approval, do not inspect, calculate, report, compare, or use any portfolio-level metrics or portfolio application results.
+- This includes portfolio CAGR, Sharpe, MDD, returns, drawdowns, exposure, turnover, and related portfolio outputs.
+- Statistical and predictive-model metrics on WF are allowed.
+- The user will not split the dataset into separate fixed IS and VAL subsets. Do not require or introduce such a split.
+- Use WF as the permitted statistical/model evaluation procedure. Specify its temporal construction and leakage safeguards before examining results.
+- After the final model is approved, exactly one decisive portfolio-level evaluation run is permitted.
+- Do not iterate, tune, compare portfolio variants, or select model settings based on that one portfolio run. It is a downstream application check, not a feedback loop.
+
+This firewall applies to all research-agent work, scripts, reports, and discussions for this project. If an existing artifact contains portfolio metrics, do not open or inspect those metrics during model development.
+
+## Research sequence
+
+1. **Formalize the prediction problem.** Define what “up” and “down” mean, horizon, label timestamp, forecast timestamp, and handling of neutral/ambiguous outcomes.
+2. **Establish baselines.** Quantify simple unconditional and conditional distributions and transparent baseline predictors, including the range-position hypothesis.
+3. **Build the modeling dataset.** Ensure each feature is available at prediction time; preserve point-in-time universe membership and instrument identity; document missingness and sample eligibility.
+4. **Develop candidate models.** Start with interpretable/simple models before increasing complexity. Keep feature selection and tuning inside the predeclared WF process.
+5. **Evaluate statistically on WF.** Use suitable classification/distribution metrics, uncertainty estimates, calibration diagnostics where relevant, and robustness by time period/instrument cohort. No portfolio metrics.
+6. **Freeze and document the final candidate.** Record model specification, feature set, target, horizon, WF evidence, limitations, and reproducibility details.
+7. **Obtain user approval.** No portfolio-level evaluation before explicit approval of the final model.
+8. **Run one decisive portfolio application evaluation.** Do not use its result to revise the model or run a second portfolio variant.
+
+## Current information layer
+
 - Instrument state: `drawdown_60`, `zscore_sma20_20`, `realized_vol_60`.
 - Separate market-state context: `breadth_change_5` (primary) and `breadth_sma20` (reference).
 - Screener: `scripts/tools/01_primitive_screener.py`.
 - Downstream specification: `docs/tools/01_primitive_screener.md`.
 
-The screener is descriptive only. It does not generate trades, portfolio weights, or allocation instructions. The user's 100/75/50/25% breadth exposure schedule remains a separate heuristic, not an approved statistically validated allocation model.
-
-## Next research cycle: analytical capability and gap assessment
-
-The next task is **not** to mine another primitive family by default. First establish what the completed screener and current data environment have made possible, then identify the most consequential capability gaps.
-
-The assessment should answer:
-
-1. **What can the system now know?**
-   - What can be calculated directly from the internal historical market dataset?
-   - What does the screener reveal at runtime, at instrument and market level?
-   - Which questions can be answered historically and reproducibly?
-   - Which outputs are descriptive, statistically validated, or merely illustrative?
-
-2. **What can the system not know reliably yet?**
-   - Which market questions are blocked by missing variables, insufficient history, poor coverage, or absent data sources?
-   - Which questions require external context or semantic interpretation?
-   - Which answers are currently dependent on one-off web retrieval rather than a repeatable data/tool interface?
-   - Where are temporal provenance, source reliability, entity mapping, or update frequency weak?
-
-3. **Which capabilities should be built next?**
-   - Identify concrete candidate tools, data interfaces, methods, or research subsystems.
-   - For each, state the capability gap, required inputs, expected output, validation design, dependencies, and likely failure modes.
-   - Distinguish foundational infrastructure from an analytical tool that depends on it.
-   - Prioritize by expected expansion of reliable analytical capability, not by novelty or apparent sophistication.
-
-4. **What should the next experiment establish?**
-   - Select one bounded research question that closes a demonstrated gap.
-   - Define a test that can reject the idea, not merely produce an interesting chart.
-   - Do not begin implementation until the research question, data requirements, and validation logic are clear.
+The screener is descriptive only. It does not generate trades, portfolio weights, or allocation instructions.
 
 ## Data reality and constraints
 
@@ -49,12 +62,11 @@ The assessment should answer:
 - There is **no internal fundamental-data dataset or fundamental-data pipeline**.
 - News, company context, market semantics, and fundamental information are retrieved from the internet/external sources in the agent workflow.
 - Current web retrieval is not equivalent to a persistent, timestamped historical dataset. Do not use present-day information to support historical point-in-time claims.
-- Any future external-data tool must consider source quality, retrieval/publication timestamps, entity resolution, temporal availability, update cadence, reproducibility, and failure handling.
-- Do not assume that a new data source is useful merely because it is accessible. Establish coverage and reliability.
+- Do not add external semantic/fundamental features to the direction model by assumption. They require a separate data-availability, timestamp, provenance, and leakage assessment, and must fit the approved prediction problem.
 
-## Explicitly retired proposal
+## Retired proposal
 
-The previous proposal to make conditional downside-risk analysis across breadth regimes the immediate next research project is **not the current plan**. It was a premature continuation of the previous breadth topic and did not follow from a full assessment of the system's capability gaps. Do not treat it as approved or automatically resume it.
+The previous proposal to make conditional downside-risk analysis across breadth regimes the immediate next research project is not the current plan. It was a premature continuation of the previous breadth topic. Do not resume it unless the user explicitly reprioritizes it.
 
 ## Dataset and operational risks
 
@@ -67,8 +79,7 @@ The previous proposal to make conditional downside-risk analysis across breadth 
 ## Research discipline
 
 - No broad feature fishing.
-- Do not restrict future research to price-derived primitives or breadth.
-- Do not assume internal fundamental data exists.
-- Do not optimize analytical tools for CAGR, Sharpe, MDD, or portfolio return as universal truth criteria.
-- Distinguish information validation from a portfolio application experiment.
-- The Research Agent recommends; the user approves scope changes and production promotion.
+- Do not optimize model selection or feature design against portfolio metrics.
+- Statistical WF evaluation is permitted; portfolio evaluation is gated as above.
+- Preserve failed and inconclusive experiments as useful evidence.
+- The Research Agent recommends; the user approves scope changes and final model approval.
