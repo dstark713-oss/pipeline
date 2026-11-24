@@ -6,10 +6,13 @@ One-use robustness audit for the existing PIT breadth research.
 Run from repository root:
   python scripts/one_use/audit_breadth_transfer_20261124.py
 
-Optional matched historical LQDT close series:
-  python scripts/one_use/audit_breadth_transfer_20261124.py --lqdt-csv path/to/lqdt_daily.csv
+Historical LQDT is loaded by default from the isolated local cache:
+  data/cache/lqdt_daily.csv
 
-CSV requirements for --lqdt-csv: tradedate, open, close.
+Refresh that cache with:
+  python scripts/cache/fetch_lqdt_history.py
+
+An alternate CSV can be supplied with --lqdt-csv. Required columns: tradedate, open, close.
 The script is read-only. It does not alter canonical data or portfolio files.
 
 Important:
@@ -121,16 +124,18 @@ def load_lqdt(path: Path) -> pd.DataFrame:
 
 
 def matched_lqdt_returns(signal_dates: pd.Series, lqdt: pd.DataFrame, horizon: int) -> pd.Series:
-    # Align on the next available LQDT close after the signal date, then H
-    # subsequent LQDT observations. No forward fill and no synthetic dates.
+    # Match the equity convention exactly:
+    # open[T+1] -> close[T+h]. No forward fill or synthetic dates.
     dates = lqdt.index
     values = []
     for raw_date in signal_dates:
         d = pd.Timestamp(raw_date).normalize()
         start_pos = dates.searchsorted(d, side="right")
-        end_pos = start_pos + horizon
+        end_pos = start_pos + horizon - 1
         if start_pos < len(dates) and end_pos < len(dates):
-            values.append(lqdt["close"].iloc[end_pos] / lqdt["close"].iloc[start_pos] - 1.0)
+            start_open = lqdt["open"].iloc[start_pos]
+            end_close = lqdt["close"].iloc[end_pos]
+            values.append(end_close / start_open - 1.0 if start_open > 0 else np.nan)
         else:
             values.append(np.nan)
     return pd.Series(values, index=signal_dates.index, dtype=float)
@@ -138,7 +143,8 @@ def matched_lqdt_returns(signal_dates: pd.Series, lqdt: pd.DataFrame, horizon: i
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--lqdt-csv", type=Path, default=None)
+    default_lqdt_cache = ROOT / "data/cache/lqdt_daily.csv"
+    parser.add_argument("--lqdt-csv", type=Path, default=default_lqdt_cache)
     args = parser.parse_args()
 
     if not INPUT.is_file():
@@ -151,7 +157,7 @@ def main() -> None:
     require(daily, ["tradedate", "breadth_sma20"], "breadth_daily.csv")
 
     OUT.mkdir(parents=True, exist_ok=True)
-    lqdt = load_lqdt(args.lqdt_csv) if args.lqdt_csv else None
+    lqdt = load_lqdt(args.lqdt_csv) if args.lqdt_csv.is_file() else None
     all_hac, all_nonoverlap, all_oos, all_buckets, all_matched = [], [], [], [], []
 
     for h in HORIZONS:
