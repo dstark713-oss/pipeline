@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from hac_calendar import calendar_aware_hac, HACResult
+from hac_calendar import calendar_aware_hac, equal_spacing_hac, HACResult
 
 
 def manual_calendar_hac(values, calendar, bandwidth):
@@ -149,3 +149,42 @@ def test_result_type():
     result = calendar_aware_hac(values, calendar, 1)
 
     assert isinstance(result, HACResult)
+
+
+
+def test_am_and_es_match_when_no_missing_values():
+    values, calendar = make_series(
+        np.random.default_rng(7).normal(size=200)
+    )
+    am = calendar_aware_hac(values, calendar, 10)
+    es = equal_spacing_hac(values, calendar, 10)
+    assert am.mean == pytest.approx(es.mean)
+    assert am.variance == pytest.approx(es.variance)
+    assert am.long_run_variance == pytest.approx(es.long_run_variance)
+
+
+def test_am_and_es_differ_when_calendar_gaps_exist():
+    values, calendar = make_series([
+        0.1, 0.2, np.nan, 0.3, 0.4,
+        0.15, np.nan, 0.25, 0.35, 0.05,
+    ])
+    am = calendar_aware_hac(values, calendar, 2)
+    es = equal_spacing_hac(values, calendar, 2)
+    assert am.n_observations == es.n_observations == 8
+    assert am.n_sessions == es.n_sessions == 10
+    assert not np.isclose(am.variance, es.variance)
+
+
+def test_non_finite_values_are_treated_as_missing():
+    values, calendar = make_series([0.1, 0.2, 0.3, 0.4, 0.5])
+    values.iloc[1] = np.inf
+    values.iloc[3] = -np.inf
+    result = calendar_aware_hac(values, calendar, 1)
+    assert result.n_observations == 3
+    assert np.isfinite(result.std_error)
+
+
+def test_bandwidth_type_is_validated():
+    values, calendar = make_series([0.1, 0.2, 0.3])
+    with pytest.raises(TypeError):
+        calendar_aware_hac(values, calendar, 1.5)

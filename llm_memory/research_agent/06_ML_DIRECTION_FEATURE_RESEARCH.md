@@ -232,3 +232,36 @@ The current calendar-aligned zero-score implementation is closest in spirit to a
 7. No portfolio metrics and no feature-family transition until Audit 01 is complete.
 
 Current status: unit tests pass; calendar-aware HAC is provisionally tested under IID/AR(1) with MCAR, but the exact missing-data estimator and real-data inference remain unvalidated.
+
+
+## HAC integration implementation (2026-11-25)
+
+Implementation is staged on branch `hac-audit-integration`; it has not yet been run against the local dataset or merged into `main`.
+
+### Code changes
+
+- `hac_calendar.py` now exposes two estimators:
+  - AM: calendar-aligned amplitude-modulated scores, with Bartlett lag pairs measured in trading sessions and Datta & Du normalization by observed count S.
+  - ES: equal-spacing comparator, where finite observations are compressed and lags refer to observed-IC time.
+- Both return the observed mean, long-run variance estimate, variance of the mean, standard error, normal-reference t statistic/p-value, observation count, calendar-session count, and bandwidth.
+- Non-finite IC values are treated as missing; invalid bandwidth types, duplicate dates, duplicate calendar sessions, and dates outside the calendar are rejected.
+- `evaluation.py` now creates a complete calendar-session × feature IC grid, preserves missing IC values with reason codes, computes descriptive IC summaries separately, and generates AM/ES inference for Pearson IC and Rank IC at bandwidths 4/10/20/60.
+- BH correction is applied across features separately for each metric × estimator × bandwidth specification.
+- `run_experiment.py` passes the signal-period slice of the existing TQBR/EQBR calendar and writes `hac_inference.csv` and `ic_missingness.csv`.
+- The report and README now describe the estimator distinction and limitations. Portfolio metrics remain disabled.
+
+### Added tests
+
+The existing manual-formula and calendar-lag tests remain. Additional tests cover AM/ES equivalence without missing observations, expected divergence with calendar gaps, non-finite values treated as missing, and bandwidth type validation.
+
+### Validation status
+
+These changes are not yet runtime-validated. The previous unit tests and MCAR simulations validate the earlier AM implementation, not every new integration change. Before merge:
+1. Run the complete test suite for this experiment.
+2. Run the experiment on the actual dataset.
+3. Inspect row counts, missingness reason counts, AM/ES outputs, and bandwidth sensitivity.
+4. Confirm that the generated full-calendar grid covers exactly the panel signal period.
+5. Review AM/ES differences as a sensitivity diagnostic; do not select the smaller p-value.
+6. Keep all portfolio metrics and strategy evaluation out of this audit.
+
+No new Monte Carlo run is currently planned. Add simulations only if runtime validation exposes a specific unresolved estimator property.
