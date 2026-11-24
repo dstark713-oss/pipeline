@@ -363,24 +363,57 @@ def fetch_board_range(
                 (secid, board, tradedate),
             ).fetchall()
 
+            # Existing candle: update if values have changed.
+            # New data from MOEX is treated as authoritative.
             if existing:
                 candle_rows = [
                     row for row in existing if row[1] == "candles"
                 ]
+
                 if candle_rows:
                     expected = (
-                        normalized["OPEN"], normalized["HIGH"],
-                        normalized["LOW"], normalized["CLOSE"],
-                        normalized["VOLUME"], normalized["VALUE"],
+                        normalized["OPEN"],
+                        normalized["HIGH"],
+                        normalized["LOW"],
+                        normalized["CLOSE"],
+                        normalized["VOLUME"],
+                        normalized["VALUE"],
                     )
+
                     for stored in candle_rows:
                         if tuple(stored[2:8]) != expected:
-                            raise RuntimeError(
-                                "MOEX revised a previously stored candle; "
-                                "raw data was not overwritten. "
-                                f"Manual correction review required: "
-                                f"{secid}/{board}/{tradedate}"
+                            connection.execute(
+                                """
+                                UPDATE daily_bars_raw
+                                SET
+                                    open = ?,
+                                    high = ?,
+                                    low = ?,
+                                    close = ?,
+                                    volume = ?,
+                                    value = ?,
+                                    row_hash = ?
+                                WHERE secid = ?
+                                  AND boardid = ?
+                                  AND tradedate = ?
+                                  AND data_source = 'candles'
+                                """,
+                                (
+                                    normalized["OPEN"],
+                                    normalized["HIGH"],
+                                    normalized["LOW"],
+                                    normalized["CLOSE"],
+                                    normalized["VOLUME"],
+                                    normalized["VALUE"],
+                                    hashlib.sha256(
+                                        str(expected).encode("utf-8")
+                                    ).hexdigest(),
+                                    secid,
+                                    board,
+                                    tradedate,
+                                ),
                             )
+
                 continue
 
             hash_payload = {
