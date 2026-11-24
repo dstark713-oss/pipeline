@@ -22,14 +22,16 @@ This is a human-in-the-loop training workflow. API orchestration and autonomous 
 
 ## Current portfolio snapshot and final recommendation (2026-11-24)
 
-User-reported on 2026-11-23:
+Latest user-reported actual portfolio (2026-11-23):
 - T: 10%
 - GCHE: 2%
 - LQDT: 88%
 
-This is the latest known portfolio snapshot and final recommendation: hold T 10%, GCHE 2%, LQDT 88%. The 12% equity sleeve resulted from a tactical reduction on Friday 2026-11-20 and is not a strategic baseline. The same 12% is retained only after bottom-up review of holdings and candidates, not by anchoring to the tactical cut. LQDT is a money-market fund, not idle cash.
+Final recommendation after the completed breadth-transfer audit: **HOLD 10% T / 2% GCHE / 88% LQDT; no new positions.** The earlier 5% T / 2% GCHE / 93% LQDT proposal was not executed and is withdrawn because the matched-LQDT and walk-forward results do not justify a mechanical trim. Breadth at 8% remains a risk warning and a reason not to add equity beta, but it is not a standalone sell rule. The walk-forward model fails to beat the unconditional baseline. See the current decision tree and research journal for full metrics, caveats, and next research gates.
 
-See [the allocation decision tree](05_ALLOCATION_DECISION_TREE.md) for the full rationale, candidate review, invalidation triggers, and evidence boundaries.
+## Qwen handoff
+
+[Qwen context and current audit state](QWEN_HANDOFF.md) is the concise source to paste into Qwen when a new second opinion is explicitly needed. Qwen remains an adversarial reviewer only; no agent-to-agent ping-pong.
 
 ## Daily division of work
 
