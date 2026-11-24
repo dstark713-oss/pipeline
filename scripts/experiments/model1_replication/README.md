@@ -4,7 +4,7 @@ Run from repository root:
 \`\`\`powershell
 python scripts/experiments/model1_replication/run_replication.py
 \`\`\`
-Use --skip-backtest to run only WF/classification metrics.
+Use --skip-backtest to run only WF/classification metrics. Run unit tests with pytest scripts/experiments/model1_replication/tests/.
 
 The script reads data/processed/moex_daily_adjusted.sqlite (adjusted_daily_bars) and data/processed/top50/top50_panel.parquet read-only. Outputs go to data/interim/model1_replication/ and are not committed.
 

@@ -81,7 +81,7 @@ def load_history(secids):
         x[col]=pd.to_numeric(x[col],errors="coerce")
     x=x.dropna(subset=["secid","tradedate","boardid"])
     x=x[~x.secid.isin(EXCLUDED)]
-    x=x[(x.tradedate<SUSPENSION[0])|(x.tradedate>SUSPENSION[1])]
+    x=x[(x.tradedate<pd.Timestamp(SUSPENSION[0]))|(x.tradedate>pd.Timestamp(SUSPENSION[1]))]
     if x.duplicated(["secid","tradedate","boardid"]).any(): raise RuntimeError("Duplicate SECID/date/board rows")
     # Activity sums across boards; OHLC uses one complete TQBR-first, EQBR-fallback row.
     a=x.groupby(["secid","tradedate"],as_index=False).agg(
