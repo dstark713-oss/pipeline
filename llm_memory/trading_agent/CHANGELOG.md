@@ -32,3 +32,5 @@
 - Rationale: existing theses remain defensible; no reviewed candidate clears the current floating LQDT hurdle with a sufficiently clear risk-adjusted premium; market breadth remains weak.
 - Recorded LQDT 30-day annualized return of 13.57% as of 2026-11-23 as backward-looking, not guaranteed.
 - Qwen review and 2026-11-24 local market snapshot were not supplied. No execution claimed.
+
+- 2026-11-24: Completed matched historical LQDT and walk-forward breadth-transfer audit. Withdrew the unsupported T 10% -> 5% trim; final recommendation is HOLD actual 10/2/88, no new positions. Added Qwen handoff context and documented unresolved 20-session sample/model divergence.
