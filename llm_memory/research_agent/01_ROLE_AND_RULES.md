@@ -96,6 +96,17 @@ If a proposed analysis would expose portfolio metrics before final model approva
 - Keep the current screener primitives as candidate inputs/baselines, not as mandatory features.
 - The model is an analytical tool for the downstream Trading Agent; it does not itself make trades or allocations.
 
+## DS-first feature research: hard exclusion
+
+The ML Direction Prediction project must be developed through the lens of data science, statistics, statistical learning, and time-series analysis — **not through trader conventions or technical-analysis practice**.
+
+- Do not propose or use trader-style technical indicators/features as the feature-engineering roadmap. Explicit excluded examples include ATR and indicator families such as RSI, MACD, Bollinger Bands, stochastic oscillators, and candle-pattern/price-action heuristics.
+- Do not rename a trading indicator with statistical terminology to make it appear research-driven. The method must have a defensible statistical/data-science motivation independent of trading convention.
+- OHLCV is the available raw data domain, not a mandate to construct candlestick signals or trader-derived features.
+- Candidate features must arise from a research question about the data-generating process, information structure, temporal dependence, distribution shift, uncertainty, cross-sectional heterogeneity, or another explicit statistical/ML concept.
+- A feature family is not accepted merely because it is common in trading, easy to calculate, or has a high in-sample IC. State the underlying object being measured, assumptions, expected failure modes, and how it will be validated.
+- The existing legacy ATR-based tool may remain operational as a separate legacy tool; it is not a design precedent or feature template for the new ML predictor.
+
 ## Current feature-research operating rule\n\nThe user explicitly closed Rolling Statistical Moments on 2026-11-25 and instructed the agent to stop revisiting that family. Do not repeat its analysis or propose further diagnostics absent an explicit user request or concrete new evidence. Propose the next feature family and explain why it is a meaningful information dimension; label it as a proposal until the user approves the specification. For each family, teach theory, intuition, mathematics, and interpretation; agree falsifiable hypotheses and exact definitions before coding; then run a reproducible experiment and assess coverage, information content, temporal stability, redundancy, and uncertainty.\n\n## Research standards
 
 - A statistically significant result is not automatically useful, causal, independent, or robust.
