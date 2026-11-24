@@ -39,6 +39,8 @@ from evaluation import (
     calculate_daily_ic,
     calculate_feature_coverage,
     summarize_ic,
+    build_hac_inference,
+    summarize_missingness,
 )
 from features import (
     calculate_binary_target,
@@ -312,6 +314,10 @@ def main() -> None:
     panel = load_panel()
     prices, calendar = load_adjusted_history(sorted(panel["secid"].unique()))
     observations = build_observations(panel, prices, calendar)
+    signal_calendar = calendar[
+        (calendar >= panel["tradedate"].min())
+        & (calendar <= panel["tradedate"].max())
+    ]
 
     feature_columns = [
         f"rolling_{family}_{window}"
@@ -322,8 +328,12 @@ def main() -> None:
     ]
 
     log("Calculating daily cross-sectional IC and Rank IC...")
-    daily_ic = calculate_daily_ic(observations, feature_columns)
+    daily_ic = calculate_daily_ic(observations, feature_columns, signal_calendar)
     summary = summarize_ic(daily_ic)
+    hac_inference = build_hac_inference(
+        daily_ic, signal_calendar, bandwidths=(4, 10, 20, 60)
+    )
+    missingness = summarize_missingness(daily_ic)
     coverage = calculate_feature_coverage(observations, feature_columns)
 
     log("Calculating within-date feature redundancy...")
@@ -336,6 +346,8 @@ def main() -> None:
     summary_path = OUTPUT_DIR / "ic_summary.csv"
     coverage_path = OUTPUT_DIR / "feature_coverage.csv"
     redundancy_path = OUTPUT_DIR / "feature_redundancy.csv"
+    hac_inference_path = OUTPUT_DIR / "hac_inference.csv"
+    missingness_path = OUTPUT_DIR / "ic_missingness.csv"
 
     temporary_parquet = observations_path.with_name(
         observations_path.stem + ".tmp" + observations_path.suffix
@@ -350,6 +362,8 @@ def main() -> None:
         (summary, summary_path),
         (coverage, coverage_path),
         (redundancy, redundancy_path),
+        (hac_inference, hac_inference_path),
+        (missingness, missingness_path),
     ):
         dataframe.to_csv(path, index=False, encoding="utf-8-sig")
 
@@ -372,7 +386,10 @@ def main() -> None:
         "target": "1 if adjusted_close[t+5] > adjusted_close[t]; 0 if lower; ties/unavailable excluded",
         "horizon": HORIZON,
         "minimum_cross_section": 20,
-        "hac_max_lags": 4,
+        "hac_estimators": ["AM", "ES"],
+        "hac_bandwidths_trading_sessions": [4, 10, 20, 60],
+        "hac_min_observations": 30,
+        "hac_missing_dates_preserved": True,
         "portfolio_metrics_calculated": False,
         "signal_rows_with_valid_target": int(len(observations)),
         "dates": int(observations["tradedate"].nunique()),
@@ -387,6 +404,8 @@ def main() -> None:
         summary,
         coverage,
         redundancy,
+        hac_inference,
+        missingness,
         metadata,
     )
 
