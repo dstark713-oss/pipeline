@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -18,6 +17,76 @@ class HACResult:
     n_observations: int
     n_sessions: int
     bandwidth: int
+    method: str
+    long_run_variance: float
+
+    @property
+    def variance_of_mean(self) -> float:
+        """Variance of the estimated sample mean."""
+        return self.variance
+
+
+def _validate_inputs(
+    values: pd.Series,
+    calendar: pd.Index,
+    bandwidth: int,
+) -> tuple[np.ndarray, np.ndarray, int, int]:
+    if isinstance(bandwidth, bool) or not isinstance(bandwidth, (int, np.integer)):
+        raise TypeError("bandwidth must be an integer")
+    if bandwidth < 0:
+        raise ValueError("bandwidth must be >= 0")
+
+    calendar = pd.Index(calendar)
+    if len(calendar) == 0:
+        raise ValueError("calendar must not be empty")
+    if not calendar.is_unique:
+        raise ValueError("calendar must contain unique sessions")
+    calendar = calendar.sort_values()
+
+    if not values.index.is_unique:
+        raise ValueError("IC index must contain unique dates")
+    if not values.index.isin(calendar).all():
+        raise ValueError("IC dates must belong to the calendar")
+
+    aligned = pd.to_numeric(values.reindex(calendar), errors="coerce").to_numpy(dtype=float)
+    observed = np.isfinite(aligned)
+    n = int(observed.sum())
+    sessions = len(calendar)
+    if n < 2:
+        raise ValueError("At least two finite IC values are required")
+    return aligned, observed, n, sessions
+
+
+def _result(
+    mean: float,
+    long_run_variance: float,
+    n: int,
+    sessions: int,
+    bandwidth: int,
+    method: str,
+) -> HACResult:
+    # Numerical round-off can create a tiny negative estimate.
+    long_run_variance = max(float(long_run_variance), 0.0)
+    variance = long_run_variance / n
+    std_error = float(np.sqrt(variance))
+    if std_error == 0.0:
+        t_stat = np.nan
+        p_value = np.nan
+    else:
+        t_stat = float(mean / std_error)
+        p_value = float(2.0 * norm.sf(abs(t_stat)))
+    return HACResult(
+        mean=float(mean),
+        variance=float(variance),
+        std_error=std_error,
+        t_stat=t_stat,
+        p_value=p_value,
+        n_observations=n,
+        n_sessions=sessions,
+        bandwidth=bandwidth,
+        method=method,
+        long_run_variance=long_run_variance,
+    )
 
 
 def calendar_aware_hac(
@@ -26,96 +95,70 @@ def calendar_aware_hac(
     bandwidth: int,
 ) -> HACResult:
     """
-    Calendar-aware HAC estimator for the mean of a time series
-    with missing observations.
+    Amplitude-modulated (AM) HAC for a series with missing calendar sessions.
 
-    Missing IC values remain missing on the calendar.
-    Lag pairs are matched by actual trading-session distance.
-
-    Parameters
-    ----------
-    ic_series : pd.Series
-        IC values indexed by trading-session dates.
-
-    calendar : pd.Index
-        Complete, ordered trading-session calendar.
-
-    bandwidth : int
-        Maximum HAC lag in trading sessions.
-
-    Returns
-    -------
-    HACResult
-        Mean, variance, standard error, t-statistic,
-        two-sided normal p-value and sample diagnostics.
+    This follows Datta & Du (2012): missing observations have g_t=0;
+    observed demeaned scores are z*_t - g_t * mean. Autocovariances
+    retain the original calendar lag and are normalized by S, the
+    number of observed values. The variance of the observed mean is
+    the Bartlett LRV estimate divided by S.
     """
-
-    if bandwidth < 0:
-        raise ValueError("bandwidth must be >= 0")
-
-    if not calendar.is_unique:
-        raise ValueError("calendar must contain unique sessions")
-
-    calendar = pd.Index(calendar).sort_values()
-
-    if not ic_series.index.is_unique:
-        raise ValueError("IC index must contain unique dates")
-
-    if not ic_series.index.isin(calendar).all():
-        raise ValueError("IC dates must belong to the calendar")
-
-    series = ic_series.reindex(calendar).astype(float)
-
-    observed = series.notna()
-    n = int(observed.sum())
-    T = len(calendar)
-
-    if n < 2:
-        raise ValueError("At least two observed IC values are required")
-
-    mean_ic = float(series[observed].mean())
-
-    # Calendar-aligned demeaned scores.
-    # Missing observations contribute zero to the score sequence.
-    u = np.zeros(T, dtype=float)
-    u[observed.to_numpy()] = (
-        series[observed].to_numpy() - mean_ic
+    values, observed, n, sessions = _validate_inputs(
+        ic_series, calendar, bandwidth
     )
+    mean = float(values[observed].mean())
 
-    # Lag-zero covariance contribution.
-    meat = float(np.dot(u, u))
+    # z*_t - g_t * mean, with zero contribution at missing sessions.
+    scores = np.zeros(sessions, dtype=float)
+    scores[observed] = values[observed] - mean
 
-    # Bartlett-weighted calendar autocovariance contributions.
-    for lag in range(1, min(bandwidth, T - 1) + 1):
-        weight = 1.0 - lag / (bandwidth + 1)
-
-        cross_product = float(
-            np.dot(u[lag:], u[:-lag])
+    meat = float(np.dot(scores, scores))
+    max_lag = min(bandwidth, sessions - 1)
+    for lag in range(1, max_lag + 1):
+        weight = 1.0 - lag / (bandwidth + 1.0)
+        meat += 2.0 * weight * float(
+            np.dot(scores[lag:], scores[:-lag])
         )
 
-        meat += 2.0 * weight * cross_product
+    # Datta-Du AM LRV uses denominator S, not calendar length T.
+    long_run_variance = meat / n
+    return _result(
+        mean, long_run_variance, n, sessions, bandwidth, "AM"
+    )
 
-    variance = meat / (n ** 2)
 
-    # Guard against tiny negative values due to numerical precision.
-    variance = max(variance, 0.0)
+def equal_spacing_hac(
+    ic_series: pd.Series,
+    calendar: pd.Index,
+    bandwidth: int,
+) -> HACResult:
+    """
+    Equal-spacing (ES) HAC comparator.
 
-    std_error = float(np.sqrt(variance))
+    Finite observations are relabelled as consecutive observations.
+    Therefore lags refer to observed-IC time, not trading-session time.
+    """
+    _, observed, n, sessions = _validate_inputs(
+        ic_series, calendar, bandwidth
+    )
+    aligned = pd.to_numeric(
+        ic_series.reindex(pd.Index(calendar).sort_values()),
+        errors="coerce",
+    ).to_numpy(dtype=float)
+    x = aligned[observed]
+    mean = float(x.mean())
+    residual = x - mean
 
-    if std_error == 0.0:
-        t_stat = np.nan
-        p_value = np.nan
-    else:
-        t_stat = mean_ic / std_error
-        p_value = float(2.0 * norm.sf(abs(t_stat)))
+    meat = float(np.dot(residual, residual))
+    max_lag = min(bandwidth, n - 1)
+    for lag in range(1, max_lag + 1):
+        weight = 1.0 - lag / (bandwidth + 1.0)
+        meat += 2.0 * weight * float(
+            np.dot(residual[lag:], residual[:-lag])
+        )
 
-    return HACResult(
-        mean=mean_ic,
-        variance=variance,
-        std_error=std_error,
-        t_stat=float(t_stat),
-        p_value=p_value,
-        n_observations=n,
-        n_sessions=T,
-        bandwidth=bandwidth,
+    # ES LRV is normalized by observed sample size S.
+    long_run_variance = meat / n
+    return _result(
+        mean, long_run_variance, n, sessions, bandwidth, "ES"
     )
