@@ -26,6 +26,8 @@ from config import (
     CHUNK_SIZE,
     EXCLUDED_TICKERS,
     HORIZON,
+    HAC_BANDWIDTHS,
+    HAC_MIN_OBSERVATIONS,
     OUTPUT_DIR,
     PANEL_PATH,
     PRICE_BOARD_PRIORITY,
@@ -331,7 +333,8 @@ def main() -> None:
     daily_ic = calculate_daily_ic(observations, feature_columns, signal_calendar)
     summary = summarize_ic(daily_ic)
     hac_inference = build_hac_inference(
-        daily_ic, signal_calendar, bandwidths=(4, 10, 20, 60)
+        daily_ic, signal_calendar, bandwidths=HAC_BANDWIDTHS,
+        min_observations=HAC_MIN_OBSERVATIONS,
     )
     missingness = summarize_missingness(daily_ic)
     coverage = calculate_feature_coverage(observations, feature_columns)
@@ -387,8 +390,8 @@ def main() -> None:
         "horizon": HORIZON,
         "minimum_cross_section": 20,
         "hac_estimators": ["AM", "ES"],
-        "hac_bandwidths_trading_sessions": [4, 10, 20, 60],
-        "hac_min_observations": 30,
+        "hac_bandwidths_trading_sessions": list(HAC_BANDWIDTHS),
+        "hac_min_observations": HAC_MIN_OBSERVATIONS,
         "hac_missing_dates_preserved": True,
         "portfolio_metrics_calculated": False,
         "signal_rows_with_valid_target": int(len(observations)),
