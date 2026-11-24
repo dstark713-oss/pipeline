@@ -113,7 +113,8 @@ def load_lqdt(path: Path) -> pd.DataFrame:
     q = pd.read_csv(path)
     require(q, ["tradedate", "open", "close"], "LQDT CSV")
     q["tradedate"] = pd.to_datetime(q["tradedate"], errors="coerce").dt.normalize()
-    q["open"] = pd.to_numeric(q["open"], errors="coerce")\n    q["close"] = pd.to_numeric(q["close"], errors="coerce")
+    q["open"] = pd.to_numeric(q["open"], errors="coerce")
+    q["close"] = pd.to_numeric(q["close"], errors="coerce")
     q = q.dropna(subset=["tradedate", "open", "close"]).sort_values("tradedate")
     q = q.drop_duplicates("tradedate", keep="last").set_index("tradedate")
     return q
