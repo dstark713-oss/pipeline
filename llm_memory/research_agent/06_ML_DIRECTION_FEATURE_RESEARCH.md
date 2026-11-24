@@ -1,6 +1,6 @@
 # ML Direction Prediction: Feature Research Context
 
-Last updated: 2026-11-25
+Last updated: 2026-11-25 (stage closure update)
 
 ## Purpose
 
@@ -100,135 +100,43 @@ Mean is retained as an exploratory/control feature to inspect its behavior, not 
 
 ## Implementation status
 
-As of 2026-11-24, the Rolling Statistical Moments experiment has been implemented and executed locally by the user. Its initial report exists, but the inferential results are preliminary because the HAC time index was compressed when dates with fewer than 20 valid securities were dropped. See the audit section below. Do not describe the initial p-values as validated.
+Feature Research 01 (Log Returns) is the base return representation. Feature Research 02 (Rolling Statistical Moments) has been executed, audited, and explicitly closed by the user on 2026-11-25. Its final experiment report and audit artifacts are the record of that stage.
 
+Do not reopen the 16 rolling-moment features (mean, variance, skewness, Fisher excess kurtosis over 20/60/120/240 sessions), repeat their IC/correlation/conditional-information discussion, or propose further diagnostics on them unless the user explicitly reopens the stage or new evidence identifies a concrete defect. The earlier audit plan below is historical and superseded by the closure record; it is not an active task list.
 
-## Rolling Statistical Moments: first execution results and audit state
+## Research Audit 01: closure record (2026-11-25)
 
-### Execution snapshot (2026-11-23/24)
+- Status: **CLOSED**.
+- The experiment used 195,601 signal rows, 5,471 dates, 188 securities, and 16 features.
+- Calendar-aware inference integration and the experiment report were completed in the repository workflow. The detailed report is the evidence source for exact methodology and results.
+- The user explicitly instructed: stop revisiting these features and move to the next feature family.
+- Do not infer that the features are approved for the final model. Stage closure means the research pass is complete, not that all candidates are selected or promoted.
+- No portfolio metrics are permitted during ongoing feature/model research.
 
-The user ran the experiment locally. Reported dataset:
-- 195,601 signal rows.
-- 5,471 signal dates.
-- 188 distinct securities across the historical panel.
-- 16 features (four statistics x four windows).
-- Target and universe as specified above.
+## Next feature family proposal: OHLC price-formation decomposition
 
-Initial descriptive findings (not final inferential conclusions):
-- Rolling variance had negative mean IC and Rank IC at all four windows. Mean IC became more negative with longer windows; variance-240 had mean IC about -0.0416 and mean Rank IC about -0.0241.
-- Rolling mean had positive IC/Rank IC, increasing with window length; mean-240 had mean IC about +0.0249 and Rank IC about +0.0316.
-- Fisher excess kurtosis had modest negative IC/Rank IC across windows; approximate mean IC range -0.011 to -0.021.
-- Skewness had weak/near-zero standalone IC, especially at 20/60/120; 240 showed a somewhat more negative Pearson IC, while Rank IC remained weak.
-- Long-window features showed substantial within-date redundancy. Examples of median pairwise correlations: variance-60 vs variance-120 about 0.917; variance-120 vs variance-240 about 0.907; mean-120 vs mean-240 about 0.769.
-- Coverage declined with window length. Mean/variance coverage: 20=97.5%, 60=94.8%, 120=89.1%, 240=78.4%. Skewness coverage was unexpectedly lower: 20=89.3%, 60=90.0%, 120=84.8%, 240=76.0%. This requires a code/data diagnostic; do not assume the missingness is benign.
+**Status: RESEARCHER PROPOSAL, NOT YET USER-APPROVED.**
 
-### Critical inference flaw
+Investigate how the daily price change is formed by separating close-to-close movement into overnight gap and intraday movement, then describing where the close sits within the day's high-low range. This uses OHLC information not represented by close-only rolling moments and is a more direct study of price formation than adding another catalogue of conventional indicators.
 
-The initial implementation calculated daily cross-sectional IC, dropped dates with fewer than 20 valid securities, then ran Newey-West/HAC with max_lags=4 on the remaining rows. This compresses time: two adjacent rows in the filtered series may be separated by multiple actual trading sessions, while HAC treats them as one lag apart. Therefore the reported HAC standard errors, p-values, and BH-adjusted q-values are not reliable as currently computed.
+Candidate raw features, calculated only from information available at close t:
+- Overnight gap: ln(Open_t / Close_{t-1}).
+- Intraday return: ln(Close_t / Open_t).
+- High-low log range: ln(High_t / Low_t).
+- Close location value: (2*Close_t - High_t - Low_t) / (High_t - Low_t), with explicit handling when High_t = Low_t.
+- Upper and lower wick proportions, normalized by the day's high-low range; define formulas carefully and avoid duplicate encodings.
+- Optional decomposition check: verify close-to-close log return equals overnight gap plus intraday return when all prices are valid and consistently adjusted.
 
-The initial HAC bandwidth of 4 also needs sensitivity analysis because five-session labels overlap and feature/market-state dependence may persist longer. Values displayed as 0.00000 are rounded, not literal zero.
+Research questions:
+1. Do overnight and intraday returns carry different associations with the five-session direction target?
+2. Does close location within the daily range add information beyond the signed intraday return?
+3. Are range and wick descriptors stable across time and securities, or mainly proxies for volatility/liquidity/data quality?
+4. Does the feature family add distinct information relative to the already researched close-return moments? Do not reopen or re-audit the old family merely to answer this; compare only if a predeclared, narrowly scoped join is needed later.
 
-### Research Audit 01: next required work
+Before implementation, verify corporate-action adjustment consistency across Open/High/Low/Close, zero-range handling, invalid OHLC bars, and whether the prior close is from the immediately preceding market session. Do not bridge missing sessions or forward-fill. Use the existing signal-date PIT TOP50 cohort and the fixed t-to-t+5 binary adjusted-Close target. Evaluate coverage, cross-sectional information, temporal stability, redundancy within the new family, and appropriate dependence-aware uncertainty. Freeze formulas and tests before inspecting results.
 
-Do not move to a new feature family or model construction until this audit is completed.
+Why this is next: it expands the observation space from close-only return moments to the internal structure of daily OHLC price formation, while remaining within the existing dataset and prediction task. It is a proposal, not an assumption that these features will predict direction.
 
-1. Recompute inference using the full trading-session calendar, preserving missing IC dates as missing rather than compressing time. Ensure HAC covariance uses actual session lags.
-2. Run bandwidth sensitivity at 4, 10, 20, and 60 trading sessions, with assumptions documented.
-3. Add a temporal block-bootstrap uncertainty estimate as a complementary check.
-4. Diagnose the skewness coverage gap versus mean/variance for identical windows. Inspect estimator output, zero/near-zero variance, missing return patterns, and implementation details.
-5. Inspect daily IC distributions and temporal stability, including subperiod coverage and the long-window sample-size limitations.
-6. Reassess the apparent variance/mean/kurtosis patterns only after corrected inference. Preserve the descriptive findings as provisional.
-7. Keep portfolio metrics out of this audit and out of all iterative feature/model selection.
+## Active next action
 
-### Interpretation constraints
-
-- Negative variance IC is an association with a lower probability of an up label, not evidence that volatility causes losses.
-- Positive rolling-mean IC may reflect drift/momentum, but is not yet evidence of robust predictive value.
-- Weak standalone skewness IC does not prove absence of conditional or interaction information.
-- Correlation is a redundancy diagnostic, not proof that features are interchangeable.
-- Do not select or discard features solely from the first-pass IC ranking.
-
-Current working point: Research Audit 01 for Rolling Statistical Moments, not the next feature family.
-
-## Research Audit 01: HAC implementation validation update (2026-11-25)
-
-### Repository code inspection
-
-Inspected the current implementation in:
-- `scripts/experiments/ml_1/rolling_statistical_moments/evaluation.py`
-- `scripts/experiments/ml_1/rolling_statistical_moments/run_experiment.py`
-- `scripts/experiments/ml_1/rolling_statistical_moments/config.py`
-
-Confirmed current integration flaw:
-- `calculate_daily_ic()` emits rows only when a date-feature pair has at least 20 valid securities, both target classes, and finite Pearson and Spearman correlations.
-- `summarize_ic()` groups the emitted rows by feature and calls `newey_west_mean_test()`.
-- `newey_west_mean_test()` drops missing values and treats the remaining values as equally spaced.
-- Therefore the original inference compresses trading-session time.
-- The full market-session calendar is already constructed in `run_experiment.py::load_adjusted_history()` from distinct `tradedate` values across approved boards TQBR/EQBR, sorted and excluding the suspension interval. It is returned by `load_adjusted_history()` and used to reindex each ticker's history, but it is not passed into daily IC inference.
-- The natural integration point is to retain the full calendar and pass it to the summary/HAC layer. The daily IC output should also preserve explicit missing date-feature observations (including their cross-sectional N / missingness reason) or otherwise make them reconstructible against the full calendar.
-
-### Calendar-aware HAC implementation and unit tests
-
-A provisional standalone implementation was created locally by the user in `hac_calendar.py`, with tests in `test_hac_calendar.py`.
-
-Latest test result: 6/6 passed:
-- IID standard-error sanity check.
-- Positive-autocorrelation SE check.
-- Missing sessions preserve calendar lags.
-- No-missing result matches manual Newey-West calculation.
-- Missing-observation count.
-- Explicit manual calendar lag-pair verification.
-
-These tests validate basic arithmetic and calendar indexing, not complete statistical validity.
-
-### Monte Carlo results
-
-The user ran four MCAR scenarios (missingness independent of values), with AR(1) generated at phi=0.5.
-
-First run: 500 sessions, 500 simulations, bandwidth 20:
-- IID/no missing: coverage 0.944; rejection 0.056.
-- IID/20% missing: coverage 0.942; rejection 0.058.
-- AR(1)/no missing: coverage 0.932; rejection 0.068.
-- AR(1)/20% missing: coverage 0.924; rejection 0.076.
-
-Bandwidth sensitivity at 500 sessions, 2,000 simulations:
-- IID coverage deteriorated as bandwidth increased from 10 to 60 (0.952 to 0.914 without missing; 0.954 to 0.922 with 20% missing), consistent with adding noisy unnecessary lag terms in finite samples.
-- AR(1) coverage was around 0.932-0.936 at L=10/20 and worse at L=40/60.
-- This short-sample experiment showed substantial finite-sample sensitivity.
-
-Bandwidth sensitivity at 5,471 sessions, 1,000 simulations (despite the script's printed footer still incorrectly saying 2,000):
-- IID/no missing coverage: L4 0.958, L10 0.958, L20 0.957, L60 0.955.
-- IID/20% missing: L4 0.943, L10 0.942, L20 0.942, L60 0.943.
-- AR(1)/no missing: L4 0.914, L10 0.945, L20 0.951, L60 0.951.
-- AR(1)/20% missing: L4 0.922, L10 0.942, L20 0.949, L60 0.951.
-
-Interpretation:
-- Longer series reduce the finite-sample instability of larger bandwidths.
-- For this specific stationary AR(1), L20/L60 achieved coverage close to nominal 95%; L4 under-covered.
-- For IID, increasing bandwidth did not help and slightly reduced coverage.
-- This does not select a production bandwidth. The real IC process may have more complex dependence, regime shifts, and informative missingness.
-- Correct the Monte Carlo script's printed simulation-count footer to 1,000 for the long-series run if retained.
-
-### Important methodological literature to consider
-
-Datta & Du (2012), Federal Reserve IFDP 1060, *Nonparametric HAC Estimation for Time Series Data with Missing Observations*:
-https://www.federalreserve.gov/econres/ifdp/nonparametric-hac-estimation-for-time-series-data-with-missing-observations.htm
-
-The paper formalizes two HAC approaches for missing observations:
-- Amplitude Modulated (AM): preserve the original time index and treat missing observations as non-serially correlated.
-- Equal Spacing (ES): relabel observed values as equally spaced and apply HAC in observation time.
-It warns that simply estimating the underlying process spectrum using only observed data can produce incorrect inference. The paper finds ES preferable in many settings due to lower bias, while AM may be preferable for small samples and low autocorrelation.
-
-The current calendar-aligned zero-score implementation is closest in spirit to an AM estimator. Before treating it as final, compare its exact normalization and finite-sample behavior against the formal AM construction and run a fair AM-vs-ES simulation comparison. Calendar preservation is not automatically the only theoretically defensible missing-data HAC approach.
-
-### Next steps
-
-1. Validate the exact AM estimator formula/normalization against Datta & Du (2012), rather than relying only on the current custom derivation and MCAR simulation.
-2. Implement a comparator Equal Spacing HAC estimator for diagnostic comparison; do not silently substitute it for calendar-time inference.
-3. Expand simulations beyond MCAR: test missingness dependent on observed process values / cross-sectional N and assess bias/coverage. Clearly distinguish missingness mechanisms.
-4. Integrate inference into the existing pipeline using the already available complete TQBR/EQBR session calendar.
-5. Run bandwidth sensitivity L=4, 10, 20, 60 on actual daily IC and Rank IC, retaining missing dates and missingness diagnostics.
-6. Add temporal block-bootstrap uncertainty, then diagnose skewness coverage and IC temporal stability.
-7. No portfolio metrics and no feature-family transition until Audit 01 is complete.
-
-Current status: unit tests pass; calendar-aware HAC is provisionally tested under IID/AR(1) with MCAR, but the exact missing-data estimator and real-data inference remain unvalidated.
+Teach and agree the OHLC decomposition family specification before coding. The next discussion should cover intuition, exact formulas, edge cases, mathematical relationships, hypotheses, and predeclared tests. Do not start model fitting or portfolio evaluation.
