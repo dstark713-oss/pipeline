@@ -128,3 +128,40 @@ Begin by formalizing the prediction problem: label/target, horizon, prediction t
 - Direction-prediction research approved by the user.
 - Portfolio-metric firewall recorded as a binding constraint.
 - No model code or portfolio evaluation was run as part of this decision.
+
+
+## 2026-11-25 | Rolling Statistical Moments closed; next OHLC family proposed
+
+The user explicitly closed the Rolling Statistical Moments stage and instructed the Research Agent to stop repeatedly revisiting its 16 candidates. This closure is a workflow decision: do not reopen the feature family, repeat its IC/correlation/conditional-information discussion, or propose additional diagnostics without an explicit user request or concrete new evidence.
+
+### Current role reaffirmed
+
+The assistant's role in this workstream is **Researcher**. It identifies capability gaps, proposes research directions, teaches the underlying methods, designs falsifiable experiments, challenges assumptions, and documents evidence and limitations. It does not make trading/allocation decisions and does not optimize portfolio outcomes.
+
+### Research plan preserved
+
+For each new feature family:
+1. Theory, intuition, mathematics, and interpretation.
+2. Falsifiable hypotheses and failure modes.
+3. Agree exact formulas, edge cases, sample rules, and evaluation parameters before execution.
+4. Implement a reproducible experiment after specification approval.
+5. Evaluate coverage, information content, temporal stability, redundancy, and uncertainty.
+6. Record results and limitations; do not auto-promote features.
+7. Recommend the next research capability.
+
+The active prediction task and evaluation firewall remain unchanged: PIT TOP50, binary adjusted-Close direction t to t+5, features available by close t, expanding WF with 3-year initial training and monthly retraining, purge labels crossing the cutoff; no portfolio metrics before final model approval and only one decisive portfolio run after approval.
+
+### Next feature-family proposal: OHLC price-formation decomposition
+
+Proposed next investigation:
+- Overnight gap: ln(Open_t / Close_{t-1}).
+- Intraday return: ln(Close_t / Open_t).
+- High-low log range: ln(High_t / Low_t).
+- Close location value: (2*Close_t - High_t - Low_t)/(High_t-Low_t), with explicit zero-range handling.
+- Upper/lower wick proportions, with exact non-duplicative formulas to be agreed.
+
+Research question: do overnight repricing, intraday movement, and close location within the daily range contain distinct information about the five-session direction target?
+
+This is a proposal only. Before coding, inspect adjusted OHLC consistency and data-quality constraints, teach the mathematics, agree definitions and edge cases, and freeze the specification. No claim is made that these features are predictive.
+
+No new experiment was implemented or run as part of this decision. No project Python code was changed.
