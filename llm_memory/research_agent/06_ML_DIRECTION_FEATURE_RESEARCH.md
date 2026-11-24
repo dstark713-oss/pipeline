@@ -113,30 +113,33 @@ Do not reopen the 16 rolling-moment features (mean, variance, skewness, Fisher e
 - Do not infer that the features are approved for the final model. Stage closure means the research pass is complete, not that all candidates are selected or promoted.
 - No portfolio metrics are permitted during ongoing feature/model research.
 
-## Next feature family proposal: OHLC price-formation decomposition
+## DS-first feature research constraint and next direction
 
-**Status: RESEARCHER PROPOSAL, NOT YET USER-APPROVED.**
+The user explicitly prohibits trader-style technical indicators/features as the basis for the new ML predictor. ATR is a named example of a trader-style feature that must not become a template. Do not propose RSI, MACD, Bollinger Bands, stochastic oscillators, candle patterns, or trader-style price-action heuristics. Do not relabel such indicators as statistical features. The OHLCV dataset is a raw observation domain, not an instruction to create candlestick signals.
 
-Investigate how the daily price change is formed by separating close-to-close movement into overnight gap and intraday movement, then describing where the close sits within the day's high-low range. This uses OHLC information not represented by close-only rolling moments and is a more direct study of price formation than adding another catalogue of conventional indicators.
+Feature discovery must be grounded in data science, statistics, statistical learning, probability, information theory, and time-series analysis. Start from a research question about the data-generating process and define what is being measured, why the measurement is statistically meaningful, what assumptions it needs, and how it can fail. The legacy ATR-based tool may remain separate and operational, but it is not a methodological precedent for this ML project.
 
-Candidate raw features, calculated only from information available at close t:
-- Overnight gap: ln(Open_t / Close_{t-1}).
-- Intraday return: ln(Close_t / Open_t).
-- High-low log range: ln(High_t / Low_t).
-- Close location value: (2*Close_t - High_t - Low_t) / (High_t - Low_t), with explicit handling when High_t = Low_t.
-- Upper and lower wick proportions, normalized by the day's high-low range; define formulas carefully and avoid duplicate encodings.
-- Optional decomposition check: verify close-to-close log return equals overnight gap plus intraday return when all prices are valid and consistently adjusted.
+The prior discussion identified **Statistical Learning under Uncertainty** as a broader methodological direction: study weak signals, dependence between observations, estimation uncertainty, and unstable/nonstationary distributions. This is a methodological research direction, not an approved feature family.
 
-Research questions:
-1. Do overnight and intraday returns carry different associations with the five-session direction target?
-2. Does close location within the daily range add information beyond the signed intraday return?
-3. Are range and wick descriptors stable across time and securities, or mainly proxies for volatility/liquidity/data quality?
-4. Does the feature family add distinct information relative to the already researched close-return moments? Do not reopen or re-audit the old family merely to answer this; compare only if a predeclared, narrowly scoped join is needed later.
+### Candidate next research question (proposal only): temporal dependence
 
-Before implementation, verify corporate-action adjustment consistency across Open/High/Low/Close, zero-range handling, invalid OHLC bars, and whether the prior close is from the immediately preceding market session. Do not bridge missing sessions or forward-fill. Use the existing signal-date PIT TOP50 cohort and the fixed t-to-t+5 binary adjusted-Close target. Evaluate coverage, cross-sectional information, temporal stability, redundancy within the new family, and appropriate dependence-aware uncertainty. Freeze formulas and tests before inspecting results.
+Investigate whether the return-generating process contains reproducible serial-dependence structure at selected lags, and whether a compact, statistically defensible representation adds information about the fixed t-to-t+5 direction target.
 
-Why this is next: it expands the observation space from close-only return moments to the internal structure of daily OHLC price formation, while remaining within the existing dataset and prediction task. It is a proposal, not an assumption that these features will predict direction.
+Potential concepts to teach before specification:
+- Autocovariance and autocorrelation: what they measure and what they do not.
+- Partial autocorrelation / conditional dependence after accounting for intermediate lags.
+- Sampling uncertainty of dependence estimates in finite, noisy samples.
+- Multiple testing and lag-selection bias.
+- Nonstationarity, regime instability, and cross-sectional heterogeneity.
+- Dependence induced by overlapping five-session labels versus dependence in the input process itself.
 
+This must not become a bulk ACF/PACF indicator catalog. First establish whether the question is distinct from the completed rolling-moment family, define the statistical estimand, choose a small predeclared lag design, and specify inference/validation. No implementation until the user approves the design.
+
+The previously suggested OHLC gap/intraday/range/CLV/wick decomposition is **withdrawn** because it drifts toward trader-style price-action feature engineering and was not aligned with the user's DS-first constraint.
+
+## Active next action
+
+Explain the DS-first research direction and the temporal-dependence question, including its mathematical foundations and relationship to the already completed rolling-moment experiment. Then propose a narrow experiment specification for user review. Do not write code or run an experiment until approved.
 ## Active next action
 
 Teach and agree the OHLC decomposition family specification before coding. The next discussion should cover intuition, exact formulas, edge cases, mathematical relationships, hypotheses, and predeclared tests. Do not start model fitting or portfolio evaluation.
