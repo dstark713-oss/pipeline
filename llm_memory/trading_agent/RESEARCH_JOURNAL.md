@@ -170,3 +170,42 @@ Created `scripts/one_use/audit_breadth_transfer_20261124.py` (commit `91e6cca0fd
 - Reassess GCHE only on its own price/volume/event/fundamental evidence, not by extrapolating TOP50 breadth.
 
 No orders placed. User retains final decision and execution authority.
+
+
+## 2026-11-24 | Final breadth-transfer audit and allocation decision
+
+### User-run evidence received
+The user supplied bucket, HAC-lag sensitivity, matched historical LQDT, non-overlapping timing-offset, and expanding walk-forward outputs. The matched equity/LQDT convention is next-session open to horizon close.
+
+- Low breadth (0-10%), 5 sessions: n=250; equity mean -0.143%, matched LQDT +0.187%, excess -0.330 pp; equity beat LQDT 45.2%.
+- Low breadth (0-10%), 20 sessions: n=250; equity mean +1.378%, matched LQDT +0.897%, excess +0.480 pp; equity beat LQDT 48.4%.
+- HAC breadth slope at 5 sessions is positive and nominally significant across tested lags 4-39 (t about 2.41-2.68). At 20 sessions it is not significant at any tested lag (t declines from 1.26 to 0.41).
+- Breadth buckets are non-monotonic. Low-breadth mean is negative over 5 sessions (-0.115%) but positive over 20 sessions (+1.732%).
+- Five-session non-overlap offsets all show negative low-breadth means, with roughly 51-58 observations per offset. Twenty-session offsets are mostly positive but have only 9-19 observations per offset and substantial dispersion.
+- Walk-forward model does not beat the unconditional baseline: 5-session MAE 2.0247% vs 2.0211%, RMSE 2.9985% vs 2.9984%, correlation 0.0356; 20-session MAE 4.5612% vs 4.5155%, RMSE 6.2704% vs 6.2187%, correlation -0.1343. Low-breadth actual means are positive on both WF horizons (+0.230% and +2.335%), despite negative/low predictions.
+- These results do not establish a tradable breadth strategy. Overlapping forward returns, regime clustering, different complete-case subsets, small low-breadth offset counts, no uncertainty interval for matched excess, and no T-specific beta/alpha remain limitations. The apparent divergence between 20-session buckets, HAC linear fit, and WF predictions needs code/sample-alignment audit rather than narrative smoothing.
+
+### Logic review
+1. Breadth 8% (4/50) is a valid descriptive warning about narrow market participation.
+2. The 5-session historical matched excess is negative, but modest and not a reliable forecast; WF model fails to add value.
+3. The 20-session matched excess is positive on average but beat frequency is below 50%; this is mixed evidence, not a bullish signal.
+4. The 20-session HAC relationship is not significant; do not infer a stable linear breadth premium.
+5. The WF model is worse than a naive baseline on MAE/RMSE at both horizons; do not use it for prediction or allocation.
+6. The market-level TOP50 result does not establish T-specific alpha/beta and does not transfer to GCHE, which is outside the universe.
+7. No new candidate has a validated edge over matched LQDT.
+
+### Final recommendation (not executed)
+Maintain the latest user-reported actual allocation:
+- T 10%: HOLD. Do not apply the previously suggested 10% -> 5% trim; that sizing was not supported by T-specific beta/alpha or a portfolio optimization and is withdrawn.
+- GCHE 2%: HOLD. Evaluate independently; TOP50 breadth does not cover it.
+- LQDT 88%: HOLD.
+- New positions: none.
+
+This is a deliberate no-change decision, not a claim that 10/2/88 is optimal. Breadth is a reason not to add equity beta and to watch short-horizon risks, but not enough to force a trim. The earlier 5/2/93 recommendation was not executed and is superseded. No orders placed.
+
+### Next research gates
+- Audit code and exact sample alignment among bucket/HAC/matched-LQDT/WF outputs, especially the 20-session low-breadth divergence.
+- Add block-bootstrap or regime-aware uncertainty intervals for matched excess; account for regime clustering and overlapping horizons.
+- Test a pre-specified breadth rule walk-forward, with realistic friction.
+- Estimate T-specific beta/conditional alpha and incremental portfolio risk before proposing any breadth-driven T sizing.
+- Keep GCHE on its own issuer/price/event evidence.
