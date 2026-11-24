@@ -61,3 +61,14 @@ Do not simply repeat the previous recommendation or propose exact portfolio weig
 
 ## Current decision
 HOLD T 10% / GCHE 2% / LQDT 88%; no new positions. No orders placed. User retains final decision and execution authority.
+
+
+## GCHE individual review update (2026-11-24)
+GCHE is outside TOP50; this only means the breadth model does not cover it. An issuer-specific review has now been completed:
+- 9M 2026: revenue +6.4%; adjusted gross profit +26.1%; adjusted EBITDA +28.5% to RUB 51.2bn; reported net profit +20.3%; adjusted net profit +135.9%; adjusted FCF RUB 19.8bn vs RUB 5.2bn; net debt -7.9% to RUB 131.1bn; ND/EBITDA 1.9x; interest coverage 3.4x.
+- Offsets: physical sales -0.3%; exports -10.1%, export average price -5.5%; Foodservice -0.9%; favorable pricing/mix and grain procurement helped margins; capex -8.2%.
+- 24 Nov price snapshot around RUB 3,729, -1.61% after prior +3.67%; intraday range 3,683-3,775. Volatile near-term structure; external and local technical prices may have different timestamps/adjustment bases.
+- Horizon view: H1 neutral/elevated range risk; H5 neutral/choppy; H20 moderately positive fundamental bias with export and feed-cost risks.
+- Decision: HOLD existing 2%, no add. Improving profitability/FCF/leverage support retention; export weakness, foodservice, feed-cost sensitivity, interest burden and choppy tape prevent adding. No validated alpha or LQDT-beating forecast. Poultry mortality rumor unverified, excluded.
+- Reassessment: worsening export restrictions, feed costs/margins, FCF, leverage/coverage, or confirmed technical breakdown.
+Process rule: never mark HOLD simply because a name is outside the TOP50 model universe. Complete and document the issuer-specific review first.
