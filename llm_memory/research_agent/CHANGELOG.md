@@ -31,3 +31,13 @@
 - Explicitly allowed statistical/predictive metrics on WF and recorded that the user will not create a separate fixed IS/VAL split.
 - Limited portfolio evaluation to one decisive run after final model approval; portfolio results must not feed back into tuning or model selection.
 - Updated the Research Agent's active project, next steps, and operating rules. No model code or portfolio evaluation was run.
+
+
+## 2026-11-25 | Correct DS-first feature research constraint
+
+- Withdrew the OHLC gap/intraday/range/CLV/wick proposal as misaligned with the user's explicit prohibition on trader-style features.
+- Recorded the binding rule: no trader-derived technical indicators or price-action heuristics in the new ML predictor; ATR is an explicit example, as are RSI/MACD/Bollinger/stochastic and candlestick patterns.
+- Clarified that OHLCV is the raw data domain, not a mandate to reproduce technical analysis.
+- Reaffirmed statistical learning, probability, information theory, and time-series analysis as the feature-discovery lens.
+- Recorded Statistical Learning under Uncertainty as a methodological direction and temporal dependence as a possible next research question, pending user approval.
+- No feature code or experiment was created or run.
