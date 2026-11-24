@@ -209,3 +209,23 @@ This is a deliberate no-change decision, not a claim that 10/2/88 is optimal. Br
 - Test a pre-specified breadth rule walk-forward, with realistic friction.
 - Estimate T-specific beta/conditional alpha and incremental portfolio risk before proposing any breadth-driven T sizing.
 - Keep GCHE on its own issuer/price/event evidence.
+
+
+## 2026-11-24 | GCHE individual review completed after process correction
+
+### Process failure acknowledged
+The previous decision tree correctly said that GCHE's exclusion from TOP50 requires separate issuer-specific assessment, but the final recommendation labelled GCHE HOLD without actually performing that review. This was a process failure. Model-universe exclusion is not evidence for HOLD or EXIT. A position cannot be marked fully reviewed until its own issuer, price, liquidity, events, and horizon analysis is completed.
+
+### GCHE evidence reviewed
+- Issuer 9M 2026 disclosure (17 Nov): revenue +6.4%; adjusted gross profit +26.1%; adjusted EBITDA +28.5% to RUB 51.2bn; reported net profit +20.3%; adjusted net profit +135.9% to RUB 24.2bn; adjusted FCF RUB 19.8bn vs RUB 5.2bn; net debt RUB 131.1bn, down 7.9%; ND/adjusted EBITDA 1.9x; interest coverage 3.4x.
+- Operating offsets: total physical sales -0.3%; export volumes -10.1%, average export realization -5.5%; Foodservice -0.9%; retail/wholesale +1.1%. Margin benefited from pricing/mix, procurement efficiency and favorable grain conditions. Capex reduced 8.2%, supporting FCF but potentially limiting future capacity investment if sustained.
+- 24 Nov public price snapshot around RUB 3,729, down about 1.61% after 23 Nov rise around 3.67%; intraday range about RUB 3,683-3,775. Volatile/choppy near-term tape. External quote/technical sources may differ by timestamp and adjusted/unadjusted basis; do not synthesize conflicting indicators.
+- 1 session: neutral / elevated short-term range and event risk.
+- 5 sessions: neutral; fundamental release is constructive but price action is choppy.
+- 20 sessions: moderately positive fundamental bias; export and feed-cost/margin risks remain.
+- A reported poultry mortality incident could not be confirmed from reliable sources and is excluded from base case.
+
+### GCHE decision
+HOLD existing 2%; do not add. This is now supported by a completed, though not exhaustive, issuer-specific review: improving adjusted profitability, FCF and leverage support retaining a small position; export/foodservice weakness, feed-cost sensitivity, interest burden and volatile price action argue against adding. No validated alpha model or reliable expected-return premium over LQDT has been established. No cost basis or exact position risk budget supplied; no claim about unrealized P&L or mathematically optimal sizing. Reassess if export restrictions worsen, feed costs reverse, margin/FCF deteriorate, debt/interest coverage worsens, or a confirmed technical breakdown occurs.
+
+The portfolio recommendation remains T 10%, GCHE 2%, LQDT 88%, no new positions, but the GCHE HOLD is now based on its own evidence rather than TOP50 exclusion. No orders placed.
