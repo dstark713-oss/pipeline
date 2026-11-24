@@ -296,16 +296,52 @@ After the user accepts/rejects the recommendation or supplies the executed state
 
 Never rewrite a prior decision to make it appear correct after the fact.
 
-## 13. Current reference state (historical, not a default target)
+## 13. Current reference state and latest breadth-transfer audit (2026-11-24)
 
-As of the 2026-11-23 user-reported snapshot:
+### Actual portfolio snapshot (not execution-confirmed since 2026-11-23)
 - T: 10%
 - GCHE: 2%
 - LQDT: 88%
 
-A recommendation dated 2026-11-24 was to hold those weights. The 12% equity sleeve resulted from a tactical reduction on 2026-11-20 and was explicitly not a strategic baseline. That historical recommendation must not be treated as an invariant or as a target for future runs. Reassess it under this short-horizon decision tree using the latest incoming contract and market snapshot.
+This is the latest user-reported actual allocation. The 5/2/93 recommendation made earlier on 2026-11-24 was not executed and is superseded by the completed matched-benchmark and walk-forward audit below. Do not represent 5/2/93 as the current portfolio or as the current recommendation.
 
-At that time, breadth above SMA20 was 12% (6/50), with a five-session change of -42 percentage points. This was a negative market-regime input, not a standalone allocation formula. The previously discussed 8% / 25% breadth thresholds and +6% from SMA20 take-profit idea are unvalidated hypotheses, not approved automatic rules.
+### Breadth-transfer experiment: user-run results supplied 2026-11-24
+Current breadth reference: 8% (4/50 above SMA20; local screener snapshot). Historical diagnostic sample:
+- HAC regression, horizon 5: breadth slope +0.00955; t-statistics +2.41 to +2.68 for lags 9-39 (lag 4 t=2.48); nominal p-values 0.007-0.016. This supports a positive association between breadth and subsequent 5-session equal-weight universe returns in this sample. It does not by itself establish a tradable or out-of-sample edge.
+- HAC regression, horizon 20: slope +0.00564; t-statistics fall from 1.26 (lag 0) to 0.41 (lag 39); no statistical evidence of a stable linear association at this horizon.
+- Matched LQDT comparison in low breadth (0-10%):
+  - 5 sessions: n=250; mean equity return -0.143%; mean matched LQDT return +0.187%; mean excess -0.330 percentage points; equity beat LQDT on 45.2% of observations.
+  - 20 sessions: n=250; mean equity return +1.378%; mean matched LQDT return +0.897%; mean excess +0.480 percentage points; equity beat LQDT on 48.4% of observations.
+  - Returns use the same next-session-open to horizon-close convention for equity and LQDT. These are historical conditional averages, not forecasts or guaranteed outcomes. Transaction costs and uncertainty intervals for the excess means are not supplied.
+- Breadth buckets are not monotonic:
+  - 5-session low-breadth bucket mean -0.115%, versus +0.183% for breadth above 50%.
+  - 20-session low-breadth bucket mean +1.732%, versus +0.410% for breadth above 50%.
+  - The 20-session low-breadth bucket is positive, but its median is only +1.012%; bucket means and medians vary materially across regimes.
+- Non-overlap timing offsets:
+  - At 5 sessions, all five calendar offsets in the low-breadth subset have negative mean returns (approximately -0.01% to -0.53%); each offset has only 51-58 observations.
+  - At 20 sessions, most offsets have positive means, but each offset contains only 9-19 low-breadth observations and results are dispersed. This is weak evidence, not a stable timing rule.
+- Expanding walk-forward diagnostics:
+  - 5 sessions: n=3,349; correlation 0.0356; direction accuracy 53.72%; model MAE 2.0247% versus baseline MAE 2.0211%; model RMSE 2.9985% versus baseline 2.9984%. Low-breadth subset n=183; actual mean +0.230%, predicted mean -0.435%, positive share 53.55%.
+  - 20 sessions: n=3,305; correlation -0.1343; direction accuracy 52.74%; model MAE 4.5612% versus baseline 4.5155%; model RMSE 6.2704% versus baseline 6.2187%. Low-breadth subset n=182; actual mean +2.335%, predicted mean +0.415%, positive share 54.95%.
+  - The walk-forward model does not add predictive value over the unconditional baseline on MAE/RMSE at either horizon. The 20-session forecast correlation is negative. Do not use this model for allocation.
+- Important unresolved diagnostic: the 20-session low-breadth bucket/matched means are positive, while the simple HAC linear model's 20-session slope is statistically insignificant and the walk-forward model underpredicts low-breadth outcomes. These are not necessarily mathematical contradictions (nonlinear/regime mixture and different evaluation subsets can produce them), but they rule out a simple linear "low breadth means sell" interpretation. Audit sample construction, regime persistence, and subset alignment before any stronger claim.
+- Historical samples are not independent observations merely because n is large; forward horizons overlap, regimes cluster, and the low-breadth subset is much smaller than the full sample. No block-bootstrap confidence intervals, pre-registered OOS regime rule, T beta/conditional alpha estimate, or GCHE-specific transfer test is supplied.
+
+### Decision after completed audit (recommendation, not execution)
+**HOLD current portfolio: T 10%, GCHE 2%, LQDT 88%.**
+- T: HOLD 10%. Weak breadth is a short-horizon risk warning; matched historical low-breadth equity excess is negative over 5 sessions. However, the effect is modest (-0.33 pp average versus LQDT), beat frequency is 45.2%, walk-forward forecasts fail to beat the baseline, and no T-specific beta/alpha or portfolio-level sizing estimate exists. This is insufficient to justify the earlier arbitrary 5 percentage-point trim. Do not add.
+- GCHE: HOLD 2%. It is outside the TOP50 breadth universe; no direct inference from this breadth test is valid. Continue issuer-specific price, event, liquidity and fundamental review. Do not add on this evidence.
+- LQDT: retain 88% as the current opportunity-cost alternative. No forced rotation from equities is justified by this experiment alone.
+- New positions: 0%. No validated cross-sectional edge or candidate-specific advantage over LQDT has been demonstrated.
+- No leverage or shorts recommended. No order was placed; the user retains execution authority.
+
+### Operating implications and reassessment triggers
+1. Breadth remains a market-state warning and a reason to avoid adding beta, not an automatic sell signal.
+2. For 1-5 session decisions, explicitly price gap/event risk and the modest historical underperformance versus matched LQDT. Reassess if a holding-specific trigger appears; do not convert the market-level result into a mechanical T trade.
+3. For 20 sessions, the current evidence does not support a bearish low-breadth rule. Treat the result as mixed/uncertain.
+4. Do not use the walk-forward model for forecasts or sizing until it demonstrably beats simple baselines on genuinely out-of-sample data.
+5. Before promoting breadth into an allocation rule: verify exact code/sample alignment across bucket, HAC, matched-LQDT and WF outputs; add block-bootstrap or regime-aware uncertainty; test non-overlapping and walk-forward samples; evaluate a pre-specified rule; estimate T-specific beta/alpha and portfolio-level incremental risk; keep GCHE separate.
+6. Reassess the HOLD if T-specific price/event evidence deteriorates, if matched LQDT excess becomes robustly negative out of sample after costs, or if the issuer thesis changes. Breadth recovery alone is not an automatic buy trigger.
 
 ## 14. Non-negotiable boundaries
 
