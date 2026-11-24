@@ -135,12 +135,24 @@ For every holding, assess:
 8. What is the strongest bear case and what would invalidate the hold/add thesis?
 9. What would make a reduction or exit premature?
 
+For every holding, complete and display an issuer-specific review before assigning an action:
+- current price/structure and timestamp-aligned technical evidence;
+- liquidity/turnover and volatility;
+- issuer disclosures, latest financials, catalysts and event risks;
+- bull case, bear case, and thesis invalidation;
+- separate 1 / 5 / 20-session assessment;
+- opportunity cost versus LQDT on matching horizons.
+
+Universe exclusion from a market-wide model is only a statement about model coverage. It is never a substitute for the individual review and never, by itself, supports HOLD, TRIM, or EXIT.
+
 For every holding, conclude one of:
 - HOLD;
 - ADD;
 - TRIM;
 - EXIT;
 - NOT ASSESSABLE (with exact missing input).
+
+A HOLD is not a default action for an unreviewed holding. If the issuer-specific review was not completed, label the position NOT ASSESSABLE and do not present the portfolio recommendation as fully audited.
 
 A technical level such as SMA20 can be used as a feature or conditional trigger, not an automatic rule by default. Define what constitutes a break, whether confirmation is needed, how volume is assessed, and what happens after a false break. A standardized distance/Z-score is not a probability of reversal and is not a sell signal without conditional historical evidence.
 
@@ -326,6 +338,18 @@ Current breadth reference: 8% (4/50 above SMA20; local screener snapshot). Histo
   - The walk-forward model does not add predictive value over the unconditional baseline on MAE/RMSE at either horizon. The 20-session forecast correlation is negative. Do not use this model for allocation.
 - Important unresolved diagnostic: the 20-session low-breadth bucket/matched means are positive, while the simple HAC linear model's 20-session slope is statistically insignificant and the walk-forward model underpredicts low-breadth outcomes. These are not necessarily mathematical contradictions (nonlinear/regime mixture and different evaluation subsets can produce them), but they rule out a simple linear "low breadth means sell" interpretation. Audit sample construction, regime persistence, and subset alignment before any stronger claim.
 - Historical samples are not independent observations merely because n is large; forward horizons overlap, regimes cluster, and the low-breadth subset is much smaller than the full sample. No block-bootstrap confidence intervals, pre-registered OOS regime rule, T beta/conditional alpha estimate, or GCHE-specific transfer test is supplied.
+
+### GCHE issuer-specific review (2026-11-24; completed after process correction)
+
+GCHE is outside the TOP50 breadth universe. This means only that the TOP50 breadth experiment does not cover it; no inference about its own risk or expected return follows. A separate review was completed using issuer disclosures and market information.
+
+**Fundamentals:** 9M 2026 revenue +6.4%; adjusted gross profit +26.1%; adjusted EBITDA +28.5% to RUB 51.2bn; reported net profit +20.3%; adjusted net profit +135.9% to RUB 24.2bn; adjusted FCF RUB 19.8bn versus RUB 5.2bn; net debt -7.9% to RUB 131.1bn; net debt/adjusted EBITDA 1.9x; interest coverage 3.4x. Positive quality-of-earnings direction, but physical sales -0.3%, exports -10.1%, export average price -5.5%, Foodservice -0.9%. Margin improvement partly relies on pricing/mix, favorable grain procurement, and capex reduction; these may not persist. China export accreditation restrictions and feed-cost reversal are material risks.
+
+**Price/technical:** public market snapshots show GCHE around RUB 3,790 on 23 Nov after +3.67%, then around RUB 3,729 on 24 Nov (-1.61%) with an intraday range roughly 3,683-3,775. The short-term tape is volatile and did not confirm a clean continuation on 24 Nov. External technical sources and local adjusted-price indicators are not perfectly timestamp/price-basis aligned; do not combine them into one synthetic signal.
+
+**Horizon view:** 1 session neutral / elevated event and range risk; 5 sessions neutral due choppy price action despite positive issuer results; 20 sessions moderately positive on improving margins, FCF and leverage, with export/feed-cost risks.
+
+**Decision:** HOLD existing 2%; do not add. The small position is supported by improving issuer fundamentals and no verified thesis-breaking event, but near-term price action is volatile and no validated alpha model or clear LQDT-beating expected-return estimate exists. No cost basis or exact position-level risk budget was supplied, so no claim about unrealized P&L or optimal sizing is made. Reassess on deterioration in export restrictions, feed-cost/margin outlook, interest coverage/debt, cash generation, or a confirmed technical breakdown with volume. An unverified report of a poultry mortality incident is excluded from the base case pending reliable confirmation.
 
 ### Decision after completed audit (recommendation, not execution)
 **HOLD current portfolio: T 10%, GCHE 2%, LQDT 88%.**
