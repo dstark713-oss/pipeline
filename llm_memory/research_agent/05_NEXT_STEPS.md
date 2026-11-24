@@ -1,85 +1,66 @@
 # Next Steps and Open Risks
 
-Last updated: 2026-11-23
+Last updated: 2026-11-25
 
 ## Active project: ML direction prediction
 
-<decision>Approved by the user on 2026-11-23.</decision>
-
 Build and validate an ML model that predicts the direction of price movement for individual instruments.
 
-The initial research motivation is the earlier observation that an instrument's position within its own recent price range may contain information about the conditional distribution of future returns. This is a starting hypothesis to test, not a proven predictive relationship. Do not confuse it with the statistical null hypothesis.
+Binding task definition:
+- Dataset: daily OHLCV panel from historical point-in-time TOP50 Russian equities.
+- Signal-date cohort: PIT TOP50 members on date t with a valid current bar.
+- Prediction horizon: 5 trading sessions.
+- Target: binary direction from adjusted Close[t] to adjusted Close[t+5]. Up=1, down=0; equal prices and unavailable endpoints are excluded.
+- Features may use information available no later than the close of t.
+- Final model WF protocol: expanding window, initial 3 years of training, monthly retraining, next month held out, and purge training observations whose 5-session target extends beyond the training cutoff.
+- Statistical and predictive-model metrics on WF are permitted. Portfolio metrics are prohibited until final model approval. After approval, exactly one decisive portfolio-level run is allowed, with no tuning or iteration from its result.
+- Research Agent researches and develops analytical capabilities; it does not make trading/allocation decisions.
 
-The first stage is research design, not immediate model fitting. Settle and document:
+## Completed stages
 
-1. Prediction target and label construction (including treatment of near-zero returns and ambiguous cases).
-2. Forecast horizon or horizons and why they are relevant.
-3. Eligible instrument universe and point-in-time availability rules.
-4. Feature candidates, beginning with the range-position hypothesis and existing screener primitives, without assuming all are useful.
-5. Simple statistical and ML baselines.
-6. WF temporal evaluation design, leakage controls, metrics, aggregation, and failure criteria.
-7. Reproducibility requirements and experiment registry fields.
+1. Log Returns: base representation documented.
+2. Rolling Statistical Moments: **CLOSED on 2026-11-25**. The experiment covered 16 features (mean, variance, skewness, Fisher excess kurtosis over 20/60/120/240 sessions). The user explicitly directed that this family should not be revisited or repeatedly analyzed. Do not reopen without explicit user request or new concrete evidence.
 
-Do not begin broad feature fishing or complex model search before these definitions are fixed.
+## Next research proposal (not yet approved)
 
-## Mandatory evaluation firewall
+**Feature Research 03: OHLC price-formation decomposition.**
 
-The user explicitly prohibited portfolio-level metrics before approval of the final model.
+Study the structure of each daily bar:
+- Overnight gap: ln(Open_t / Close_{t-1}).
+- Intraday return: ln(Close_t / Open_t).
+- High-low log range: ln(High_t / Low_t).
+- Close location value: (2*Close_t - High_t - Low_t) / (High_t - Low_t), with explicit zero-range handling.
+- Upper/lower wick proportions, after exact non-duplicative definitions are agreed.
 
-- Before final model approval, do not inspect, calculate, report, compare, or use any portfolio-level metrics or portfolio application results.
-- This includes portfolio CAGR, Sharpe, MDD, returns, drawdowns, exposure, turnover, and related portfolio outputs.
-- Statistical and predictive-model metrics on WF are allowed.
-- The user will not split the dataset into separate fixed IS and VAL subsets. Do not require or introduce such a split.
-- Use WF as the permitted statistical/model evaluation procedure. Specify its temporal construction and leakage safeguards before examining results.
-- After the final model is approved, exactly one decisive portfolio-level evaluation run is permitted.
-- Do not iterate, tune, compare portfolio variants, or select model settings based on that one portfolio run. It is a downstream application check, not a feedback loop.
+Research question: does separating overnight repricing, intraday movement, and the close's position inside the day's range reveal distinct information about the t-to-t+5 direction target?
 
-This firewall applies to all research-agent work, scripts, reports, and discussions for this project. If an existing artifact contains portfolio metrics, do not open or inspect those metrics during model development.
+This is a researcher proposal, not an approved experiment. First teach the intuition and mathematics, inspect OHLC adjustment/data-quality constraints, agree exact formulas and hypotheses, then freeze the experiment specification before coding or viewing results. Do not assume these features are predictive.
 
 ## Research sequence
 
-1. **Formalize the prediction problem.** Define what “up” and “down” mean, horizon, label timestamp, forecast timestamp, and handling of neutral/ambiguous outcomes.
-2. **Establish baselines.** Quantify simple unconditional and conditional distributions and transparent baseline predictors, including the range-position hypothesis.
-3. **Build the modeling dataset.** Ensure each feature is available at prediction time; preserve point-in-time universe membership and instrument identity; document missingness and sample eligibility.
-4. **Develop candidate models.** Start with interpretable/simple models before increasing complexity. Keep feature selection and tuning inside the predeclared WF process.
-5. **Evaluate statistically on WF.** Use suitable classification/distribution metrics, uncertainty estimates, calibration diagnostics where relevant, and robustness by time period/instrument cohort. No portfolio metrics.
-6. **Freeze and document the final candidate.** Record model specification, feature set, target, horizon, WF evidence, limitations, and reproducibility details.
-7. **Obtain user approval.** No portfolio-level evaluation before explicit approval of the final model.
-8. **Run one decisive portfolio application evaluation.** Do not use its result to revise the model or run a second portfolio variant.
+For each feature family:
+1. Explain theory, intuition, mathematics, and interpretation.
+2. State falsifiable hypotheses and identify plausible failure modes.
+3. Agree formulas, edge-case handling, sample rules, and evaluation parameters before running.
+4. Implement a reproducible isolated experiment only after specification approval.
+5. Evaluate coverage, information content, temporal stability, redundancy, and uncertainty.
+6. Record results and limitations; do not promote features automatically.
+7. Propose the next capability gap / feature family.
 
-## Current information layer
+Do not create broad indicator catalogs or jump prematurely to model fitting. Study interactions/conditional information later as a separate planned stage; standalone IC is not a complete feature-selection criterion.
 
-- Instrument state: `drawdown_60`, `zscore_sma20_20`, `realized_vol_60`.
-- Separate market-state context: `breadth_change_5` (primary) and `breadth_sma20` (reference).
-- Screener: `scripts/tools/01_primitive_screener.py`.
-- Downstream specification: `docs/tools/01_primitive_screener.md`.
+## Evaluation firewall
 
-The screener is descriptive only. It does not generate trades, portfolio weights, or allocation instructions.
+- No portfolio-level metrics before explicit final-model approval.
+- Do not inspect, calculate, report, compare, or use CAGR, Sharpe, MDD, returns, drawdowns, exposure, turnover, or portfolio application results during feature/model development.
+- No separate fixed IS/VAL split; use the predeclared WF evaluation path.
+- No repeated portfolio variants after approval. Exactly one decisive downstream portfolio evaluation.
 
-## Data reality and constraints
+## Data and operational constraints
 
-- The repository contains an internal historical market-data pipeline. Its exact coverage and limitations are recorded in `02_DATASET_PIPELINE.md`.
-- There is **no internal fundamental-data dataset or fundamental-data pipeline**.
-- News, company context, market semantics, and fundamental information are retrieved from the internet/external sources in the agent workflow.
-- Current web retrieval is not equivalent to a persistent, timestamped historical dataset. Do not use present-day information to support historical point-in-time claims.
-- Do not add external semantic/fundamental features to the direction model by assumption. They require a separate data-availability, timestamp, provenance, and leakage assessment, and must fit the approved prediction problem.
-
-## Retired proposal
-
-The previous proposal to make conditional downside-risk analysis across breadth regimes the immediate next research project is not the current plan. It was a premature continuation of the previous breadth topic. Do not resume it unless the user explicitly reprioritizes it.
-
-## Dataset and operational risks
-
-- Verify the refresh script locally before relying on it.
-- Resolve delayed publication after an empty MOEX response, calendar-yesterday cutoff, and missing SECID/board-pair onboarding.
-- Do not rebuild completed historical-universe/raw/audit/adjustment stages without a concrete defect.
-- Keep raw observations immutable and derived datasets rebuildable.
-- Do not claim local execution or validation from GitHub code inspection alone.
-
-## Research discipline
-
-- No broad feature fishing.
-- Do not optimize model selection or feature design against portfolio metrics.
-- Statistical WF evaluation is permitted; portfolio evaluation is gated as above.
-- Preserve failed and inconclusive experiments as useful evidence.
-- The Research Agent recommends; the user approves scope changes and final model approval.
+- Internal historical MOEX market-data pipeline exists; no internal fundamental-data dataset or pipeline exists.
+- Current external web information is not a point-in-time historical dataset. Any future external features require source, publication/retrieval timestamps, entity mapping, historical availability, and leakage controls.
+- Preserve PIT membership, SECID identity, actual market-session timing, and missingness. No forward-fill or synthetic observations.
+- Do not rebuild completed data stages without a concrete defect.
+- Repository inspection is not local execution. Never claim tests or experiments ran unless actual execution output is available.
+- Do not modify user-owned daily reports or project code without explicit authorization.
