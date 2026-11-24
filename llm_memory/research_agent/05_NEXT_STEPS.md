@@ -21,20 +21,17 @@ Binding task definition:
 1. Log Returns: base representation documented.
 2. Rolling Statistical Moments: **CLOSED on 2026-11-25**. The experiment covered 16 features (mean, variance, skewness, Fisher excess kurtosis over 20/60/120/240 sessions). The user explicitly directed that this family should not be revisited or repeatedly analyzed. Do not reopen without explicit user request or new concrete evidence.
 
-## Next research proposal (not yet approved)
+## Methodological direction after Rolling Statistical Moments
 
-**Feature Research 03: OHLC price-formation decomposition.**
+The next step is **not** a trader-style OHLC/candlestick feature family. The user explicitly prohibits trader-derived technical indicators/features for the new ML predictor. ATR is a named example of what not to use as a template. Do not propose RSI/MACD/Bollinger/stochastic/candlestick patterns or repackage them under statistical names. OHLCV is a raw data source, not a license to reproduce technical analysis.
 
-Study the structure of each daily bar:
-- Overnight gap: ln(Open_t / Close_{t-1}).
-- Intraday return: ln(Close_t / Open_t).
-- High-low log range: ln(High_t / Low_t).
-- Close location value: (2*Close_t - High_t - Low_t) / (High_t - Low_t), with explicit zero-range handling.
-- Upper/lower wick proportions, after exact non-duplicative definitions are agreed.
+The user wants feature discovery through data science: statistical learning, probability, time-series analysis, information theory, dependence structure, uncertainty, and robust measurement of the data-generating process. A valid proposal must begin with a statistical question and a clear object of measurement, not with a familiar trading signal.
 
-Research question: does separating overnight repricing, intraday movement, and the close's position inside the day's range reveal distinct information about the t-to-t+5 direction target?
+The prior discussion identified **Statistical Learning under Uncertainty** as a broader methodological direction: investigate weak signals, dependent observations, uncertainty, and unstable/nonstationary distributions. Treat this as a research-method direction, not as an already approved feature family or completed experiment.
 
-This is a researcher proposal, not an approved experiment. First teach the intuition and mathematics, inspect OHLC adjustment/data-quality constraints, agree exact formulas and hypotheses, then freeze the experiment specification before coding or viewing results. Do not assume these features are predictive.
+A promising next research question to develop (proposal only) is **temporal dependence in the return-generating process**: determine whether returns contain statistically reproducible serial-dependence structure at selected lags, and whether a compact representation of that structure adds information about the fixed t-to-t+5 target. This is a time-series/statistical question, not a trader indicator. Before naming candidate features, teach the concepts (autocovariance/autocorrelation, partial dependence after conditioning on intermediate lags, estimation uncertainty, multiple testing, regime instability, and cross-sectional pooling), then agree a narrowly scoped experiment. Do not automatically turn ACF/PACF outputs into a large feature catalog.
+
+This direction is not yet approved for implementation. First explain the research question and determine whether it is genuinely distinct from already completed rolling-moment work. No coding until the user approves the exact specification.
 
 ## Research sequence
 
