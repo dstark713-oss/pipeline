@@ -56,7 +56,7 @@ Completed feature-research stages:
 - Log Returns: base representation.
 - Rolling Statistical Moments: 16 candidates across four statistics and four windows; **closed on 2026-11-25** by explicit user decision. Do not reopen this family without a concrete new reason or user request.
 
-The next proposed feature family is OHLC price-formation decomposition (overnight gap, intraday return, daily range, and close location within the range). This remains a proposal until the user approves its exact formulas and experiment specification.
+The new ML predictor follows a DS-first research approach. Trader-style technical indicators/features (ATR, RSI, MACD, Bollinger Bands, stochastic oscillators, candlestick patterns and similar price-action heuristics) are excluded. Statistical learning, probability, information theory and time-series analysis guide feature discovery. A possible next research question is temporal dependence in the return-generating process; it is not yet an approved experiment.
 
 Research-agent context and detailed specifications are maintained in:
 `llm_memory/research_agent/06_ML_DIRECTION_FEATURE_RESEARCH.md`.
