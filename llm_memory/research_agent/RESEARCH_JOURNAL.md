@@ -165,3 +165,19 @@ Research question: do overnight repricing, intraday movement, and close location
 This is a proposal only. Before coding, inspect adjusted OHLC consistency and data-quality constraints, teach the mathematics, agree definitions and edge cases, and freeze the specification. No claim is made that these features are predictive.
 
 No new experiment was implemented or run as part of this decision. No project Python code was changed.
+
+
+## 2026-11-25 | Correction: DS-first feature research constraint
+
+The prior proposal to investigate OHLC gap/intraday/range/CLV/wick decomposition is withdrawn. The user reiterated that the new ML predictor must not use trader-style technical indicators/features and that the project must be approached through data science rather than trading conventions. The OHLC decomposition proposal drifted toward trader-style price-action feature engineering and was not appropriate.
+
+Binding constraint clarified:
+- Feature discovery must be grounded in statistics, statistical learning, probability, information theory, and time-series analysis.
+- Do not use ATR, RSI, MACD, Bollinger Bands, stochastic oscillators, candlestick patterns, or trader-style price-action heuristics as candidate features or methodological templates.
+- Do not disguise trading indicators with statistical names.
+- OHLCV is a raw data source, not a mandate to derive trader signals.
+- The legacy ATR-based tool is separate and is not a precedent for the new predictor.
+
+The prior discussion identified Statistical Learning under Uncertainty as a broader methodological direction: weak signals, dependence between observations, uncertainty, and unstable/nonstationary distributions. A possible next research question is temporal dependence in the return-generating process (autocovariance/autocorrelation, partial dependence, estimation uncertainty, lag selection, and nonstationarity). This remains a proposal, not an approved feature family or experiment.
+
+The next conversation must teach and scope the statistical question before selecting features or coding. No implementation or experiment was run for the withdrawn OHLC proposal.
