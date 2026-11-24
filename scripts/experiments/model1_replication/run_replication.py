@@ -207,10 +207,10 @@ def folds(dates):
     first=dates.min()+pd.DateOffset(years=WF["pretrain_years"]); last=dates.max()
     out=[]; start=first; i=0
     while start<=last:
-        end=min(start+pd.DateOffset(months=WF["test_months"]),last)
+        boundary=min(start+pd.DateOffset(months=WF["test_months"]),last+pd.Timedelta(days=1))
         train_start=dates.min() if WF["window"]=="expanding" else start-pd.DateOffset(years=3)
         cutoff=start-pd.Timedelta(days=WF["purge_days"])
-        tr=dates[(dates>=train_start)&(dates<=cutoff)]; te=dates[(dates>=start)&(dates<=end)]
+        tr=dates[(dates>=train_start)&(dates<=cutoff)]; te=dates[(dates>=start)&(dates<boundary)]
         if not len(tr) or not len(te):break
         out.append({"fold_id":i,"train_start":tr.min(),"train_end":tr.max(),"test_start":te.min(),"test_end":te.max()})
         i+=1; start+=pd.DateOffset(months=WF["retrain_months"])
@@ -349,7 +349,7 @@ def main():
         "Full observed history used for warmup; only PIT TOP50 and bar_available=1 rows enter model sample; no forward fill.",
         "Breadth computed over PIT TOP50 membership on each signal date."],
         "known_source_quirks":["Breakout rolling high/low includes current bar; preserved.","N selection maximizes predicted score, not realized return; preserved.",
-        "WF purge is 10 calendar days; preserved."],
+        "WF purge is 10 calendar days; preserved.","Adjacent OOS test blocks are made disjoint; model1 source used inclusive six-month endpoints, duplicating a boundary session when it was a trading day."],
         "backtest_warning":"Legacy backtest is one-session Open(t+1)->Open(t+2), inconsistent with H=5 Triple Barrier labels.",
         "signal_rows":len(full),"signal_dates":int(full.tradedate.nunique()),"secids":int(full.secid.nunique()),
         "folds":len(results),"oos_rows":len(pred)}
