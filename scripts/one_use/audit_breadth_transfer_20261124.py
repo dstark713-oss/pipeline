@@ -9,7 +9,7 @@ Run from repository root:
 Optional matched historical LQDT close series:
   python scripts/one_use/audit_breadth_transfer_20261124.py --lqdt-csv path/to/lqdt_daily.csv
 
-CSV requirements for --lqdt-csv: tradedate, close.
+CSV requirements for --lqdt-csv: tradedate, open, close.
 The script is read-only. It does not alter canonical data or portfolio files.
 
 Important:
@@ -111,10 +111,10 @@ def walk_forward(data: pd.DataFrame, ycol: str, horizon: int) -> pd.DataFrame:
 
 def load_lqdt(path: Path) -> pd.DataFrame:
     q = pd.read_csv(path)
-    require(q, ["tradedate", "close"], "LQDT CSV")
+    require(q, ["tradedate", "open", "close"], "LQDT CSV")
     q["tradedate"] = pd.to_datetime(q["tradedate"], errors="coerce").dt.normalize()
-    q["close"] = pd.to_numeric(q["close"], errors="coerce")
-    q = q.dropna(subset=["tradedate", "close"]).sort_values("tradedate")
+    q["open"] = pd.to_numeric(q["open"], errors="coerce")\n    q["close"] = pd.to_numeric(q["close"], errors="coerce")
+    q = q.dropna(subset=["tradedate", "open", "close"]).sort_values("tradedate")
     q = q.drop_duplicates("tradedate", keep="last").set_index("tradedate")
     return q
 
@@ -208,7 +208,7 @@ def main() -> None:
     if lqdt is None:
         print("WARNING: no historical LQDT series supplied; no historical excess-vs-LQDT claim is produced.")
     else:
-        print("Matched historical LQDT comparison written. Check calendar alignment and return convention before interpretation.")
+        print("Historical LQDT comparison uses the same next-session open to horizon close convention as the equity outcomes.")
 
 
 if __name__ == "__main__":
