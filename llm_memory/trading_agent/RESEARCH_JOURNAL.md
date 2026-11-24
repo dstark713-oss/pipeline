@@ -135,3 +135,38 @@ Existing holdings:
 Final recommendation: T 10%, GCHE 2%, LQDT 88%; no new positions, leverage, or shorts. The 12% equity sleeve is not a base assumption. It is retained after bottom-up review because current holdings remain defensible and no reviewed candidate offers a sufficiently clear risk-adjusted premium over current LQDT.
 
 Confidence: moderate that no reviewed candidate clears the cash hurdle; moderate in retaining T and GCHE; low that exact weights are mathematically optimal. No Qwen review or 2026-11-24 local snapshot supplied. No trades executed or claimed.
+
+
+## 2026-11-24 | Independent decision after Qwen audit
+
+### Process correction
+Qwen's audit is treated as a completed second-opinion input. No further agent-to-agent review loop is required. ChatGPT owns the decision tree, independent verification, follow-up code, and final recommendation; Qwen is not a co-decision-maker.
+
+### Assessment of Qwen findings
+- Accept: breadth at 8% (4/50) is a material risk-regime warning; do not add equity risk or buy new names from the primitive screen alone.
+- Accept conditionally: low-breadth history reports negative forward equal-weight TOP50 returns on 5/20 sessions. This supports reducing market beta as a risk-control hypothesis.
+- Reject as not yet established: the claim that the historical conditional equity return is statistically below LQDT. The supplied report compares historical conditional equity estimates with LQDT returns of 0.037%/0.267%/1.086%, but does not provide a date-matched historical LQDT return series under the same forward-return convention. A current realized LQDT return is not a historical matched benchmark.
+- Reject as unsupported sizing: the exact T 10% -> 5% trim is not derived from an estimated T beta, conditional alpha, or portfolio optimization.
+- Reject: exiting GCHE solely because it is outside the TOP50 universe. Universe exclusion means the TOP50 breadth model does not directly cover GCHE; it is not a sell signal.
+- Qwen's 20-session parameter CI is a confidence interval for an estimated conditional mean, not a prediction interval for an individual future return. The report does not establish the distinction or fully document HAC settings.
+
+### Independent recommendation (not executed)
+- T: 10% -> 5% (trim 5 percentage points).
+- GCHE: retain 2%.
+- LQDT: 88% -> 93%.
+- New positions: 0%.
+
+Rationale: T is the only existing equity holding directly represented in the TOP50 breadth universe. A partial reduction halves the covered equity exposure in a weak-breadth regime without pretending the model identifies an optimized target. GCHE remains a small, separately assessed position: recent technical data show it above SMA20 (Z-score +1.26) and issuer fundamentals remain constructive, while no GCHE-specific short-horizon edge has been established. No new name has a validated cross-sectional edge.
+
+This is a risk-control decision under uncertainty, not a claim that 5/2/93 is a statistically optimized portfolio. The expected portfolio-level benefit is modest and depends on the low-breadth signal persisting.
+
+### Follow-up code
+Created `scripts/one_use/audit_breadth_transfer_20261124.py` (commit `91e6cca0fd77933f10e17dfaf32c4a2946083b7e`, benchmark alignment fix `baab395d796751d2913ff6d80deb8ec1f260cb73`). It tests multiple HAC lags, non-overlapping samples, expanding-window forecasts, breadth buckets, and optional historical LQDT returns aligned to the same next-session-open to horizon-close convention. It is unexecuted until the user runs it and returns outputs.
+
+### Reversal conditions
+- If date-matched LQDT excess is not negative out of sample, do not extend the trim.
+- If low-breadth effect survives multiple HAC lags, non-overlapping samples, and walk-forward evaluation, consider further reduction of T.
+- If breadth recovers and persists above 20-25%, reassess the beta haircut; this is a provisional review zone, not a validated threshold.
+- Reassess GCHE only on its own price/volume/event/fundamental evidence, not by extrapolating TOP50 breadth.
+
+No orders placed. User retains final decision and execution authority.
