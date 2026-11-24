@@ -62,6 +62,17 @@ def load_latest_panel() -> tuple[pd.Timestamp, pd.DataFrame]:
     return asof, latest.sort_values("secid").reset_index(drop=True)
 
 
+def complete_horizon_map(history: pd.DataFrame) -> pd.DataFrame:
+    ordered = history.sort_values(["secid", "tradedate"]).copy()
+    result = ordered[["secid", "tradedate"]].copy()
+    result["label_horizon_end"] = (
+        ordered.groupby("secid", sort=False)["tradedate"]
+        .shift(-HORIZON)
+        .to_numpy()
+    )
+    return result
+
+
 def prepare_training_data(
     panel: pd.DataFrame, history: pd.DataFrame, asof: pd.Timestamp
 ) -> tuple[pd.DataFrame, list[str]]:
@@ -71,16 +82,7 @@ def prepare_training_data(
     # A Triple Barrier label is usable only when all five forward sessions exist.
     # The replication helper labels a truncated tail as timeout, so explicitly
     # remove rows without a complete H-session horizon before fitting.
-    horizon_map = (
-        history.sort_values(["secid", "tradedate"])
-        .groupby("secid", sort=False)["tradedate"]
-        .shift(-HORIZON)
-        .rename("label_horizon_end")
-        .reset_index()
-    )
-    horizon_map["secid"] = history.sort_values(
-        ["secid", "tradedate"]
-    )["secid"].to_numpy()
+    horizon_map = complete_horizon_map(history)
     full = full.merge(
         horizon_map,
         on=["secid", "tradedate"],
