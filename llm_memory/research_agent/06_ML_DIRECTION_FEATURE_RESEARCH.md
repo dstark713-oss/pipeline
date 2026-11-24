@@ -100,4 +100,52 @@ Mean is retained as an exploratory/control feature to inspect its behavior, not 
 
 ## Implementation status
 
-As of 2026-11-24, the experiment specification is agreed in principle. Implementation and local execution are pending. Do not claim the code has been run against the user's local data until the user supplies execution output or a verified run is available.
+As of 2026-11-24, the Rolling Statistical Moments experiment has been implemented and executed locally by the user. Its initial report exists, but the inferential results are preliminary because the HAC time index was compressed when dates with fewer than 20 valid securities were dropped. See the audit section below. Do not describe the initial p-values as validated.
+
+
+## Rolling Statistical Moments: first execution results and audit state
+
+### Execution snapshot (2026-11-23/24)
+
+The user ran the experiment locally. Reported dataset:
+- 195,601 signal rows.
+- 5,471 signal dates.
+- 188 distinct securities across the historical panel.
+- 16 features (four statistics x four windows).
+- Target and universe as specified above.
+
+Initial descriptive findings (not final inferential conclusions):
+- Rolling variance had negative mean IC and Rank IC at all four windows. Mean IC became more negative with longer windows; variance-240 had mean IC about -0.0416 and mean Rank IC about -0.0241.
+- Rolling mean had positive IC/Rank IC, increasing with window length; mean-240 had mean IC about +0.0249 and Rank IC about +0.0316.
+- Fisher excess kurtosis had modest negative IC/Rank IC across windows; approximate mean IC range -0.011 to -0.021.
+- Skewness had weak/near-zero standalone IC, especially at 20/60/120; 240 showed a somewhat more negative Pearson IC, while Rank IC remained weak.
+- Long-window features showed substantial within-date redundancy. Examples of median pairwise correlations: variance-60 vs variance-120 about 0.917; variance-120 vs variance-240 about 0.907; mean-120 vs mean-240 about 0.769.
+- Coverage declined with window length. Mean/variance coverage: 20=97.5%, 60=94.8%, 120=89.1%, 240=78.4%. Skewness coverage was unexpectedly lower: 20=89.3%, 60=90.0%, 120=84.8%, 240=76.0%. This requires a code/data diagnostic; do not assume the missingness is benign.
+
+### Critical inference flaw
+
+The initial implementation calculated daily cross-sectional IC, dropped dates with fewer than 20 valid securities, then ran Newey-West/HAC with max_lags=4 on the remaining rows. This compresses time: two adjacent rows in the filtered series may be separated by multiple actual trading sessions, while HAC treats them as one lag apart. Therefore the reported HAC standard errors, p-values, and BH-adjusted q-values are not reliable as currently computed.
+
+The initial HAC bandwidth of 4 also needs sensitivity analysis because five-session labels overlap and feature/market-state dependence may persist longer. Values displayed as 0.00000 are rounded, not literal zero.
+
+### Research Audit 01: next required work
+
+Do not move to a new feature family or model construction until this audit is completed.
+
+1. Recompute inference using the full trading-session calendar, preserving missing IC dates as missing rather than compressing time. Ensure HAC covariance uses actual session lags.
+2. Run bandwidth sensitivity at 4, 10, 20, and 60 trading sessions, with assumptions documented.
+3. Add a temporal block-bootstrap uncertainty estimate as a complementary check.
+4. Diagnose the skewness coverage gap versus mean/variance for identical windows. Inspect estimator output, zero/near-zero variance, missing return patterns, and implementation details.
+5. Inspect daily IC distributions and temporal stability, including subperiod coverage and the long-window sample-size limitations.
+6. Reassess the apparent variance/mean/kurtosis patterns only after corrected inference. Preserve the descriptive findings as provisional.
+7. Keep portfolio metrics out of this audit and out of all iterative feature/model selection.
+
+### Interpretation constraints
+
+- Negative variance IC is an association with a lower probability of an up label, not evidence that volatility causes losses.
+- Positive rolling-mean IC may reflect drift/momentum, but is not yet evidence of robust predictive value.
+- Weak standalone skewness IC does not prove absence of conditional or interaction information.
+- Correlation is a redundancy diagnostic, not proof that features are interchangeable.
+- Do not select or discard features solely from the first-pass IC ranking.
+
+Current working point: Research Audit 01 for Rolling Statistical Moments, not the next feature family.
