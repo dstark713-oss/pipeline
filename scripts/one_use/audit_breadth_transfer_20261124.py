@@ -93,9 +93,16 @@ def walk_forward(data: pd.DataFrame, ycol: str, horizon: int) -> pd.DataFrame:
     frame = frame.reset_index(drop=True)
     predictions = []
     min_train = 756
-    # Expanding-window OLS, forecast only after a minimum of 3 years.
+    # Expanding-window OLS with a purged horizon-sized gap. Without purging,
+    # training labels overlap the test date and leak future returns.
     for i in range(min_train, len(frame)):
-        train = frame.iloc[:i]
+        # Purge observations whose forward-return labels are not yet fully
+        # realized at the test signal date. The target at t spans next open
+        # through close[t+h], so the latest mature training signal is t-h.
+        train_end = i - horizon + 1
+        if train_end < min_train:
+            continue
+        train = frame.iloc[:train_end]
         test = frame.iloc[[i]]
         X_train = sm.add_constant(train[["breadth_sma20"]].astype(float))
         model = sm.OLS(train[ycol].astype(float), X_train).fit()
