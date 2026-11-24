@@ -43,7 +43,6 @@ def summarize(values):
         "p75": quantile(x, 0.75),
         "p90": quantile(x, 0.90),
         "max": max(x),
-        "positive_fold_share": sum(v > 0 for v in x) / len(x),
     }
 
 
