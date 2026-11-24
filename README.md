@@ -52,7 +52,11 @@ Current task definition:
 
 Feature research is conducted one family at a time. Individual IC is a diagnostic, not an automatic feature-selection rule. Feature coverage, temporal stability, redundancy, and conditional information matter as well.
 
-The first completed exploratory feature experiment is Rolling Statistical Moments (rolling mean, variance, skewness, and Fisher excess kurtosis over 20/60/120/240-session windows). Its initial report is preliminary: the HAC inference needs a calendar-spacing correction because dates with insufficient cross-sectional observations were dropped before the time-series standard-error calculation. The experiment also surfaced unexpectedly low skewness coverage that requires diagnosis. Do not treat its initial p-values or feature rankings as final conclusions.
+Completed feature-research stages:
+- Log Returns: base representation.
+- Rolling Statistical Moments: 16 candidates across four statistics and four windows; **closed on 2026-11-25** by explicit user decision. Do not reopen this family without a concrete new reason or user request.
+
+The next proposed feature family is OHLC price-formation decomposition (overnight gap, intraday return, daily range, and close location within the range). This remains a proposal until the user approves its exact formulas and experiment specification.
 
 Research-agent context and detailed specifications are maintained in:
 `llm_memory/research_agent/06_ML_DIRECTION_FEATURE_RESEARCH.md`.
