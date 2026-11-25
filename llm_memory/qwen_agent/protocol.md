@@ -1,22 +1,37 @@
-# Протокол работы двух агентов
+# Протокол (калиброванный LONG/SHORT loop, 25.11)
 
-## Классификация утверждений
-Каждое утверждение помечается одним из тегов:
-- [FACT] — проверяемо первичным источником (отчётность, MOEX, ЦБ)
-- [HYPOTHESIS] — требует backtest на pipeline данных, приложен скрипт
-- [UNVERIFIED_PRIOR] — моё предположение без данных, помечено явно
-- [NARRATIVE] — запрещено к использованию в рекомендациях
+## Evidence labels (стандарт репо)
+User-reported | User-run result | Live external source | Verified in repository | Inference | Hypothesis | Unknown/unavailable.
+(Мои старые [FACT]/[HYPOTHESIS]/[UNVERIFIED_PRIOR] мапплю на эти; NARRATIVE запрещён как опора.)
 
-## Обязанности агентов
-- **Qwen (я)**: генерирую гипотезы + код проверки + вычитываю отчётность
-- **ChatGPT**: фальсифицирует мои гипотезы, ищет контрпримеры, проверяет код на баги
-- **Ты**: согласуешь / вето. Вето с причиной = новый цикл
+## Что я обязан оспорить (QWEN_HANDOFF, 8 пунктов)
+1. Edge реален, PIT-valid, сильнее LQDT после издержек?
+2. Data/labels/dates/horizons/benchmarks выровнены?
+3. Гипотеза фальсифицируема или narrative post-hoc?
+4. Sample size / dependence / regime clustering / uncertainty честно учтены?
+5. Size следует из evidence+risks или arbitrary?
+6. Какие LONG/SHORT альтернативы / LONG LQDT упущены?
+7. Что инвалидирует тезис; где reasoning выходит за validated boundary?
+8. Какие ветки decision-tree unsupported → remove.
 
-## Запрещённые паттерны
-- Рекомендовать действие без кода проверки гипотезы
-- Выдавать unverified prior за recommendation
-- Использовать термины без операционализации ("accumulation", "momentum plays")
-- Круглые числа в триггерах без backtest (25%, 2σ, 1.5x volume)
+## Возврат
+Strongest objections; missing tests/data; factual claims needing verification; alternative directional hypotheses; sizing critique; per-branch verdict: survives / revise / reject. НЕ generic bear/base/bull.
 
-## Минимальный артефакт для рекомендации
-[FACT блок] + [HYPOTHESIS + script] + [decision rule с порогами, выведенными из данных]
+## Запрещено
+- Narrative как опора; unverified prior как recommendation.
+- Механические пороги/множители без валидации (breadth 25%, 2σ, 1.5x volume).
+- False-precision sizing без beta/alpha/оптимизации.
+- Benchmark mismatch (current vs historical LQDT).
+- Mean-CI выдавать за prediction interval.
+- Игнорировать regime clustering / overlapping horizons / малые episode counts.
+- Universe-exclusion как sell-сигнал.
+- Выводить исполнение из рекомендации.
+
+## Sizing (обязателен, из evidence)
+Expected excess vs LQDT на горизонте; uncertainty/downside; vol/covariance; liquidity/spread/turnover/capacity/costs; signed-exposure constraints; robustness. Не из prior ownership / small size / round %. Нет обоснованного размера → 0 и LONG LQDT.
+
+## Script policy
+≤2 passes/phase (run + analysis), ≤2 post-Qwen. ≤linear без approval; read-only; fixed inputs/cutoffs; compact output; ≥1 новая фальсифицируемая гипотеза или явное объяснение почему нет. Не permanent pipeline.
+
+## Минимальный артефакт
+Facts (labeled) + falsifiable hypothesis + script + data-derived decision rule + dependence-aware uncertainty + invalidation.

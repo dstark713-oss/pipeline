@@ -1,21 +1,12 @@
-# Лог решений
+# Лог решений (immutable, append-only)
 
-## 2026-11-24 | Подтверждение статус-кво
-**Решение**: Сохранить аллокацию T 10%, GCHE 2%, LQDT 88%. Не открывать новых позиций.
+## 2026-11-24 | SUPERSEDED
+Подтверждение статус-кво T10/GCHE2/LQDT88. Основано на narrative breadth/фундаментал. Отозвано калиброванным протоколом 25.11 и paired-excess audit. Не использовать как текущую рекомендацию.
 
-**Обоснование**:
-- Breadth 12% + Δ -42 п.п. = экстремально узкий рынок, режим распределения
-- Матожидание новых лонгов отрицательное при текущей ширине
-- LQDT даёт 1.12% за 20 дней без риска drawdown
-- GCHE перекуплен (Z-score +2.61), но momentum пока держит
-- T ниже SMA20, но фундаментальная поддержка (ROE 29%, дивиденд)
-
-**Ожидаемый результат**: Сохранение капитала до расширения breadth. Минимизация opportunity cost через LQDT.
-
-**Следующая точка принятия решения**: 
-- Ежедневный мониторинг breadth
-- Пересмотр при Breadth >25% или <8%
-- Пересмотр GCHE при +6% от SMA20
-
-**Ответственный**: Qwen Agent (второй агент)
-**Статус**: Активно
+## 2026-11-25 | Мой аудит → отозван
+Первично рекомендовал trim T→5%, GCHE→0%, LQDT→95% на основании «breadth-headwind E<LQDT».
+ОТОЗВАНО после paired-excess episode-bootstrap audit (trading_agent RESEARCH_JOURNAL 25.11): benchmark mismatch + mean-CI≠PI + 4-7 кластеров → excess интервалы включают 0. Валидированного breadth timing-сигнала нет.
+Trading_agent final rec (not executed): maintain T10/GCHE2/LQDT88, no new equity.
+User actual (user-reported): ПОЛНЫЙ ВЫХОД В КЭШ 25.11.
+Текущая нейтраль = LONG LQDT. Новые equity: 0 (нет validated edge; Model1 не калиброван; X5 div negative-sum; oil кластер коррелирован; YDEX mean-reversion не валидирован).
+Confidence: high что breadth-test не justify automatic action; low что точные веса оптимальны.

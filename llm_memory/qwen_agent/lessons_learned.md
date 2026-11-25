@@ -1,23 +1,23 @@
-# Уроки и ошибки
+# Уроки (append-only)
 
-## 2026-11-24: Ошибка фреймворка
-**Ситуация**: Агент применил долгосрочный инвестиционный анализ (флоатеры, фундаментал на годы) к портфелю с горизонтом 1-20 дней. Не подтянул актуальную ставку ЦБ (использовал гипотетические 16-18% вместо фактических 14%).
+## 2026-11-24 L1 — фреймворк
+Долгосрочный инвест-анализ применён к 1-20d; ставка не подтянута (16-18% вместо 14%). Урок: уточнять горизонт/ставку; <30d — без облигаций/флоатеров/долгосрочного фундаментала.
 
-**Причина**: Отсутствие явного указания горизонта в первом промпте + привычка к инвестиционному контексту.
+## 2026-11-24 L2 — нарратив vs гипотеза
+Трейдерский фольклор выдан за аналитику без кода. Урок: нетривиальное утверждение = hypothesis + script; IC≈0 → отозвать; уровни без evidence = шум.
 
-**Урок**: 
-1. ВСЕГДА уточнять горизонт и ставку перед первым анализом
-2. При горизонте <30 дней игнорировать облигации, флоатеры, долгосрочный фундаментал
-3. Фокус на: momentum, breadth, volume, Z-score, event-driven катализаторы
-4. LQDT при коротком горизонте = тактическая позиция ожидания, а не пассивный кэш
+## 2026-11-25 L3 — MAJOR: breadth-trim overclaim фальсифицирован
+Мой вывод «при breadth 8% E[equity]<LQDT, CI ниже → trim T5/GCHE0» ОТОЗВАН.
+Ошибки:
+(a) Benchmark mismatch: historical conditional equity vs CURRENT trailing LQDT. Нужен date-matched historical LQDT (next-open→horizon-close).
+(b) Mean-CI выдан за prediction interval; HAC/regime clustering не учтены.
+(c) Episode-bootstrap: H5/H20 всего 7/4 валидных кластера → все интервалы excess включают 0 (T/GCHE/EW-TOP50).
+(d) False-precision sizing без T-beta/alpha/оптимизации.
+(e) GCHE вне TOP50 ≠ sell-сигнал.
+Corrected (user-run paired-excess audit): low-breadth excess vs matched LQDT НЕ валидирован ни на одном горизонте; 20d HAC незначим (t 1.26→0.41); бакеты немонотонны; WF хуже baseline (MAE/RMSE, corr ~0.035/−0.134). Breadth — descriptive regime warning, НЕ tradable timing rule.
 
-**Статус**: Исправлено. Контекст зафиксирован в context.md.
+## 2026-11-25 L4 — raw IC ≠ validated edge
+daily_report primitive IC (pos60d +0.054, z20 +0.036, vol −0.044, RS −0.040) — raw point estimates. Мой PIT TOP50 NW-test: z_dist/vol60 незначимы (NW_t 0.03–0.17). Reconcile: universe/horizon/IC def (Pearson vs Spearman, pooled vs XS)/significance. Breadth: time-series info для index (мой H1) ≠ cross-sectional info (research: static adds none) — разные вопросы, не противоречие.
 
-## 2026-11-24: Lesson 2 — нарратив vs гипотеза
-**Ошибка**: Выдал трейдерский фольклор (momentum, distribution, levels) за аналитику.
-**Корневая причина**: Не было скриптов проверки. Без кода любая "логика" — нарратив.
-**Новое правило**: 
-  - Любое нетривиальное утверждение о рынке = HYPOTHESIS с Python-скриптом
-  - Если скрипт не написан — утверждение помечается UNVERIFIED_PRIOR
-  - Если скрипт написан и IC ≈ 0 — гипотеза отзывается
-  - Никаких "классических уровней" без evidence. Шум.
+## 2026-11-25 L5 — данные/исполнение
+ISS: /candles НЕ /history. LQDT board ожидаемо TQTF (мой TQBR fetch reconcile). Code в GitHub ≠ execution. User actual (full cash 25.11) может расходиться с agent rec — никогда не выводить исполнение из рекомендации. Grade process, не только outcome.
