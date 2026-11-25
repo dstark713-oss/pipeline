@@ -248,7 +248,7 @@ The user ran the approved EDA locally and committed the generated outputs to `ma
 - Pooled adjusted-price, Volume, and Value levels are strongly right-skewed/heavy-tailed; pooled moments are descriptive only and mix instruments, scales, and periods.
 - Among 197,955 complete OHLC observations, checked price-order constraints had zero violations; non-positive adjusted prices were not found among non-missing values.
 - Panel Close matched selected adjusted SQLite Close on all 197,955 comparable rows at tolerance 1e-8.
-- 1,214/199,169 bar-available rows have incomplete OHLC and missing adjusted Close. Clarify the semantics of `bar_available`.
+- The OHLC completeness check reports 1,214 incomplete rows among 199,169 bar-available rows; separate checks each report 1,214 missing panel Close and selected-history Close values. Row-level overlap is not established by the aggregate report. Clarify the semantics of `bar_available`.
 - Selected board shares: TQBR 81.56%, EQBR 18.44%; one row is flagged `QUARANTINED_MIXED_SCALE`, but aggregate outputs do not identify it.
 - Exact endpoint coverage at +1/+5/+20 sessions: 99.682% / 99.406% / 98.574%.
 - Positive/negative/zero return shares are close to balanced. At +5 they are 49.46% / 49.99% / 0.55%; at +20, 50.43% / 49.34% / 0.23%.
