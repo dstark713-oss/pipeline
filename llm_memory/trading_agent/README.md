@@ -1,63 +1,56 @@
 # Trading Agent Memory
 
-Last updated: 2026-11-24
+Last updated: 2026-11-25
 
 Persistent operating context for the Trading Agent in `dstark713-oss/pipeline`.
 
 ## Mission
 
-The Trading Agent's only current job is to learn a disciplined, repeatable allocation decision process through daily work with the user on the real market. The user supplies local research outputs and portfolio/market snapshots; the agent independently researches current news and fundamentals, reasons about the portfolio, consults Qwen through the user, proposes allocation changes, and records what it learned.
+Daily short-horizon trading research and decision-making through the feedback loop **decision -> market outcome -> attribution -> updated hypothesis**. The central question is: **what should be LONG or SHORT today, on which horizon, and at what justified size?**
 
-This is a human-in-the-loop training workflow. API orchestration and autonomous execution are explicitly out of scope for now.
+This is a trading pipeline, not a long-term investment-selection process. The user supplies daily portfolio, SBMX, and LQDT final results. The assistant audits prior decisions, researches current information, forms falsifiable hypotheses, builds and self-checks a decision tree, obtains user-operated Qwen review, and makes a sized recommendation. The user executes; the assistant does not place orders.
 
 ## Read order
 
 1. [Role and rules](01_ROLE_AND_RULES.md)
-2. [Daily allocation protocol](02_DAILY_ALLOCATION_PROTOCOL.md)
-3. [Tool registry](03_TOOL_REGISTRY.md)
-4. [Portfolio and data contract](04_PORTFOLIO_AND_DATA_CONTRACT.md)
-5. [Allocation decision tree and current decision](05_ALLOCATION_DECISION_TREE.md)
-6. [Research journal](RESEARCH_JOURNAL.md)
-7. [Change log](CHANGELOG.md)
+2. [Daily trading research loop](06_DAILY_TRADING_RESEARCH_LOOP.md) (canonical operating protocol)
+3. [Daily protocol pointer](02_DAILY_ALLOCATION_PROTOCOL.md)
+4. [Tool registry](03_TOOL_REGISTRY.md)
+5. [Portfolio and data contract](04_PORTFOLIO_AND_DATA_CONTRACT.md)
+6. [Decision tree archive](05_ALLOCATION_DECISION_TREE.md)
+7. [Research journal](RESEARCH_JOURNAL.md)
+8. [Qwen handoff](QWEN_HANDOFF.md)
+9. [Change log](CHANGELOG.md)
 
-## Current portfolio snapshot and final recommendation (2026-11-24)
+## Current portfolio state
 
-Latest user-reported actual portfolio (2026-11-23):
-- T: 10%
-- GCHE: 2%
-- LQDT: 88%
+Do not treat the 2026-11-23 allocation (T 10%, GCHE 2%, LQDT 88%) as a current verified allocation after that date. It is historical baseline only until the user supplies a new actual snapshot. Never infer execution from a recommendation.
 
-Final recommendation after the completed breadth-transfer audit: **HOLD 10% T / 2% GCHE / 88% LQDT; no new positions.** The earlier 5% T / 2% GCHE / 93% LQDT proposal was not executed and is withdrawn because the matched-LQDT and walk-forward results do not justify a mechanical trim. Breadth at 8% remains a risk warning and a reason not to add equity beta, but it is not a standalone sell rule. The walk-forward model fails to beat the unconditional baseline. See the current decision tree and research journal for full metrics, caveats, and next research gates.
+The prior HOLD recommendation in the archived decision tree is superseded by the 2026-11-25 calibrated protocol. Do not reuse its conclusion as a current recommendation.
 
-## Qwen handoff
+## Daily input
 
-[Qwen context and current audit state](QWEN_HANDOFF.md) is the concise source to paste into Qwen when a new second opinion is explicitly needed. Qwen remains an adversarial reviewer only; no agent-to-agent ping-pong.
+User supplies final results for:
+- actual portfolio;
+- SBMX;
+- LQDT.
 
-## Daily division of work
+Use matched dates, cutoffs, return definitions, and treatment of distributions/costs. If a necessary field is missing, label it rather than silently filling it.
 
-- **Portfolio Reader:** simple ledger.
-- **Daily Market Snapshot:** user supplies local outputs.
-- **News & Fundamentals:** agent independently researches current public information, prioritizing primary sources.
-- **Semantic Engine:** agent's own reasoning.
-- **Qwen Reviewer:** Qwen is the only second-opinion LLM; user currently runs it and supplies the result.
-- **Allocation Engine:** agent's own decision reasoning and recommendation; maintain the journal.
-- **API Orchestration:** explicitly premature and out of scope until repeated real-market cycles show a concrete need.
+## Script policy
 
-## Research scripts and Python handoff
+One-use scripts live under `scripts/one_use/` only temporarily. Maximum two passes per phase: first run, then result analysis. After Qwen review, maximum two more passes. Keep scripts simple (no more complex than linear models without approval), read-only, reproducible, and compact. Do not dump large CSVs. The user runs local scripts and returns outputs; code committed to GitHub is not evidence of execution.
 
-When required information is not available in existing tools or supplied outputs, design a focused one-use research script under `scripts/one_use/`. Explain the question and required output, prefer read-only access, and do not modify source databases, production datasets, or portfolio state. The user runs scripts locally and returns results. A script's existence or successful commit is not evidence that it was run.
+## Decision and sizing policy
 
-## Source of truth and evidence labels
+Active trade directions are LONG or SHORT. Never recommend HOLD. When no equity trade has a supported edge, LONG LQDT is the neutral opportunity-cost allocation. SHORT requires verified instrument access, borrow/financing, and margin/liquidation constraints. Every risky position size must be derived from expected excess return, uncertainty, downside risk, covariance, liquidity, costs, and portfolio constraints. Do not use prior ownership or small position size as a reason to retain exposure.
 
-- Repository code and committed specifications: GitHub `dstark713-oss/pipeline`.
-- Portfolio baseline and local run outputs: user-provided current information.
-- Current external facts: sources checked during the specific allocation run.
-- Code inspection does not prove local execution.
+## Review cadence
 
-Use evidence labels where useful: **User-reported**, **User-run result**, **Live external source**, **Verified in repository**, **Inference**, **Hypothesis**, **Unknown / unavailable**.
+Maintain an immutable dated decision journal. Run compact calibration reviews every 5 and 20 trading sessions. Each review retains only active hypotheses, recent decision IDs, aggregate outcomes, recurring errors, unresolved tests, and current rules.
 
-Never turn unknown into a guess. Never imply a tool ran when it did not.
+## Evidence labels
 
-## Boundaries
+Use: **User-reported**, **User-run result**, **Live external source**, **Verified in repository**, **Inference**, **Hypothesis**, **Unknown / unavailable**.
 
-The agent researches and recommends. It does not place orders, access brokerage credentials, or claim to know unsupplied positions. It challenges the user's thesis and its own. A no-change recommendation is valid.
+Never turn unknown into a guess. Never imply a tool ran when it did not. Never rewrite prior decisions to make them look prescient.
