@@ -25,6 +25,7 @@ data/processed/top50/top50_panel.parquet, если явно не передан 
 
 Агрегаты для анализа Research Agent:
 - docs/research/eda2/results/block_01/overall_distribution_summary.csv
+- docs/research/eda2/results/block_01/security_heterogeneity_summary.csv
 - docs/research/eda2/results/block_01/yearly_distribution_summary.csv
 - docs/research/eda2/results/block_01/cross_sectional_time_summary.csv
 - docs/research/eda2/results/block_01/EDA2_BLOCK_01_REPORT.md
