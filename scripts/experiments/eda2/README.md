@@ -1,56 +1,48 @@
-# EDA2 — Блок 3
+# EDA2 — исследовательские блоки
 
-Межбумажная зависимость и совместное движение бумаг в PIT TOP50.
+Скрипты запускаются из корня репозитория. Все блоки используют существующую панель
+data/processed/top50/top50_panel.parquet, если явно не передан другой путь.
+Они не обращаются к MOEX ISS, не запускают сборку датасета и не изменяют SQLite.
 
-## Запуск
+## Блок 1. Геометрия распределения доходностей
 
-Из корня репозитория:
+Запуск:
 
-```powershell
-python scripts/experiments/eda2/03_cross_sectional_dependence.py
-```
+    python scripts/experiments/eda2/01_return_distribution.py
 
-Панель читается из `data/processed/top50/top50_panel.parquet`. Скрипт не обращается к MOEX ISS, не запускает сборку датасета и не изменяет SQLite.
+Исследуются:
+- pooled-распределение дневных логарифмических доходностей;
+- индивидуальные распределения бумаг и оценки с равным весом каждой бумаги;
+- квантили, асимметрия, эксцесс, MAD и частоты экстремальных движений;
+- годовые изменения формы распределений;
+- поперечные статистики доходностей по датам и их временное распределение.
 
-## Расчёты
+Машинные артефакты:
+- data/interim/eda2/block_01/security_distribution.csv
+- data/interim/eda2/block_01/yearly_distribution.csv
+- data/interim/eda2/block_01/daily_cross_sectional_distribution.csv
+- data/interim/eda2/block_01/run_metadata.json
 
-- Дневные логарифмические доходности adjusted close на соседних торговых сессиях.
-- В расчёт входят только даты, где бумага является PIT member и имеет `bar_available=1` на обеих соседних сессиях.
-- Парные Pearson и Spearman корреляции с попарным исключением отсутствующих наблюдений.
-- Годовые сводки межбумажных корреляций.
-- Скользящие корреляционные сводки для окон 60, 120 и 240 сессий, с шагом 20 сессий.
-- Собственный спектр корреляционной матрицы как описательное спектральное разложение.
+Агрегаты для анализа Research Agent:
+- docs/research/eda2/results/block_01/overall_distribution_summary.csv
+- docs/research/eda2/results/block_01/yearly_distribution_summary.csv
+- docs/research/eda2/results/block_01/cross_sectional_time_summary.csv
+- docs/research/eda2/results/block_01/EDA2_BLOCK_01_REPORT.md
 
-NumPy используется для численных массивов, попарных корреляций и матричной алгебры. Numba не добавлена: основные операции выражены через NumPy, а отдельного узкого цикла, оправдывающего JIT, здесь нет.
+Методологические правила:
+- Доходность считается только между соседними сессиями панели.
+- На обеих соседних сессиях должны быть положительный adjusted close и bar_available=1.
+- Пропуски не заполняются, доходности через пропущенные сессии не рассчитываются.
+- Pooled-оценки взвешивают наблюдения «бумага-дата»; equal-security оценки сначала считают статистику каждой бумаги, затем усредняют бумаги с равным весом.
+- MAD — немасштабированная медиана абсолютных отклонений от медианы.
+- Эксцесс использует определение Fisher.
+- Блок описательный: без тестов гипотез, IC, отбора признаков, моделей, прогнозов, торговых правил и портфельных метрик.
 
-## Выходы
+## Блок 3. Межбумажная зависимость и совместное движение
 
-В `data/interim/eda2/block_03/`:
-- `pairwise_correlations.csv`
-- `yearly_dependence_summary.csv`
-- `yearly_eigen_spectrum.csv`
-- `rolling_dependence_summary.csv`
-- `full_sample_eigen_spectrum.csv`
-- `full_sample_pearson_matrix.csv`
-- `run_metadata.json`
+Запуск:
 
-В `docs/research/eda2/results/block_03/`:
-- `EDA2_BLOCK_03_REPORT.md`
+    python scripts/experiments/eda2/03_cross_sectional_dependence.py
 
-## Методологические оговорки
-
-- Никакого заполнения пропусков и forward-fill.
-- Разные пары могут иметь разные наборы дат из-за pairwise deletion.
-- Попарно собранная корреляционная матрица не обязана быть положительно полуопределённой. Поэтому спектральное разложение выполняется на подмножестве бумаг с полной матрицей конечных корреляций; размер этого подмножества сохраняется в metadata.
-- Spearman ранжирует наблюдения каждой бумаги внутри всего доступного периода; годовые Spearman-оценки в текущем модуле не рассчитываются.
-- Скользящие оценки берутся с шагом 20 сессий, чтобы не выполнять тысячи избыточных матричных разложений.
-- Блок не рассчитывает IC, не обучает модели и не формирует торговых сигналов.
-
-
-## Разделение data и docs
-
-- `data/` содержит рабочие машинные данные и расчётные артефакты.
-- `docs/research/eda2/results/block_03/` содержит агрегированный отчёт для чтения и интерпретации Research Agent.
-
-
-При следующем запуске модуль дополнительно публикует в `docs/research/eda2/results/block_03/` агрегированные материалы для Research Agent: `EDA2_BLOCK_03_REPORT.md`, `pairwise_correlation_distribution.csv`, `yearly_dependence_summary.csv`, `rolling_dependence_summary.csv` и `spectral_summary.json`. Построчные пары, полные матрицы и технические metadata остаются в `data/`.
+Блок 3 завершён. Его методика и результаты описаны в
+docs/research/eda2/results/block_03/EDA2_BLOCK_03_REPORT.md.
