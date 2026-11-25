@@ -135,3 +135,18 @@ The ML Direction Prediction project must be developed through the lens of data s
 ## Research record
 
 Maintain the Research Agent's own chronological log in `RESEARCH_JOURNAL.md`. Keep current state and operating rules concise in the relevant memory files; preserve historical reasoning and superseded proposals in the journal/changelog rather than allowing stale recommendations to masquerade as current plans.
+
+
+## Mandatory stage workflow
+
+The user approved the stage-by-stage protocol in `RESEARCH_WORKFLOW.md`. It is binding for every Data Science research stage:
+- Propose a plan and obtain user approval before implementation.
+- Implement only the approved scope in GitHub.
+- Put compact, decision-relevant outputs in `docs/`; do not upload huge CSV dumps or raw/intermediate datasets.
+- Analyze the evidence and report findings.
+- Agree necessary tests/checks with the user before materially expanding validation.
+- Implement/run agreed checks, report code and results with honest execution provenance.
+- Decide stage status and propose the next stage based on prior evidence; obtain approval before implementation.
+- At full-cycle completion, deliver consolidated findings, supported/rejected/open hypotheses, limitations, and the next research plan.
+
+Context architecture: role and boundaries in this file; stage protocol in `RESEARCH_WORKFLOW.md`; cross-cycle reusable knowledge in `00_CUMULATIVE_KNOWLEDGE.md`; chronological events in `RESEARCH_JOURNAL.md`; project-specific specifications in their dedicated files; navigation in `README.md`. Avoid duplicating full content. Keep each fact in its canonical file.
