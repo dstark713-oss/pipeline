@@ -128,7 +128,7 @@ def temporal_analysis(panel: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     return yearly, {"summary": summary, "daily_churn": churn_frame}
 
 
-def consistency_analysis(panel: pd.DataFrame) -> pd.DataFrame:
+def consistency_analysis(panel: pd.DataFrame, prices: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     available = panel[panel["bar_available"].eq(1)].copy()
     checks = []
 
@@ -170,7 +170,41 @@ def consistency_analysis(panel: pd.DataFrame) -> pd.DataFrame:
     add("bar_available=1 but adjusted_close missing", int(len(panel)),
         int((panel["bar_available"].eq(1) & ~close_present).sum()),
         "Checks consistency between availability flag and panel close.")
-    return pd.DataFrame(checks)
+
+    matched = available[["tradedate", "secid", "adjusted_close"]].merge(
+        prices, on=["tradedate", "secid"], how="left",
+        suffixes=("_panel", "_history"), validate="one_to_one",
+    )
+    missing_history = matched["adjusted_close_history"].isna()
+    add("bar_available=1 but selected adjusted history close missing",
+        len(matched), int(missing_history.sum()),
+        "Compares the panel bar with the board-selected adjusted SQLite history.")
+    comparable = matched[
+        matched["adjusted_close_panel"].notna()
+        & matched["adjusted_close_history"].notna()
+    ]
+    mismatch = ~np.isclose(
+        comparable["adjusted_close_panel"].to_numpy(dtype="float64"),
+        comparable["adjusted_close_history"].to_numpy(dtype="float64"),
+        rtol=1e-8, atol=1e-8,
+    )
+    add("panel close differs from selected adjusted history close",
+        len(comparable), int(mismatch.sum()),
+        "Tolerance: rtol=1e-8, atol=1e-8; flags possible board/aggregation/snapshot mismatch.")
+
+    category_rows = []
+    for column in ("price_board", "adjustment_status", "n_boards", "boards"):
+        if column not in panel.columns:
+            continue
+        source = available if column in ("price_board", "adjustment_status") else panel
+        counts = source[column].fillna("<NA>").astype(str).value_counts(dropna=False)
+        denominator = int(len(source))
+        for category, count in counts.items():
+            category_rows.append({
+                "field": column, "category": category, "n": int(count),
+                "share": float(count / denominator) if denominator else None,
+            })
+    return pd.DataFrame(checks), pd.DataFrame(category_rows)
 
 
 def future_price_analysis(
