@@ -135,24 +135,36 @@ def main():
             pieces.append(f"{w}d beta={z['beta']:.2f} corr={z['corr']:.2f} low-breadth beta={z['low_breadth_beta']:.2f} n={z['n']}")
         lines.append(" | ".join(pieces))
 
-    lines.append(f"Conditional forward EW-TOP50 returns when breadth <= {args.low_breadth:.0%}:")
+    lines.append(f"Conditional forward returns when breadth <= {args.low_breadth:.0%}:")
     fwd_rows = []
     for h in HORIZONS:
-        fwd = (1 + market_ret).rolling(h).apply(np.prod, raw=True).shift(-h) - 1
-        sample = pd.concat([fwd.rename("ew_fwd"), breadth.breadth], axis=1).dropna()
+        ew_fwd = (1 + market_ret).rolling(h).apply(np.prod, raw=True).shift(-h) - 1
+        sample = pd.concat([ew_fwd.rename("ew_fwd"), breadth.breadth], axis=1).dropna()
         sample = sample[sample.breadth <= args.low_breadth]
-        row = {"horizon": h, "n": len(sample), "ew_mean": sample.ew_fwd.mean()}
+        row = {"asset": "EW_TOP50", "horizon": h, "n": len(sample), "asset_mean": sample.ew_fwd.mean()}
         if lqdt is not None:
             lqdt_fwd = (1 + lqdt).rolling(h).apply(np.prod, raw=True).shift(-h) - 1
-            joined = pd.concat([fwd.rename("ew"), lqdt_fwd.rename("lqdt"), breadth.breadth], axis=1).dropna()
+            joined = pd.concat([ew_fwd.rename("asset"), lqdt_fwd.rename("lqdt"), breadth.breadth], axis=1).dropna()
             joined = joined[joined.breadth <= args.low_breadth]
-            excess = joined.ew - joined.lqdt
-            row.update({"paired_n": len(joined), "lqdt_mean": joined.lqdt.mean(), "excess_mean": excess.mean()})
+            row.update({"paired_n": len(joined), "lqdt_mean": joined.lqdt.mean(), "excess_mean": (joined.asset - joined.lqdt).mean()})
         fwd_rows.append(row)
-        lines.append(f"H{h}: n={row['n']} EW mean={row['ew_mean']:.3%}" +
+        for ticker in ("T", "GCHE"):
+            if ticker not in ret:
+                continue
+            asset_fwd = (1 + ret[ticker]).rolling(h).apply(np.prod, raw=True).shift(-h) - 1
+            aligned = pd.concat([asset_fwd.rename("asset_fwd"), breadth.breadth], axis=1).dropna()
+            aligned = aligned[aligned.breadth <= args.low_breadth]
+            prow = {"asset": ticker, "horizon": h, "n": len(aligned), "asset_mean": aligned.asset_fwd.mean()}
+            if lqdt is not None:
+                paired = pd.concat([asset_fwd.rename("asset"), lqdt_fwd.rename("lqdt"), breadth.breadth], axis=1).dropna()
+                paired = paired[paired.breadth <= args.low_breadth]
+                prow.update({"paired_n": len(paired), "lqdt_mean": paired.lqdt.mean(), "excess_mean": (paired.asset - paired.lqdt).mean()})
+            fwd_rows.append(prow)
+            lines.append(f"{ticker} H{h}: n={prow['n']} mean={prow['asset_mean']:.3%}" +
+                         (f" | paired n={prow.get('paired_n',0)} LQDT={prow.get('lqdt_mean',np.nan):.3%} excess={prow.get('excess_mean',np.nan):+.3%}" if lqdt is not None else " | LQDT: NOT PROVIDED"))
+        lines.append(f"EW H{h}: n={row['n']} mean={row['asset_mean']:.3%}" +
                      (f" | paired n={row.get('paired_n',0)} LQDT={row.get('lqdt_mean',np.nan):.3%} excess={row.get('excess_mean',np.nan):+.3%}" if lqdt is not None else " | LQDT: NOT PROVIDED"))
-    lines.append("NOTE: descriptive conditional means only; overlapping horizons, no CI, no costs, no alpha attribution.")
-    lines.append("Position-level forward excess vs LQDT is NOT inferred from index results.")
+    lines.append("NOTE: descriptive conditional means only; overlapping horizons, no CI, no costs, no alpha attribution. Results are not forecasts.")
     report = "\n".join(lines)
     print(report)
     (OUT / "position_exit_audit_report.txt").write_text(report + "\n", encoding="utf-8")
