@@ -51,3 +51,12 @@ The user supplies local market/screener outputs. The agent requests what is need
 ## Privacy
 
 Do not request or store brokerage passwords, API keys, tokens, or unnecessary personal/account identifiers.
+
+## LQDT data-source contract
+
+- LQDT is NOT included in `data/processed/top50/top50_panel.parquet` or the approved adjusted SQLite universe (`TQBR`/`EQBR`).
+- Whenever LQDT is required as an opportunity-cost benchmark, fetch its own daily price history separately from MOEX ISS. Do not silently substitute the key rate, a fixed historical cash proxy, or an unrelated series.
+- Use the MOEX ISS daily candles endpoint for LQDT, discover/confirm its active board (expected fund board `TQTF`), paginate with `start`, and preserve source, board, date range, retrieval timestamp, and raw close values.
+- Align LQDT returns with asset/index returns by exact trading date. Do not forward-fill missing sessions. Report unmatched dates and coverage.
+- For forward H1/H5/H20 comparisons, calculate synchronized compounded returns over the same future trading sessions. Distinguish current LQDT yield from historical realized LQDT returns.
+- If MOEX ISS retrieval fails or coverage is insufficient, mark the benchmark `NOT ASSESSABLE`; do not proceed as if LQDT were absent by design.
