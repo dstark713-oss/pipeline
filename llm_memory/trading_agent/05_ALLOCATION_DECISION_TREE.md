@@ -1,3 +1,5 @@
+> **ARCHIVED / NOT CURRENT POLICY (2026-11-25).** This document preserves historical reasoning only. Its HOLD/no-change actions, position-retention assumptions, and allocation conclusions are superseded by [06_DAILY_TRADING_RESEARCH_LOOP.md](06_DAILY_TRADING_RESEARCH_LOOP.md). Do not use this tree as the current operating decision tree. New daily trees must be rebuilt from current inputs, self-checked, and committed branch by branch. Active directions are LONG/SHORT; LONG LQDT is the neutral opportunity-cost allocation when no equity trade qualifies.
+
 # Trading Agent — End-to-End Allocation Decision Tree
 
 Last updated: 2026-11-24
