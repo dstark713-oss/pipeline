@@ -137,9 +137,8 @@ This must not become a bulk ACF/PACF indicator catalog. First establish whether 
 
 The previously suggested OHLC gap/intraday/range/CLV/wick decomposition is **withdrawn** because it drifts toward trader-style price-action feature engineering and was not aligned with the user's DS-first constraint.
 
-## Active next action
+## Current status and next action
 
-Explain the DS-first research direction and the temporal-dependence question, including its mathematical foundations and relationship to the already completed rolling-moment experiment. Then propose a narrow experiment specification for user review. Do not write code or run an experiment until approved.
-## Active next action
+Rolling Statistical Moments is closed. The OHLC decomposition proposal is withdrawn. Temporal dependence remains a possible DS-first research direction, not an approved feature family or experiment. No next feature family is approved yet.
 
-Teach and agree the OHLC decomposition family specification before coding. The next discussion should cover intuition, exact formulas, edge cases, mathematical relationships, hypotheses, and predeclared tests. Do not start model fitting or portfolio evaluation.
+Follow `RESEARCH_WORKFLOW.md`: first propose a research plan, explain the statistical question and its distinction from completed work, and obtain user approval. Do not write code or run an experiment before approval.
