@@ -218,7 +218,7 @@ def run_repair(dry_run: bool = False, limit: int | None = None) -> dict[str, Any
 
     refresh = load_module("pipeline_refresh_for_repair", REFRESH_MODULE_PATH)
     downloader_module = load_module("pipeline_raw_downloader_for_repair", DOWNLOADER_PATH)
-    downloader = downloader_module.Downloader()
+    downloader = downloader_module
 
     OVERLAY_DB.parent.mkdir(parents=True, exist_ok=True)
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
