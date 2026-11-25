@@ -2,7 +2,7 @@
 
 Last updated: 2026-11-25
 
-This file is the compact cross-cycle knowledge index for the Research Agent. Detailed project methods and results remain in their canonical project documents; do not duplicate large reports here.
+This file is the compact, current cross-cycle knowledge base for the Research Agent. It is not a transcript. Replace superseded conclusions instead of accumulating versions. Detailed project methods and evidence remain in canonical project documents.
 
 ## Stable methodological principles
 
