@@ -1,3 +1,5 @@
+# Path: scripts/experiments/ml_1/eda/reporting.py
+# Purpose: EDA implementation module.
 """Compact Markdown and CSV evidence writer."""
 from __future__ import annotations
 
@@ -32,7 +34,6 @@ def write_outputs(
     distribution_by_year.to_csv(output_dir / "distribution_by_year.csv", index=False)
     by_secid.to_csv(output_dir / "instrument_coverage_summary.csv", index=False)
     temporal_yearly.to_csv(output_dir / "temporal_by_year.csv", index=False)
-    temporal_detail["daily_churn"].to_csv(output_dir / "daily_membership_churn.csv", index=False)
     consistency.to_csv(output_dir / "consistency_checks.csv", index=False)
     future_summary.to_csv(output_dir / "future_price_summary.csv", index=False)
     future_by_year.to_csv(output_dir / "future_price_by_year.csv", index=False)
@@ -113,7 +114,7 @@ Per-instrument results are in `future_price_by_secid.csv`.
 
 - `eda_metadata.json`: run provenance and aggregate counts.
 - `distribution_summary.csv`, `distribution_by_year.csv`.
-- `instrument_coverage_summary.csv`, `temporal_by_year.csv`, `daily_membership_churn.csv`.
+- `instrument_coverage_summary.csv`, `temporal_by_year.csv`.
 - `consistency_checks.csv`.
 - `future_price_summary.csv`, `future_price_by_year.csv`, `future_price_by_secid.csv`.
 """
