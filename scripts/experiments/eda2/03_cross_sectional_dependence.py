@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy.stats import rankdata
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -123,6 +124,32 @@ def pairwise_corr_numpy(
 def rank_columns(frame: pd.DataFrame) -> pd.DataFrame:
     # Average ranks handle ties; ranking is performed independently per security.
     return frame.rank(axis=0, method="average", na_option="keep")
+
+
+def pairwise_spearman(
+    frame: pd.DataFrame,
+    min_obs: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Pair-specific Spearman: rank each pair only on its shared dates."""
+    x = frame.to_numpy(dtype=np.float64)
+    n_columns = x.shape[1]
+    corr = np.full((n_columns, n_columns), np.nan, dtype=np.float64)
+    counts = np.zeros((n_columns, n_columns), dtype=np.int32)
+
+    for i in range(n_columns):
+        xi = x[:, i]
+        for j in range(i, n_columns):
+            common = np.isfinite(xi) & np.isfinite(x[:, j])
+            n = int(common.sum())
+            counts[i, j] = counts[j, i] = n
+            if n < min_obs:
+                continue
+            ri = rankdata(xi[common], method="average")
+            rj = rankdata(x[common, j], method="average")
+            value = np.corrcoef(ri, rj)[0, 1]
+            corr[i, j] = corr[j, i] = value
+
+    return corr, counts
 
 
 def matrix_to_long(
@@ -242,11 +269,11 @@ def main() -> None:
     tickers = list(returns.columns)
 
     pearson, counts, _ = pairwise_corr_numpy(returns, args.min_pair_obs)
-    spearman, _, _ = pairwise_corr_numpy(rank_columns(returns), args.min_pair_obs)
+    spearman, spearman_counts = pairwise_spearman(returns, args.min_pair_obs)
 
     pairwise = pd.concat([
         matrix_to_long(pearson, counts, tickers, "pearson", "full_sample"),
-        matrix_to_long(spearman, counts, tickers, "spearman", "full_sample"),
+        matrix_to_long(spearman, spearman_counts, tickers, "spearman", "full_sample"),
     ], ignore_index=True)
     pairwise.to_csv(args.output_dir / "pairwise_correlations.csv", index=False)
 
