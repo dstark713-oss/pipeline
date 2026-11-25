@@ -58,3 +58,13 @@
 - Added `scripts/experiments/ml_1/eda/` and `docs/research/eda/EDA_SPEC.md`.
 - Replaced stale fixed binary t-to-t+5 target and fixed WF assumptions in canonical active-project context. Target, horizons, model count, and whether prediction is warranted remain open until EDA evidence is reviewed.
 - Implementation is committed but not run here; local runtime results are pending the user's pull/run/push cycle.
+
+
+## 2026-11-26 | EDA reviewed and context corrected
+
+- Reviewed the user-run EDA report, metadata, summary tables, annual summaries, consistency diagnostics, and board/adjustment composition on `main`.
+- Added `docs/research/eda/EDA_ANALYSIS.md` with findings, interpretation limits, and a proposed targeted validation plan.
+- Replaced the active ML research specification to remove stale fixed t-to-t+5 target/WF assumptions, withdrawn OHLC price-action proposal, and unresolved merge-conflict markers.
+- Updated next steps, cumulative knowledge, repository index, and dataset snapshot to reflect the actual EDA run and its findings.
+- Recorded the 1,214 incomplete bar-available rows, one quarantined mixed-scale row, heavy-tailed returns, changing PIT universe size, and exact endpoint coverage as issues/findings to validate or interpret.
+- Targeted diagnostic checks are proposed but not yet approved or implemented. No project Python code or source data was changed.
