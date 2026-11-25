@@ -1,146 +1,146 @@
-# EDA v2: Statistical Structure and Behaviour of the PIT TOP50 Panel
+# EDA v2: статистическая структура и поведение панели PIT TOP50
 
-Status: proposed research plan; implementation not approved or started.  
-Date: 2026-11-26
+Статус: предлагаемый план исследования; реализация не согласована и не начата.  
+Дата: 2026-11-26
 
-## Purpose
+## Цель
 
-The first EDA pass mainly described schema coverage, marginal source-variable distributions, consistency checks, and pooled future-price summaries. That is not sufficient to characterize the statistical behaviour of the PIT TOP50 panel or to generate defensible research hypotheses.
+Первый проход EDA в основном описал покрытие схемы и источников, маргинальные распределения исходных переменных, проверки согласованности и агрегированные распределения будущих цен. Этого недостаточно, чтобы охарактеризовать статистическое поведение панели PIT TOP50 и сформулировать обоснованные исследовательские гипотезы.
 
-EDA v2 is a data-characterization study. It asks how returns and activity are distributed, how observations depend on time and on other securities, how the cross-section changes, and whether stable heterogeneity or conditional structure is visible. It does not assume that a predictive model must be built.
+EDA v2 — исследование структуры данных. Мы изучаем распределения доходностей и торговой активности, зависимости наблюдений во времени и между бумагами, динамику поперечного сечения, а также возможную устойчивую неоднородность и условную структуру. План не предполагает, что результатом обязательно должна стать предсказательная модель.
 
-## Scope boundaries
+## Границы исследования
 
-- Use the existing adjusted daily panel and its PIT membership/calendar semantics.
-- Do not repeat the completed general data-quality audit.
-- The known 1,214 incomplete bars are a refresh-pipeline issue. Repair them through the separate candle overlay utility; do not make EDA v2 a source-cleaning project.
-- Do not spend a separate analysis cycle on the single BELU quarantined row.
-- Missing bars and changing universe coverage may be described only where needed to understand sample composition or potential selection bias.
-- No trader indicators, technical signals, candlestick patterns, or price-action heuristics.
-- No feature selection, IC leaderboard, model fitting, walk-forward validation, trading rules, or portfolio metrics.
-- Descriptive conditional distributions may be examined to formulate hypotheses, but they must not be presented as predictive evidence.
+- Используем существующую скорректированную дневную панель с её семантикой PIT membership и торгового календаря.
+- Не повторяем завершённый общий аудит качества данных.
+- Известные 1 214 неполных свечей относятся к дефекту процесса обновления данных. Исправление выполняется отдельной утилитой через слой коррекций свечей; EDA v2 не превращаем в проект очистки источника.
+- Не выделяем отдельный исследовательский цикл на одну изолированную строку BELU, уже помещённую в карантин.
+- Пропуски свечей и изменение покрытия универсума описываем только там, где это необходимо для понимания состава выборки или потенциального смещения отбора.
+- Не используем трейдерские индикаторы, технические сигналы, свечные паттерны и эвристики ценового движения.
+- Не проводим отбор признаков, не строим рейтинги IC, не обучаем модели, не выполняем walk-forward-валидацию, не формируем торговые правила и не рассчитываем портфельные метрики.
+- Условные описательные распределения допустимы для выдвижения гипотез, но не должны представляться как доказательство предсказательной способности.
 
-## Research questions and analyses
+## Исследовательские вопросы и анализы
 
-### 1. Return distribution geometry
+### 1. Геометрия распределения доходностей
 
-**Question:** What does the distribution of daily security-level log returns look like, and how does its shape vary across instruments and time?
+**Вопрос:** Как выглядят распределения дневных доходностей отдельных бумаг и как их форма меняется между инструментами и во времени?
 
-Analyses:
-- Daily log returns from consecutive valid adjusted closes, with no bridging across missing sessions.
-- Pooled and per-security distributions: mean, median, standard deviation, MAD, quantiles, skewness, excess kurtosis, and tail exceedance frequencies.
-- Tail-focused quantiles (for example 1%, 5%, 95%, 99%) and empirical left/right tail asymmetry.
-- Annual and rolling-period summaries to expose temporal changes.
-- Compare pooled, equal-security-weighted, and date-level cross-sectional summaries so large/long-lived constituents do not silently dominate.
+Анализы:
+- Рассчитать дневные логарифмические доходности по последовательным валидным скорректированным ценам закрытия. Не соединять наблюдения через пропущенные сессии.
+- Изучить объединённые и индивидуальные распределения по бумагам: среднее, медиану, стандартное отклонение, MAD, квантили, асимметрию, эксцесс и частоты экстремальных наблюдений.
+- Отдельно изучить хвосты распределений: например, квантили 1%, 5%, 95%, 99% и эмпирическую асимметрию левого и правого хвостов.
+- Построить годовые и скользящие сводки, чтобы выявить изменения во времени.
+- Сопоставить объединённые оценки, оценки с равным весом каждой бумаги и статистики поперечного сечения по датам. Это позволит не допустить, чтобы крупные или долго присутствующие в панели бумаги незаметно доминировали в результатах.
 
-Hypotheses this can motivate: heavy-tail persistence, instrument-specific distribution families, time-varying asymmetry, and non-constant scale.
+Возможные гипотезы: устойчивость тяжёлых хвостов, различия форм распределений между инструментами, меняющаяся асимметрия и непостоянный масштаб доходностей.
 
-### 2. Temporal dependence
+### 2. Временная зависимость
 
-**Question:** Are returns independent through time, and does dependence differ between signed returns and measures of return magnitude?
+**Вопрос:** Независимы ли доходности во времени и отличается ли зависимость для знаковых доходностей и показателей их величины?
 
-Analyses:
-- Per-security ACF at lags 1, 2, 5, 10, and 20 for returns, absolute returns, and squared returns.
-- Ljung-Box tests per security for predeclared lag sets, with minimum effective sample requirements and Benjamini-Hochberg correction across securities.
-- Summarize the distribution of test statistics/effect sizes, not only counts of small p-values.
-- Repeat on broad time segments only where sample size permits.
-- Keep missing sessions missing; never create artificial zero returns.
+Анализы:
+- Рассчитать автокорреляционную функцию (ACF) по каждой бумаге для лагов 1, 2, 5, 10 и 20 на трёх рядах: доходности, абсолютные доходности и квадраты доходностей.
+- Выполнить тесты Льюнга — Бокса по каждой бумаге для заранее заданных наборов лагов. Установить минимальные требования к эффективному размеру выборки и применить поправку Бенджамини — Хохберга (BH) по множеству бумаг.
+- Анализировать распределения статистик и размеров эффектов, а не только количество малых p-value.
+- Повторить анализ на крупных временных отрезках, только если размер выборки это позволяет.
+- Не заполнять пропущенные сессии и не создавать искусственные нулевые доходности.
 
-Interpretation:
-- Dependence in signed returns and dependence in magnitudes are different questions.
-- Significant absolute/squared-return dependence is evidence of volatility clustering, not by itself a volatility forecast or a model recommendation.
-- Overlapping windows and repeated tests must be handled explicitly.
+Интерпретация:
+- Зависимость знаковых доходностей и зависимость их величины — разные исследовательские вопросы.
+- Значимая зависимость абсолютных или квадратичных доходностей может свидетельствовать о кластеризации волатильности, но сама по себе не является прогнозом волатильности и не обосновывает выбор модели.
+- Перекрывающиеся окна и множественные проверки должны учитываться явно.
 
-### 3. Cross-sectional dependence and common movement
+### 3. Межрыночная зависимость и совместное движение бумаг
 
-**Question:** How strongly do securities co-move, and is that structure stable?
+**Вопрос:** Насколько сильно бумаги движутся совместно и насколько устойчива эта структура?
 
-Analyses:
-- Pairwise Pearson and Spearman correlations of aligned daily log returns.
-- Distribution of pairwise correlations by year and broad time segment.
-- Rolling cross-sectional correlation summaries for 60/120/240-session windows.
-- Correlation-matrix eigenvalue spectrum and variance concentration as descriptive linear-algebra diagnostics.
-- PCA may be used strictly as an exploratory decomposition of contemporaneous return covariance, not as a fitted prediction model. Report stability and sensitivity to universe composition.
+Анализы:
+- Рассчитать парные корреляции Пирсона и Спирмена для синхронизированных дневных логарифмических доходностей.
+- Изучить распределение парных корреляций по годам и крупным временным отрезкам.
+- Рассчитать скользящие сводки поперечных корреляций для окон 60, 120 и 240 сессий.
+- Изучить собственный спектр корреляционной матрицы и концентрацию объясняемой дисперсии как описательные методы линейной алгебры.
+- PCA (метод главных компонент) допустим только как исследовательское разложение одновременной ковариационной структуры доходностей, а не как обученная предсказательная модель. Нужно описать устойчивость результатов и их чувствительность к составу универсума.
 
-Hypotheses this can motivate: common market component, changing dependence regimes, clusters of co-moving securities, and residual idiosyncratic variation.
+Возможные гипотезы: общий рыночный компонент, меняющиеся режимы зависимости, группы совместно движущихся бумаг и остаточная идиосинкратическая вариация.
 
-### 4. Cross-sectional dispersion and breadth as statistical summaries
+### 4. Поперечный разброс и breadth как статистические сводки
 
-**Question:** How dispersed are security returns within each market session, and how persistent is that dispersion?
+**Вопрос:** Насколько различаются доходности бумаг внутри одной торговой сессии и насколько устойчив этот разброс?
 
-For each date:
-- Cross-sectional mean, median, standard deviation, MAD, IQR, and selected quantiles of returns.
-- Fraction of securities with positive, negative, and zero returns.
-- Number of valid securities contributing to each statistic.
-- Time-series distributions and autocorrelation of those date-level statistics.
-- Annual/rolling summaries and comparison across universe-size strata.
+Для каждой даты рассчитать:
+- Среднее, медиану, стандартное отклонение, MAD, межквартильный размах (IQR) и выбранные квантили доходностей поперечного сечения.
+- Доли бумаг с положительной, отрицательной и нулевой доходностью.
+- Количество валидных бумаг, участвующих в расчёте каждой статистики.
+- Временные распределения и автокорреляцию этих статистик по датам.
+- Годовые и скользящие сводки, а также сравнение периодов с разным размером универсума.
 
-These are descriptive cross-sectional statistics, not trading breadth signals or allocation rules.
+Это описательные статистики поперечного сечения, а не торговые breadth-сигналы и не правила распределения капитала.
 
-### 5. Heterogeneity of scale and volatility
+### 5. Неоднородность масштаба и волатильности
 
-**Question:** Are return scale and distribution shape stable across securities, or are there persistent groups?
+**Вопрос:** Стабильны ли масштаб и форма распределения доходностей между бумагами или существуют устойчивые группы?
 
-Analyses:
-- Per-security standard deviation, MAD, quantile range, skewness, and tail measures.
-- Rolling dispersion measures over 20/60/120/240 sessions, used only to describe changing variance.
-- Compare within-security temporal variation with between-security variation.
-- Robust group comparisons (for example Brown-Forsythe/Levene where assumptions and sample construction are suitable); report effect sizes and uncertainty.
-- Avoid treating each security-day as independent.
+Анализы:
+- Рассчитать для каждой бумаги стандартное отклонение, MAD, диапазон квантилей, асимметрию и характеристики хвостов.
+- Рассчитать скользящие показатели разброса на окнах 20, 60, 120 и 240 сессий. Их назначение — описывать изменение дисперсии, а не создавать торговые сигналы.
+- Сопоставить временную изменчивость внутри одной бумаги с различиями между бумагами.
+- Использовать устойчивые методы сравнения групп, например Brown–Forsythe или Levene, только если предпосылки и конструкция выборки подходят. Представлять размеры эффектов и неопределённость.
+- Не считать каждое наблюдение «бумага-день» независимым.
 
-Hypotheses this can motivate: stable scale heterogeneity, time-varying volatility, and changes in relative dispersion.
+Возможные гипотезы: устойчивая неоднородность масштаба между бумагами, меняющаяся во времени волатильность и изменения относительного разброса.
 
-### 6. PIT membership dynamics and rank mobility
+### 6. Динамика PIT membership и мобильность рангов
 
-**Question:** How stable is the research population, and how quickly do securities move through the TOP50 ranking?
+**Вопрос:** Насколько стабилен исследуемый состав бумаг и как быстро бумаги перемещаются внутри рейтинга TOP50?
 
-Analyses:
-- Membership tenure distributions, entry/exit rates, and consecutive membership persistence.
-- Rank transition matrices and rank changes for securities present on adjacent dates.
-- Rank autocorrelation/persistence by lag.
-- Universe-size and cohort summaries by period.
-- Separate actual rank mobility from membership turnover.
+Анализы:
+- Изучить распределения длительности пребывания в составе TOP50, частоту входов и выходов, а также непрерывность членства.
+- Построить матрицы переходов между рангами и оценить изменение ранга для бумаг, присутствующих на соседних датах.
+- Рассчитать автокорреляцию и устойчивость рангов для выбранных лагов.
+- Сформировать сводки размера универсума и когорт по периодам.
+- Разделять собственно мобильность ранга и смену состава участников.
 
-This extends the first EDA pass's annual counts into a statistical description of population dynamics.
+Этот блок расширяет годовые подсчёты первого прохода EDA до статистического описания динамики исследуемой популяции.
 
-### 7. Activity, concentration, and conditional structure
+### 7. Торговая активность, концентрация и условная структура
 
-**Question:** How is market activity distributed across the cross-section, and does return behaviour differ descriptively across activity/rank strata?
+**Вопрос:** Как распределена торговая активность между бумагами и различается ли описательное поведение доходностей между группами активности и ранга?
 
-Analyses:
-- Cross-sectional distributions of Volume, Value, and value_60d.
-- Per-date concentration measures (for example top-5/top-10 share and Herfindahl concentration) using only valid positive activity observations.
-- PIT rank and activity strata defined on date t; compare contemporaneous return distributions and, as a separate explicitly descriptive view, the previously specified +1/+5/+20 return distributions.
-- Report group sizes, medians, quantiles, dispersion, and uncertainty. Do not rank strata by predictive performance or compute an IC leaderboard.
+Анализы:
+- Изучить поперечные распределения Volume, Value и value_60d.
+- Рассчитать концентрацию активности по датам: например, долю TOP-5/TOP-10 и индекс Херфиндаля — Хиршмана (HHI). Использовать только валидные положительные значения активности.
+- Формировать группы по PIT-рангу и активности на дату t. Сравнить текущие распределения доходностей, а отдельно — явно описательные распределения доходностей на горизонтах +1, +5 и +20 сессий.
+- Представлять размеры групп, медианы, квантили, разброс и неопределённость. Не ранжировать группы по предсказательной эффективности и не строить рейтинг IC.
 
-This is exploratory stratification for hypothesis generation, not feature approval or evidence of deployable prediction.
+Это исследовательская стратификация для выдвижения гипотез, а не утверждение о пригодности признаков или доказательство реализуемого прогноза.
 
-## Statistical inference protocol
+## Протокол статистического вывода
 
-- Define the estimand and sample unit for every test.
-- Preserve time ordering, PIT membership, and security identity.
-- Do not pool dependent security-day observations and then use iid standard errors.
-- Where uncertainty is estimated, use date-block or other dependence-aware resampling appropriate to the statistic; explain what dependence is preserved.
-- Correct families of repeated per-security/per-lag tests for multiplicity (BH where suitable).
-- Report effect sizes, confidence intervals, sample sizes, and test diagnostics together. P-values alone are not conclusions.
-- Distinguish statistical significance from economic or predictive usefulness.
-- Predeclare thresholds, minimum sample sizes, lag sets, and comparison groups before running tests.
+- Для каждого теста определить оцениваемую величину (estimand) и единицу наблюдения.
+- Сохранять временной порядок, PIT membership и идентичность каждой бумаги.
+- Не объединять зависимые наблюдения «бумага-день» и затем применять к ним стандартные ошибки, рассчитанные в предположении независимости.
+- Если оценивается неопределённость, использовать блочный бутстрэп по датам или другой подход с учётом зависимостей, подходящий конкретной статистике. Объяснять, какие зависимости сохраняет выбранный метод.
+- Корректировать семейства множественных проверок по бумагам и лагам; применять BH там, где это уместно.
+- Вместе представлять размеры эффектов, доверительные интервалы, размеры выборок и диагностику тестов. Одни p-value не являются выводом.
+- Разделять статистическую значимость, экономическую полезность и предсказательную полезность.
+- До запуска тестов заранее определить пороги, минимальные размеры выборок, наборы лагов и группы сравнения.
 
-## Proposed deliverables
+## Предлагаемые результаты
 
-1. EDA_V2_REPORT.md: research questions, methods, results, figures/tables summarized in text, interpretations, caveats, and hypotheses.
-2. Compact CSV aggregates for per-security, per-year, per-date, and pairwise summaries where useful. No raw daily exports or giant correlation matrices in GitHub.
-3. Statistical test summary with test family, sample size, statistic, effect size, p-value, adjusted p-value, and interpretation.
-4. A final hypothesis register: supported descriptively / not supported / inconclusive, evidence, confounders, and what would be required to test further.
+1. **EDA_V2_REPORT.md** — исследовательские вопросы, методы, результаты, текстовое описание графиков и таблиц, интерпретации, ограничения и гипотезы.
+2. Компактные CSV-агрегаты по бумагам, годам, датам и парам бумаг там, где они полезны. Не публиковать в GitHub сырые дневные выгрузки и огромные корреляционные матрицы.
+3. Сводка статистических тестов: семейство тестов, размер выборки, статистика, размер эффекта, p-value, скорректированный p-value и интерпретация.
+4. Итоговый реестр гипотез со статусами «описательно подтверждается», «не подтверждается» или «недостаточно данных», указанием доказательств, смешивающих факторов и того, что потребуется для дальнейшей проверки.
 
-## Proposed execution order
+## Предлагаемый порядок выполнения
 
-1. Return distribution geometry.
-2. Temporal dependence.
-3. Cross-sectional dependence/common movement.
-4. Date-level dispersion and breadth statistics.
-5. Instrument heterogeneity.
-6. PIT membership/rank mobility.
-7. Activity concentration and conditional stratification.
+1. Геометрия распределения доходностей.
+2. Временная зависимость.
+3. Межрыночная зависимость и совместное движение бумаг.
+4. Поперечный разброс и breadth-статистики по датам.
+5. Неоднородность инструментов.
+6. Динамика PIT membership и мобильность рангов.
+7. Концентрация активности и условная стратификация.
 
-The order can be revised after the first result review, but no implementation begins until the user approves the plan and the output contract.
+Порядок можно пересмотреть после обсуждения первых результатов. Реализация не начинается до согласования плана и формата выходных материалов.
