@@ -17,6 +17,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 RAW_DB = PROJECT_ROOT / "data" / "raw" / "moex_daily_raw.sqlite"
 OUTPUT_DB = PROJECT_ROOT / "data" / "processed" / "moex_daily_adjusted.sqlite"
+REPAIR_OVERLAY_DB = PROJECT_ROOT / "data" / "interim" / "bar_repairs" / "moex_candle_repairs.sqlite"
 
 REPORT_DIR = PROJECT_ROOT / "data" / "interim" / "corporate_actions"
 REGISTER_CSV = REPORT_DIR / "corporate_actions_register.csv"
@@ -264,6 +265,8 @@ def create_target_table(target_conn, source_info, source_by_lower):
             )
 
     definitions.extend([
+        '"bar_repair_id" TEXT',
+        '"bar_repair_fetched_at_utc" TEXT',
         '"price_adjustment_factor" REAL',
         '"volume_adjustment_factor" REAL',
         '"corporate_action_id" TEXT',
@@ -335,6 +338,8 @@ def build_adjusted_database():
                 output_columns.append("adjusted_" + field)
 
         output_columns.extend([
+            "bar_repair_id",
+            "bar_repair_fetched_at_utc",
             "price_adjustment_factor",
             "volume_adjustment_factor",
             "corporate_action_id",
@@ -371,6 +376,30 @@ def build_adjusted_database():
         source_cursor = source_conn.execute(select_sql)
         actions_by_ticker = get_actions_by_ticker()
 
+        # Keep raw SQLite append-only. Validated candle corrections are
+        # applied from a separate overlay while rebuilding adjusted data.
+        repair_overlay = {}
+        repaired_rows_applied = 0
+        if REPAIR_OVERLAY_DB.is_file():
+            overlay_conn = sqlite3.connect(sqlite_readonly_uri(REPAIR_OVERLAY_DB), uri=True)
+            try:
+                overlay_exists = overlay_conn.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='repaired_bars'"
+                ).fetchone()
+                if overlay_exists:
+                    overlay_rows = overlay_conn.execute(
+                        """
+                        SELECT secid, boardid, tradedate, open, high, low,
+                               close, volume, value, repair_id, fetched_at_utc
+                        FROM repaired_bars
+                        """
+                    )
+                    for item in overlay_rows:
+                        key = (str(item[0]).upper(), str(item[1]).upper(), str(item[2])[:10])
+                        repair_overlay[key] = item[3:]
+            finally:
+                overlay_conn.close()
+
         row_count = 0
         status_counts = Counter()
         action_counts = Counter()
@@ -397,6 +426,26 @@ def build_adjusted_database():
 
                 secid = row[source_index["secid"]]
                 tradedate = row[source_index["tradedate"]]
+                boardid = row[source_index["boardid"]] if "boardid" in source_index else None
+
+                repair = repair_overlay.get(
+                    (str(secid).upper(), str(boardid).upper(), str(tradedate)[:10])
+                ) if boardid is not None and tradedate is not None else None
+
+                repair_id = None
+                repair_fetched_at = None
+                if repair is not None:
+                    repair_values = {
+                        "open": repair[0], "high": repair[1],
+                        "low": repair[2], "close": repair[3],
+                        "volume": repair[4], "value": repair[5],
+                    }
+                    for field, value in repair_values.items():
+                        if field in source_index and value is not None:
+                            row[source_index[field]] = value
+                    repair_id = repair[6]
+                    repair_fetched_at = repair[7]
+                    repaired_rows_applied += 1
 
                 action = actions_by_ticker.get(secid)
 
@@ -483,6 +532,8 @@ def build_adjusted_database():
                     row
                     + adjusted_values
                     + [
+                        repair_id,
+                        repair_fetched_at,
                         stored_price_factor,
                         volume_factor,
                         action_id,
@@ -641,6 +692,9 @@ def build_adjusted_database():
             "corporate_actions": audit_rows,
             "raw_database_modified": False,
             "raw_database_opened_read_only": True,
+            "repair_overlay_database": str(REPAIR_OVERLAY_DB),
+            "repair_overlay_keys_loaded": len(repair_overlay),
+            "raw_rows_with_repair_overlay_applied": repaired_rows_applied,
             "price_adjustments_applied_only_to_confirmed_actions": True,
             "unconfirmed_actions_adjusted": [],
             "belu_effective_date_bar_quarantined": True,
