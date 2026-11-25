@@ -68,3 +68,13 @@
 - Updated next steps, cumulative knowledge, repository index, and dataset snapshot to reflect the actual EDA run and its findings.
 - Recorded the 1,214 incomplete bar-available rows, one quarantined mixed-scale row, heavy-tailed returns, changing PIT universe size, and exact endpoint coverage as issues/findings to validate or interpret.
 - Targeted diagnostic checks are proposed but not yet approved or implemented. No project Python code or source data was changed.
+
+
+## 2026-11-26 | Repair overlay and substantive EDA v2 proposal
+
+- Added standalone incomplete-bar repair utility using MOEX ISS daily candles; raw SQLite remains append-only.
+- Added separate repair overlay with source payload and original-row provenance.
+- Integrated overlay application into adjusted dataset rebuild and recorded repair provenance in derived output.
+- Added offline unit tests and dataset-script documentation. Runtime validation on local data remains pending.
+- Withdrew repeated generic audit follow-up after user clarified the 1,214 incomplete bars are a known refresh defect and the single BELU quarantined row needs no separate investigation.
+- Added EDA v2 plan for return distribution geometry, temporal/cross-sectional dependence, dispersion, heterogeneity, PIT rank mobility, and activity concentration. Awaiting user approval; implementation not started.
