@@ -236,7 +236,7 @@ def main():
     for path in (PANEL, FEATURES, DB):
         if not path.exists():
             raise FileNotFoundError(path)
-    calendar, breadth, daily = load_inputs()
+    calendar, breadth, daily, _lqdt_prices = load_inputs()
     lqdt_daily = daily["LQDT"]
     rng = np.random.default_rng(args.seed)
     rows = []
