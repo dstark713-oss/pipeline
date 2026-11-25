@@ -3,10 +3,7 @@
 """Run descriptive EDA from the repository root."""
 from __future__ import annotations
 
-import sys
 from datetime import datetime, timezone
-
-import pandas as pd
 
 from analysis import (
     consistency_analysis, distribution_analysis, future_price_analysis,
@@ -45,6 +42,16 @@ def main() -> None:
         "started_at_utc": started.isoformat(),
         "panel_path": str(PANEL_PATH),
         "adjusted_db_path": str(ADJUSTED_DB_PATH),
+        "source_fingerprints": {
+            "panel": {
+                "size_bytes": int(PANEL_PATH.stat().st_size),
+                "mtime_ns": int(PANEL_PATH.stat().st_mtime_ns),
+            },
+            "adjusted_db": {
+                "size_bytes": int(ADJUSTED_DB_PATH.stat().st_size),
+                "mtime_ns": int(ADJUSTED_DB_PATH.stat().st_mtime_ns),
+            },
+        },
         "panel_start": str(panel["tradedate"].min().date()),
         "panel_end": str(panel["tradedate"].max().date()),
         "panel_rows": int(len(panel)),
