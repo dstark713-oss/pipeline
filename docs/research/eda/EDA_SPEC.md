@@ -24,7 +24,8 @@ Describe the observed panel and the empirical behavior of adjusted closing price
 3. **Internal consistency diagnostics**
    - OHLC constraints and positive adjusted prices.
    - Nonnegative volume and value.
-   - `bar_available` consistency with adjusted Close.
+   - `bar_available` consistency with adjusted Close and agreement between panel Close and board-selected adjusted SQLite history.
+   - Composition summaries for selected price board, adjustment status, and board aggregation.
    - Diagnostics only: no automatic data correction.
 
 4. **Future adjusted-close behavior**
