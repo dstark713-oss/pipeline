@@ -24,6 +24,7 @@ def write_outputs(
     temporal_yearly: pd.DataFrame,
     temporal_detail: dict,
     consistency: pd.DataFrame,
+    consistency_categories: pd.DataFrame,
     future_summary: pd.DataFrame,
     future_by_year: pd.DataFrame,
     future_by_secid: pd.DataFrame,
@@ -35,6 +36,7 @@ def write_outputs(
     by_secid.to_csv(output_dir / "instrument_coverage_summary.csv", index=False)
     temporal_yearly.to_csv(output_dir / "temporal_by_year.csv", index=False)
     consistency.to_csv(output_dir / "consistency_checks.csv", index=False)
+    consistency_categories.to_csv(output_dir / "consistency_categories.csv", index=False)
     future_summary.to_csv(output_dir / "future_price_summary.csv", index=False)
     future_by_year.to_csv(output_dir / "future_price_by_year.csv", index=False)
     future_by_secid.to_csv(output_dir / "future_price_by_secid.csv", index=False)
@@ -89,6 +91,10 @@ These are descriptive flags only. No observation is automatically corrected or r
 
 {_markdown_table(consistency)}
 
+### Board and corporate-action composition
+
+{_markdown_table(consistency_categories)}
+
 ## 4. Future adjusted-close behavior
 
 For each PIT TOP50 observation with a valid current bar, compare adjusted Close at t with the observed adjusted Close at the exact t+h market-calendar endpoint. Missing endpoints remain unavailable; intermediate missing bars are not interpolated. Both absolute price change and scale-relative returns are reported.
@@ -115,7 +121,7 @@ Per-instrument results are in `future_price_by_secid.csv`.
 - `eda_metadata.json`: run provenance and aggregate counts.
 - `distribution_summary.csv`, `distribution_by_year.csv`.
 - `instrument_coverage_summary.csv`, `temporal_by_year.csv`.
-- `consistency_checks.csv`.
+- `consistency_checks.csv`, `consistency_categories.csv`.
 - `future_price_summary.csv`, `future_price_by_year.csv`, `future_price_by_secid.csv`.
 """
     (output_dir / "EDA_REPORT.md").write_text(report, encoding="utf-8")
