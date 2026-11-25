@@ -110,19 +110,19 @@ def forward_return(daily_returns: pd.Series, horizon: int) -> pd.Series:
     ).shift(-horizon) - 1.0
 
 
-def episode_labels(low_mask: np.ndarray) -> tuple[np.ndarray, int]:
+def episode_labels(low_mask: np.ndarray, max_gap: int = 0) -> tuple[np.ndarray, int]:
+    """Label low-breadth clusters; optionally merge signals separated by short gaps."""
     labels = np.full(len(low_mask), -1, dtype=int)
-    episode = -1
-    in_episode = False
-    for i, flag in enumerate(low_mask):
-        if flag and not in_episode:
-            episode += 1
-            in_episode = True
-        elif not flag:
-            in_episode = False
-        if flag:
-            labels[i] = episode
-    return labels, episode + 1
+    active = np.flatnonzero(low_mask)
+    if not len(active):
+        return labels, 0
+    # max_gap counts intervening non-low sessions. This horizon-aware grouping
+    # reduces false independence when forward-return windows overlap.
+    split_at = np.where(np.diff(active) > max_gap + 1)[0] + 1
+    groups = np.split(active, split_at)
+    for episode_id, positions in enumerate(groups):
+        labels[positions] = episode_id
+    return labels, len(groups)
 
 
 def hac_ci(values: np.ndarray, valid: np.ndarray, lag: int) -> tuple[float, float]:
@@ -166,11 +166,33 @@ def block_bootstrap_ci(
     return tuple(np.quantile(estimates, [0.025, 0.975]).tolist())
 
 
+def episode_bootstrap_ci(
+    values: np.ndarray,
+    valid: np.ndarray,
+    labels: np.ndarray,
+    reps: int,
+    rng: np.random.Generator,
+) -> tuple[float, float]:
+    """Cluster bootstrap: resample whole low-breadth episodes, preserving within-episode paths."""
+    ids = np.unique(labels[valid & (labels >= 0)])
+    if len(ids) < 10:
+        return np.nan, np.nan
+    clusters = [values[valid & (labels == episode_id)] for episode_id in ids]
+    estimates = np.empty(reps, dtype=float)
+    k = len(clusters)
+    for b in range(reps):
+        draw = rng.integers(0, k, size=k)
+        sample = np.concatenate([clusters[j] for j in draw])
+        estimates[b] = float(sample.mean())
+    return tuple(np.quantile(estimates, [0.025, 0.975]).tolist())
+
+
 def summarize(
     asset_fwd: pd.Series,
     lqdt_fwd: pd.Series,
     breadth: pd.Series,
     threshold: float,
+    horizon: int,
     hac_lag: int,
     block: int,
     reps: int,
@@ -187,8 +209,14 @@ def summarize(
     if common_mask is not None:
         valid &= common_mask
     selected = excess[valid]
-    labels, n_episodes = episode_labels(low & np.isfinite(frame["breadth"].to_numpy(dtype=float)))
+    # Merge low-breadth runs separated by fewer than horizon sessions so
+    # overlapping forward-return windows are not treated as separate episodes.
+    labels, n_episodes_total = episode_labels(
+        low & np.isfinite(frame["breadth"].to_numpy(dtype=float)),
+        max_gap=max(horizon - 1, 0),
+    )
     selected_labels = labels[valid]
+    n_episodes_valid = int(np.unique(selected_labels[selected_labels >= 0]).size)
     largest_episode = -1
     largest_n = 0
     if len(selected_labels):
@@ -201,9 +229,15 @@ def summarize(
         without_largest &= labels != largest_episode
     hac_low, hac_high = hac_ci(excess, valid, hac_lag)
     boot_low, boot_high = block_bootstrap_ci(excess, valid, block, reps, rng)
+    episode_low, episode_high = episode_bootstrap_ci(excess, valid, labels, reps, rng)
+    selected_cluster_sizes = [
+        int(np.sum(valid & (labels == episode_id)))
+        for episode_id in np.unique(selected_labels[selected_labels >= 0])
+    ]
     return {
         "n": int(valid.sum()),
-        "episodes": int(n_episodes),
+        "episodes_total": int(n_episodes_total),
+        "episodes_valid": n_episodes_valid,
         "mean_excess": float(np.mean(selected)) if len(selected) else np.nan,
         "median_excess": float(np.median(selected)) if len(selected) else np.nan,
         "sd_excess": float(np.std(selected, ddof=1)) if len(selected) > 1 else np.nan,
@@ -212,6 +246,9 @@ def summarize(
         "hac95_high": hac_high,
         "block95_low": boot_low,
         "block95_high": boot_high,
+        "episode_boot95_low": episode_low,
+        "episode_boot95_high": episode_high,
+        "median_valid_episode_n": float(np.median(selected_cluster_sizes)) if selected_cluster_sizes else np.nan,
         "largest_episode_n": largest_n,
         "mean_ex_ex_largest": float(np.mean(excess[without_largest])) if without_largest.any() else np.nan,
     }
@@ -263,7 +300,7 @@ def main():
             for sample_type, common_mask in (("asset_specific", None), ("common_dates", common_dates)):
                 for threshold in THRESHOLDS:
                     result = summarize(
-                        asset_fwd, lqdt_fwd, breadth, threshold,
+                        asset_fwd, lqdt_fwd, breadth, threshold, horizon,
                         args.hac_lag, args.block_length, args.bootstrap_reps, rng,
                         common_mask=common_mask,
                     )
@@ -273,11 +310,14 @@ def main():
                     })
                     if threshold == 0.10:
                         report.append(
-                            f"{asset} H{horizon} [{sample_type}] | n={result['n']} episodes={result['episodes']} "
+                            f"{asset} H{horizon} [{sample_type}] | n={result['n']} "
+                            f"episodes_valid/total={result['episodes_valid']}/{result['episodes_total']} "
                             f"mean={pct(result['mean_excess'])} median={pct(result['median_excess'])} "
                             f"positive={result['positive_share']:.1%} "
                             f"HAC95=[{pct(result['hac95_low'])}, {pct(result['hac95_high'])}] "
-                            f"block95=[{pct(result['block95_low'])}, {pct(result['block95_high'])}] "
+                            f"calendar_block95=[{pct(result['block95_low'])}, {pct(result['block95_high'])}] "
+                            f"episode_boot95=[{pct(result['episode_boot95_low'])}, {pct(result['episode_boot95_high'])}] "
+                            f"median_episode_n={result['median_valid_episode_n']:.1f} "
                             f"largest_episode_n={result['largest_episode_n']} "
                             f"mean_ex_largest={pct(result['mean_ex_ex_largest'])}"
                         )
