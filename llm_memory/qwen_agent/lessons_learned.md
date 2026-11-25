@@ -21,3 +21,10 @@ daily_report primitive IC (pos60d +0.054, z20 +0.036, vol −0.044, RS −0.040)
 
 ## 2026-11-25 L5 — данные/исполнение
 ISS: /candles НЕ /history. LQDT board ожидаемо TQTF (мой TQBR fetch reconcile). Code в GitHub ≠ execution. User actual (full cash 25.11) может расходиться с agent rec — никогда не выводить исполнение из рекомендации. Grade process, не только outcome.
+
+## 2026-11-26 L7 — Model1 composite REJECT при r=1.5 (TP 1.5σ / SL 1σ)
+Payoff = 1.5·tp_hit − sl_hit: ВСЕ децили < 0; лучший dec9 −0.0211 (breakeven r 1.59 > 1.5); overall −0.0765.
+Top−bottom spread +0.059 = слабое относительное ранжирование, абсолютного edge нет.
+Composite ≈ activity/vol score; (1-p_sl) не инвертирует SL (AUC vs sl_hit 0.577).
+REJECT как positive LONG prior. Top Model1 ranks = activity/SL-heavy, не edge. Нейтраль LONG LQDT.
+Inverse/SHORT — отдельная невалидированная гипотеза, не авторизована.
