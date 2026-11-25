@@ -4,6 +4,11 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import subprocess
+import sys
+
+import numpy as np
+import pandas as pd
 
 from analysis import (
     consistency_analysis, distribution_analysis, future_price_analysis,
@@ -40,6 +45,18 @@ def main() -> None:
     metadata = {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "started_at_utc": started.isoformat(),
+        "code_revision": subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=str(PANEL_PATH.parents[3]),
+            capture_output=True,
+            text=True,
+            check=False,
+        ).stdout.strip() or None,
+        "runtime": {
+            "python": sys.version.split()[0],
+            "pandas": pd.__version__,
+            "numpy": np.__version__,
+        },
         "panel_path": str(PANEL_PATH),
         "adjusted_db_path": str(ADJUSTED_DB_PATH),
         "source_fingerprints": {
