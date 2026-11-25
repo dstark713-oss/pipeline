@@ -1,6 +1,6 @@
 # Research Agent Memory
 
-Last updated: 2026-11-23
+Last updated: 2026-11-25
 
 This directory is the persistent working context for the Research Agent in `dstark713-oss/pipeline`. It is not user-facing product documentation. Keep it factual, compact enough to navigate, and explicit about uncertainty.
 
@@ -15,12 +15,14 @@ This directory is the persistent working context for the Research Agent in `dsta
 ## Read order
 
 1. [Role and operating rules](01_ROLE_AND_RULES.md)
-2. [Dataset pipeline state](02_DATASET_PIPELINE.md)
-3. [Primitive research](03_PRIMITIVE_RESEARCH.md)
-4. [Refresh mechanism](04_REFRESH_MECHANISM.md)
-5. [Next steps and open risks](05_NEXT_STEPS.md)
-6. [Research journal](RESEARCH_JOURNAL.md)
-7. [Change log](CHANGELOG.md)
+2. [Research workflow protocol](RESEARCH_WORKFLOW.md)
+3. [Cumulative research knowledge](00_CUMULATIVE_KNOWLEDGE.md)
+4. [Dataset pipeline state](02_DATASET_PIPELINE.md)
+5. [Primitive research](03_PRIMITIVE_RESEARCH.md)
+6. [Refresh mechanism](04_REFRESH_MECHANISM.md)
+7. [Next steps and open risks](05_NEXT_STEPS.md)
+8. [Research journal](RESEARCH_JOURNAL.md)
+9. [Change log](CHANGELOG.md)
 
 ## Evidence labels
 
@@ -51,3 +53,8 @@ The Research Agent is an autonomous researcher and developer of validated analyt
 The first primitive research cycle and market-state screener hypothesis are closed. The screener is the first runtime tool, not the boundary of future research. The next cycle is now **ML direction prediction**, under the evaluation firewall documented in `01_ROLE_AND_RULES.md`: WF statistical/model metrics are allowed, a separate fixed IS/VAL split is not planned, and portfolio-level metrics are prohibited until final model approval. After approval, only one decisive portfolio-level run is permitted.
 
 Important data constraint: the repository has an internal historical market-data pipeline, but **no internal fundamental-data dataset or pipeline**. News, market semantics, company context, and fundamental information are currently obtained from the internet/external sources. Such information must retain source and temporal provenance; present-day web information must not be treated as point-in-time historical data.
+
+
+## Mandatory operating protocol
+
+Every research stage follows the approval-gated sequence in [RESEARCH_WORKFLOW.md](RESEARCH_WORKFLOW.md): plan → user approval → implementation → compact docs outputs → analysis → agreed checks → code/results → next-stage proposal and approval. The cumulative knowledge file stores reusable cross-cycle findings; the journal stores chronology.
