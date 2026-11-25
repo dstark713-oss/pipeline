@@ -65,9 +65,60 @@ def load_market():
     return panel, breadth, close
 
 
+def fetch_lqdt_iss():
+    """Fetch LQDT daily candles separately; LQDT is absent from TOP50/adjusted DB."""
+    import json
+    from urllib.parse import urlencode
+    from urllib.request import Request, urlopen
+
+    base = "https://iss.moex.com/iss/engines/stock/markets/shares"
+    endpoints = [
+        base + "/boards/TQTF/securities/LQDT/candles.json",
+        base + "/securities/LQDT/candles.json",
+    ]
+    start_date = pd.to_datetime(pd.read_parquet(PANEL)["tradedate"]).min()
+    end_date = pd.to_datetime(pd.read_parquet(PANEL)["tradedate"]).max()
+    last_error = None
+    for endpoint in endpoints:
+        rows, offset = [], 0
+        try:
+            while True:
+                query = urlencode({
+                    "from": start_date.strftime("%Y-%m-%d"),
+                    "till": end_date.strftime("%Y-%m-%d"),
+                    "interval": 24, "start": offset, "iss.meta": "off",
+                })
+                req = Request(endpoint + "?" + query, headers={"User-Agent": "position-exit-audit/1.0"})
+                with urlopen(req, timeout=30) as response:
+                    payload = json.loads(response.read().decode("utf-8"))
+                block = payload.get("candles", {})
+                columns, page = block.get("columns", []), block.get("data", [])
+                if not page:
+                    break
+                rows.extend(dict(zip(columns, row)) for row in page)
+                offset += len(page)
+                if len(page) < 100:
+                    break
+            if rows:
+                frame = pd.DataFrame(rows)
+                if "begin" not in frame or "close" not in frame:
+                    raise RuntimeError("Unexpected MOEX ISS candles schema")
+                frame["date"] = pd.to_datetime(frame["begin"], errors="coerce").dt.normalize()
+                frame["close"] = pd.to_numeric(frame["close"], errors="coerce")
+                frame = frame.dropna(subset=["date", "close"]).drop_duplicates("date").sort_values("date")
+                OUT.mkdir(parents=True, exist_ok=True)
+                frame[["date", "close"]].to_csv(OUT / "lqdt_moex_iss_daily.csv", index=False)
+                returns = frame.set_index("date")["close"].pct_change(fill_method=None)
+                return returns.rename("lqdt_ret")
+            last_error = "No candles returned from " + endpoint
+        except Exception as exc:
+            last_error = str(exc)
+    raise RuntimeError("LQDT MOEX ISS download failed: " + str(last_error))
+
+
 def load_lqdt(path):
     if not path:
-        return None
+        return fetch_lqdt_iss()
     x = pd.read_csv(path)
     cols = {c.lower(): c for c in x.columns}
     if "tradedate" not in cols:
@@ -96,7 +147,7 @@ def beta_stats(asset, market, breadth, window):
 
 def main():
     ap = argparse.ArgumentParser(description="One-off T/GCHE exit audit; no target weights or trade signals.")
-    ap.add_argument("--lqdt-csv", help="Optional CSV: tradedate,daily_return OR tradedate,close")
+    ap.add_argument("--lqdt-csv", help="Optional offline CSV override; default fetches LQDT daily candles from MOEX ISS")
     ap.add_argument("--low-breadth", type=float, default=0.10)
     args = ap.parse_args()
 
@@ -123,6 +174,7 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     lines = []
     lines.append(f"Snapshot: {dates.max().date()} | breadth: {breadth.loc[dates.max(), 'breadth']:.1%}")
+    lines.append("LQDT: " + ("MOEX ISS daily candles" if not args.lqdt_csv else "CSV override") + " | rows=" + str(int(lqdt.notna().sum())))
     lines.append("Beta vs daily PIT EW-TOP50 (not a causal estimate):")
     for ticker in ("T", "GCHE"):
         if ticker not in ret:
