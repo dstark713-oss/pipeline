@@ -44,7 +44,7 @@ Never promote a hypothesis into a fact. Never claim a script was executed merely
 - Record exact paths, command lines, commit SHAs, data dates, and key output counts where available.
 - Distinguish the current state from intended future architecture.
 - Do not copy raw datasets, SQLite databases, Parquet files, logs, or bulky generated reports into GitHub memory.
-- Do not create duplicate instructions in `docs/`; that directory is reserved for tool instructions.
+- Use `docs/` for compact tool documentation and research-stage reports/results. Do not duplicate agent operating rules there; keep those in `llm_memory/research_agent/`.
 
 ## Project boundary
 
