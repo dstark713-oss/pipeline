@@ -1,3 +1,5 @@
+# Path: scripts/experiments/ml_1/eda/data_loader.py
+# Purpose: EDA implementation module.
 """Read-only loading and market-session alignment for EDA."""
 from __future__ import annotations
 
