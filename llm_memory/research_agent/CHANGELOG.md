@@ -50,3 +50,11 @@
 - Updated `01_ROLE_AND_RULES.md`, `README.md`, and `RESEARCH_JOURNAL.md` to reflect the workflow and context architecture.
 - Corrected the ML feature-research file's stale next-step text: Rolling Statistical Moments remains closed, the OHLC decomposition proposal remains withdrawn, and no next feature family is approved.
 - Clarified that `docs/` stores compact research reports/results as well as tool documentation; raw datasets and bulky dumps remain excluded.
+
+## 2026-11-25 | EDA stage implemented
+
+- Approved descriptive EDA for temporal coverage, variable distributions, cross-instrument/time heterogeneity, internal consistency, and Close[t] to Close[t+1/5/20] empirical behavior.
+- Excluded the already-completed general structure/quality audit and `numtrades`, which is absent from the current EDA data contract.
+- Added `scripts/experiments/ml_1/eda/` and `docs/research/eda/EDA_SPEC.md`.
+- Replaced stale fixed binary t-to-t+5 target and fixed WF assumptions in canonical active-project context. Target, horizons, model count, and whether prediction is warranted remain open until EDA evidence is reviewed.
+- Implementation is committed but not run here; local runtime results are pending the user's pull/run/push cycle.
