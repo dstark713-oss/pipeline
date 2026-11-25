@@ -36,7 +36,7 @@ def main() -> None:
     print("[EDA] Temporal structure and membership dynamics...", flush=True)
     temporal_yearly, temporal_detail = temporal_analysis(panel)
     print("[EDA] Internal consistency diagnostics...", flush=True)
-    consistency = consistency_analysis(panel)
+    consistency, consistency_categories = consistency_analysis(panel, prices)
     print(f"[EDA] Future adjusted-close horizons={HORIZONS}...", flush=True)
     future_summary, future_by_year, future_by_secid = future_price_analysis(
         panel, prices, calendar
@@ -90,7 +90,7 @@ def main() -> None:
     }
     write_outputs(
         OUTPUT_DIR, distribution, distribution_by_year, by_secid,
-        temporal_yearly, temporal_detail, consistency, future_summary,
+        temporal_yearly, temporal_detail, consistency, consistency_categories, future_summary,
         future_by_year, future_by_secid, metadata,
     )
     print(f"[EDA] Complete. Report: {OUTPUT_DIR / 'EDA_REPORT.md'}", flush=True)
