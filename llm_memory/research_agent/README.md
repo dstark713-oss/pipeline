@@ -26,13 +26,13 @@ Persistent working context for the Research Agent in `dstark713-oss/pipeline`. T
 
 ## Current project
 
-The active stage is targeted diagnostic validation after the completed PIT TOP50 EDA run. Read:
-- Approved scope: `docs/research/eda/EDA_SPEC.md`
-- Generated results: `docs/research/eda/EDA_REPORT.md`
-- Research interpretation and proposed checks: `docs/research/eda/EDA_ANALYSIS.md`
-- Implementation: `scripts/experiments/ml_1/eda/`
+Two items are active:
+- Engineering: standalone incomplete-bar repair overlay. Code is committed but awaits local runtime execution. See `scripts/dataset/README.md`.
+- Research: substantive EDA v2 plan is proposed and awaits user approval. See `docs/research/eda/EDA_V2_PLAN.md`.
 
-No target, label, model, feature family, or prediction horizon has been selected. The +1/+5/+20 horizons are descriptive only.
+First-pass EDA results and limitations are in `docs/research/eda/EDA_ANALYSIS.md`. It is a preliminary descriptive/consistency pass, not a completed study of panel statistical structure.
+
+No target, label, model, feature family, or prediction horizon has been selected. The +1/+5/+20 horizons remain descriptive.
 
 The first primitive research cycle and market-state screener hypothesis are closed. The screener is the first runtime analytical tool, not the boundary of future research.
 
