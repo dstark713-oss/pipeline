@@ -1,3 +1,5 @@
+# Path: scripts/experiments/ml_1/eda/config.py
+# Purpose: EDA implementation module.
 """Configuration for descriptive EDA of the PIT TOP50 panel."""
 from pathlib import Path
 
