@@ -377,3 +377,169 @@ GCHE is outside the TOP50 breadth universe. This means only that the TOP50 bread
 - No treating Qwen's opinion as truth or consensus.
 - No silently changing user-approved rules.
 - User retains final decision and execution authority.
+
+
+## 15. Final paired-excess robustness audit and allocation decision (2026-11-25)
+
+### 15.1 Evidence received and estimand
+
+The user supplied the final run of `scripts/one_use/breadth_paired_excess_robustness.py`:
+- 5,490 trading-calendar sessions.
+- 1,074 LQDT ISS candles in the cached source file; 994 aligned daily returns.
+- Thresholds tested in the saved CSV: breadth <=5%, <=10%, <=15%; the console excerpt below is the <=10% slice.
+- Forward excess is asset return over sessions t+1..t+h minus LQDT return over the same dates, conditional on breadth at t.
+- HAC Newey-West Bartlett lag 20; calendar moving-block bootstrap length 20, 1,000 repetitions; episode bootstrap resamples whole horizon-aware low-breadth clusters.
+- The reported intervals are descriptive uncertainty intervals, not predictive intervals and not out-of-sample guarantees.
+
+### 15.2 Read the effective sample correctly
+
+The nominal `n` counts signal dates, not independent market regimes. The script merges low-breadth observations separated by fewer than h sessions, so the total episode count depends on the horizon:
+- H1: 111 total episodes.
+- H5: 63 total episodes.
+- H20: 47 total episodes.
+
+The number of episodes actually represented in each complete-case sample is much smaller:
+- T: H1 14; H5 7; H20 4.
+- GCHE: H1 26 asset-specific / 14 common; H5 17 / 7; H20 10 / 4.
+- EW-TOP50: same complete-case counts as GCHE in this run.
+
+The episode bootstrap is deliberately unavailable when fewer than 10 valid clusters remain. `NA` is a sample-size warning, not a zero effect and not a software failure. In particular, H20 common-date inference is based on only four valid episodes for every series. The H20 common-date GCHE HAC interval excluding zero is not sufficient evidence by itself because its calendar-block interval includes zero and episode bootstrap cannot be estimated.
+
+The episode grouping rule (merge low-breadth observations separated by fewer than h sessions) is a defensible way to reduce overlap-induced pseudo-replication, but it is one operational definition, not a uniquely correct partition of market regimes. Results should not be described as having 14, 17, or 26 independent economic regimes without qualification.
+
+### 15.3 Results at breadth <=10%
+
+All returns and intervals below are percentage points of forward excess versus matched LQDT.
+
+| Asset / horizon | Sample | n dates | Valid episodes | Mean excess | HAC 95% | Calendar block 95% | Episode bootstrap 95% |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| T H1 | asset/common | 60 | 14 | +0.161% | [-0.257, +0.578] | [-0.235, +0.652] | [-0.118, +0.538] |
+| T H5 | asset/common | 60 | 7 | +0.610% | [-1.069, +2.289] | [-1.084, +2.606] | NA |
+| T H20 | asset/common | 58 | 4 | +0.504% | [-3.880, +4.889] | [-3.251, +7.694] | NA |
+| GCHE H1 | asset-specific | 123 | 26 | -0.188% | [-0.453, +0.077] | [-0.473, +0.104] | [-0.391, +0.029] |
+| GCHE H1 | common | 60 | 14 | -0.313% | [-0.639, +0.013] | [-0.650, +0.061] | [-0.621, +0.029] |
+| GCHE H5 | asset-specific | 123 | 17 | -0.156% | [-1.493, +1.181] | [-1.474, +1.307] | [-1.363, +1.265] |
+| GCHE H5 | common | 60 | 7 | -1.245% | [-2.853, +0.363] | [-3.041, +0.596] | NA |
+| GCHE H20 | asset-specific | 123 | 10 | -0.918% | [-4.548, +2.713] | [-4.348, +2.790] | [-4.185, +3.670] |
+| GCHE H20 | common | 58 | 4 | -4.103% | [-7.204, -1.002] | [-6.513, +0.076] | NA |
+| EW H1 | asset-specific | 123 | 26 | -0.117% | [-0.445, +0.211] | [-0.429, +0.257] | [-0.331, +0.189] |
+| EW H1 | common | 60 | 14 | -0.139% | [-0.500, +0.222] | [-0.506, +0.330] | [-0.316, +0.113] |
+| EW H5 | asset-specific | 123 | 17 | +0.022% | [-1.035, +1.079] | [-1.070, +1.148] | [-0.642, +0.943] |
+| EW H5 | common | 60 | 7 | -0.298% | [-1.839, +1.244] | [-1.954, +1.483] | NA |
+| EW H20 | asset-specific | 123 | 10 | +0.210% | [-3.076, +3.496] | [-2.929, +3.733] | [-2.544, +4.554] |
+| EW H20 | common | 58 | 4 | -1.800% | [-5.393, +1.792] | [-5.016, +3.385] | NA |
+
+### 15.4 Statistical interpretation
+
+**T**
+- Mean excess is positive at all three horizons, but every available interval includes zero.
+- H5 and H20 have only 7 and 4 valid horizon-aware episodes; the episode bootstrap is unavailable.
+- Positive mean is not evidence of a stable conditional premium. H20 median is negative (-1.379% in the supplied run), so the positive mean is not representative of the typical observation.
+- This analysis does not prove that T underperforms LQDT; it also does not establish that T beats LQDT.
+
+**GCHE**
+- Point estimates are negative at all horizons.
+- H1 intervals include zero, although the episode-bootstrap upper bounds are close to zero.
+- H5 asset-specific intervals are broad and include both material underperformance and outperformance. Common-date sample has only seven valid episodes.
+- H20 asset-specific intervals include zero. Common-date HAC is negative, but calendar-block upper bound is +0.076% and only four valid episodes remain. Treat this as a warning, not robust evidence for EXIT.
+- GCHE is outside the TOP50 universe; the EW breadth series is not a substitute for issuer-specific alpha or beta.
+
+**EW-TOP50**
+- No horizon shows a robust excess-return result across the uncertainty methods.
+- H1/H5 estimates are near zero; H20 is highly dispersed and common-date sample has only four valid episodes.
+- This experiment does not validate a low-breadth market-timing rule.
+
+**Overall statistical conclusion:** no statistically robust, episode-stable premium or penalty versus LQDT is established for T, GCHE, or EW-TOP50 at <=10% breadth. The evidence is especially weak at H20. It is incorrect to convert the negative GCHE H20 common-date mean into a deterministic exit rule, or the positive T means into a holding/adding signal.
+
+### 15.5 Additional data and inference caveats
+
+1. The output uses complete-case samples that differ by asset and horizon. Asset-specific and common-date estimates answer different questions; do not compare their means without acknowledging sample composition.
+2. The large difference between GCHE H5/H20 asset-specific and common-date means is a sample-composition warning. It is not resolved by selecting whichever estimate supports a preferred action.
+3. The episode bootstrap has few clusters and is unavailable for many rows. Even when available, it is descriptive and assumes the horizon-aware clusters are suitable resampling units.
+4. The moving-block bootstrap uses 20-session blocks. This is a sensitivity check, not proof that all dependence structures are captured.
+5. The supplied console output does not show the <=5% and <=15% rows. Those are in the CSV but were not included in this final verbal interpretation. Do not claim threshold robustness until those rows are inspected.
+6. The current breadth reference from the preceding user snapshot was 8% (4/50); the current signal is a warning about narrow participation, not a standalone action.
+7. LQDT's trailing return is floating. A 25 Nov market-data comparison reported 30-day annualized return 14.56% and 90-day annualized return 14.65%; these are backward-looking, not a guaranteed forward rate. The actual matched historical LQDT returns in the user's ISS series remain the correct benchmark for this backtest.
+8. The local script output is user-run evidence. No claim is made that the agent independently executed the local repository code.
+
+### 15.6 Issuer-specific refresh and horizon assessment
+
+**T / T-Technologies**
+- Official company page lists October 2026 operating results dated 24 Nov and 3Q IFRS results dated 10 Nov.
+- October operating data reported by the company: loan portfolio +25% YoY to RUB 4.2tn; business loans +62%; client funds plus brokerage assets +5% to RUB 6.5tn; client funds on accounts alone RUB 3.9tn, down 9% YoY and 3.6% MoM; investment assets +34% YoY. The October bank profit figure of RUB 160.5bn is RAS bank profit, not consolidated IFRS group profit. Do not conflate the two.
+- The funding-mix divergence (credit portfolio growth against falling customer account funds) is a monitoring risk. It does not by itself prove a funding crisis, but it weakens an unconditional bullish thesis. The 9M operating net profit growth and raised guidance remain positive counterevidence.
+- The group has strategic transaction/execution complexity, including CIAN and Tochka-related actions. Monitor dilution, capital allocation, and execution.
+- 25 Nov quote feeds showed inconsistent intraday values/time stamps. A public quote snapshot at 18:00 reported RUB 279.50 and a weekly decline of 4.33%; another source earlier in the day showed materially different levels. Treat the exact price/technical state as provisional pending the user's local aligned snapshot.
+- Horizon view: H1 neutral; H5 neutral to cautious because funding mix and price weakness offset growth; H20 constructive but conditional on credit quality, funding stability, capital adequacy, and transaction execution.
+- Decision: HOLD existing 10% provisionally; do not add. No evidence in this breadth audit supports a trim or an add. This is not a claim that 10% is an optimized weight. Reopen if customer funding continues to deteriorate relative to loan growth, credit costs/NPLs rise, capital adequacy weakens, guidance is cut, or a confirmed price/liquidity deterioration appears.
+
+**GCHE / Cherkizovo**
+- Official 9M 2026 disclosure (17 Nov): revenue +6.4%; adjusted gross profit +26.1%; adjusted EBITDA +28.5% to RUB 51.2bn; adjusted net profit RUB 24.2bn versus RUB 10.3bn; adjusted FCF RUB 19.8bn versus RUB 5.2bn; net debt RUB 131.1bn; net debt/adjusted EBITDA 1.9x; interest coverage 3.4x.
+- Offsetting risks: physical sales -0.3%; exports -10.1%; foodservice -0.9%; transport expenses +10.4%; improved margins partly depend on favorable grain procurement/pricing and lower capex. Reduced capex may limit capacity growth if sustained. Export restrictions and high interest burden remain material.
+- 25 Nov external quote feeds were inconsistent in time/price; no single quote is treated as authoritative. The local adjusted-price and liquidity snapshot is still needed for a fully timestamp-aligned technical review.
+- Horizon view: H1 neutral; H5 neutral/cautious; H20 moderately constructive on cash generation and deleveraging, offset by export, demand, feed-cost and capex risks.
+- Decision: HOLD existing 2% provisionally; do not add. Breadth statistics do not cover GCHE directly and do not support EXIT. No robust LQDT-beating expected return has been demonstrated, so the small position is retained only while the issuer thesis remains intact, not because ownership itself is a reason to hold.
+
+### 15.7 Full decision path
+
+```text
+START
+ |
+ |-- Validate actual portfolio snapshot
+ |     |-- stale/partial/weights unreconciled -> mark state provisional; no execution claim
+ |     '-- latest user-reported: T 10 / GCHE 2 / LQDT 88 (not re-confirmed after 23 Nov)
+ |
+ |-- Freeze data and market state
+ |     |-- breadth 8% -> narrow participation warning
+ |     '-- never convert breadth threshold directly into BUY/SELL/weight
+ |
+ |-- Evaluate paired asset-minus-LQDT history
+ |     |-- date-matched? yes
+ |     |-- overlapping windows / clusters handled? partly, via HAC + 20d blocks + episode clusters
+ |     |-- enough valid episodes? H20 often no
+ |     '-- robust premium/penalty across methods? no
+ |           '-- breadth experiment cannot force trim/exit/add
+ |
+ |-- Review each holding independently
+ |     |-- T: issuer thesis broadly constructive, funding mix is key risk,
+ |     |      short-horizon price state not fully aligned -> HOLD 10%, no add
+ |     '-- GCHE: improved FCF/profitability and leverage, operating/export risks,
+ |            no direct TOP50 coverage -> HOLD 2%, no add
+ |
+ |-- Review new candidates
+ |     '-- no candidate with verified after-cost premium vs LQDT -> 0% new equity
+ |
+ '-- Portfolio-level decision
+       '-- HOLD 10 / 2 / 88; no leverage/shorts; no order placed
+```
+
+### 15.8 Final recommendation (25 Nov 2026; recommendation, not execution)
+
+**HOLD / NO CHANGE: T 10%, GCHE 2%, LQDT 88%; new positions 0%.**
+
+This is a provisional, evidence-conservative decision, not a mathematically optimized target:
+- T 10%: HOLD; no add and no breadth-driven trim. Positive fundamentals are offset by funding-mix and transaction risks; matched excess intervals do not establish an edge either way.
+- GCHE 2%: HOLD; no add and no breadth-driven exit. The fundamental thesis remains positive but conditional; low-breadth common-date H20 warning is too cluster-sparse and method-sensitive to dictate exit.
+- LQDT 88%: retain. Its trailing 30-day annualized return was about 14.56% as of 25 Nov, but the rate floats and must not be treated as a forward guarantee.
+- New equities: 0%. No candidate has a verified after-cost advantage over LQDT.
+- No leverage or short positions recommended. No order placed; the user retains execution authority.
+
+Why not trim T to 5% or exit GCHE? Neither exact sizing follows from the supplied data. The breadth test does not estimate an optimal portfolio weight, T-specific conditional alpha, or GCHE-specific risk. A forced reduction would create false precision. Why not add? No validated expected-return premium over the floating LQDT hurdle is demonstrated.
+
+### 15.9 Self-audit and failure disclosure
+
+- Portfolio state: latest known weights are from 23 Nov; no newer user-confirmed executed state supplied. PASS with stale-state qualification.
+- Market breadth: latest prior local snapshot 8% (4/50); current threshold is not an order rule. PASS.
+- LQDT benchmark: actual ISS price series is separately sourced and date-aligned; 994 daily returns available from 1,074 candles. PASS for the supplied sample, but coverage is not complete across the full 5,490-session calendar.
+- Horizon matching: forward windows t+1..t+h matched for asset and LQDT. PASS as defined by script.
+- Dependence: HAC, 20-session moving blocks, horizon-aware episode clusters used. PARTIAL; H20 cluster counts too low for reliable episode bootstrap.
+- Multiple thresholds: 5/10/15% generated in CSV, but console excerpt supplied only <=10%. NOT FULLY VERIFIED in this final review.
+- Common-date integrity: sample sizes differ materially from asset-specific; the output quantifies this but does not explain every excluded date. PARTIAL.
+- Issuer-specific evidence: T and GCHE have recent fundamental reviews; 25 Nov quote feeds conflict and local timestamp-aligned price/volume snapshot is unavailable. PARTIAL.
+- Valuation and expected-return hurdle: no current intrinsic valuation / forward expected return distribution for T or GCHE. NOT ESTABLISHED.
+- Portfolio optimization: no covariance-based marginal risk contribution or expected-return optimizer supplied. Exact weights are NOT OPTIMIZED.
+- Candidate search: no fresh full candidate universe audit in this final cycle. No new position is approved; broader candidate ranking remains NOT FULLY REASSESSed.
+- Qwen: no fresh Qwen opinion supplied for this cycle. NOT PERFORMED.
+- Execution: no order placed or assumed. PASS.
+
+**Final confidence:** high that this breadth experiment does not justify an automatic action; moderate that no new equity should be added; low-to-moderate in retaining exact existing weights; low in any claim that 10/2/88 is optimal. If a fully refreshed local quote/volume snapshot, <=5/15% CSV rows, or new issuer disclosure changes the evidence, reopen the relevant branch rather than rewriting this decision retroactively.
