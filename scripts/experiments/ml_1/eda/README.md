@@ -7,7 +7,7 @@ This stage describes the data before any target or model is designed. It does no
 1. Temporal panel coverage, annual membership counts, bar coverage, entrants/exits, and membership persistence.
 2. Distributions of adjusted OHLC, volume, value, 60-session turnover value, PIT rank, and universe size. Market activity/price variables use `bar_available=1`; membership variables use all panel rows. Outliers are reported, never automatically removed.
 3. Per-year distribution summaries and per-instrument coverage/activity summaries.
-4. Internal consistency checks for OHLC constraints, positive adjusted prices, nonnegative volume/value, and the `bar_available`/close relationship.
+4. Internal consistency checks for OHLC constraints, positive adjusted prices, nonnegative volume/value, `bar_available`/close consistency, panel-close agreement with the board-selected adjusted history, and board/corporate-action composition.
 5. Descriptive adjusted-close changes from t to t+1, t+5, and t+20 market sessions: absolute change, simple return, log return, distribution shape, positive/negative/zero shares, endpoint coverage, year and instrument breakdowns.
 
 ## Explicit exclusions
