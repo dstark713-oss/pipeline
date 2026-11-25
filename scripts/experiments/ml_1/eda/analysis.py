@@ -1,4 +1,6 @@
-"""Descriptive statistics, temporal structure, consistency and future-price EDA."""
+# Path: scripts/experiments/ml_1/eda/analysis.py
+# Purpose: Descriptive statistics, temporal structure, consistency and future-price EDA.
+"""Descriptive EDA analysis functions."""
 from __future__ import annotations
 
 import numpy as np
@@ -61,18 +63,34 @@ def temporal_analysis(panel: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     frame = panel.copy()
     frame["year"] = _year(frame)
     frame["available"] = frame["bar_available"].eq(1)
-    yearly = (
+    daily = (
+        frame.groupby("tradedate")
+        .agg(members=("secid", "size"), bar_coverage=("available", "mean"))
+        .reset_index()
+    )
+    daily["year"] = daily["tradedate"].dt.year
+    yearly_members = (
         frame.groupby("year")
         .agg(
             membership_rows=("secid", "size"),
             unique_secids=("secid", "nunique"),
             available_bars=("available", "sum"),
-            mean_daily_members=("secid", "size"),
             mean_bar_coverage=("available", "mean"),
             median_universe_size=("universe_size", "median"),
         )
         .reset_index()
     )
+    yearly_daily = (
+        daily.groupby("year")
+        .agg(
+            dates=("tradedate", "size"),
+            mean_daily_members=("members", "mean"),
+            median_daily_members=("members", "median"),
+            mean_daily_bar_coverage=("bar_coverage", "mean"),
+        )
+        .reset_index()
+    )
+    yearly = yearly_members.merge(yearly_daily, on="year", validate="one_to_one")
     daily_sets = {
         date: set(group["secid"])
         for date, group in frame.groupby("tradedate", sort=True)
