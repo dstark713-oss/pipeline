@@ -1,6 +1,6 @@
 # Research Agent Memory
 
-Last updated: 2026-11-25
+Last updated: 2026-11-26
 
 Persistent working context for the Research Agent in `dstark713-oss/pipeline`. This is operational context, not a transcript.
 
@@ -8,8 +8,8 @@ Persistent working context for the Research Agent in `dstark713-oss/pipeline`. T
 
 - Repository: [dstark713-oss/pipeline](https://github.com/dstark713-oss/pipeline), branch `main`.
 - Committed code and research artifacts define what exists.
-- Local `data/` is not committed. User-reported local state must not be mistaken for live inspection.
-- Evidence must be labeled as verified in GitHub, user-run/user-reported, code-inspected-not-run, or hypothesis.
+- Local `data/` is not committed. User-run results committed under `docs/` are evidence of the recorded local run, not an independent rerun by the Research Agent.
+- Evidence must be labeled as GitHub-verified, user-run/user-reported, code-inspected-not-run, independently runtime-verified, or hypothesis.
 
 ## Read order
 
@@ -20,13 +20,19 @@ Persistent working context for the Research Agent in `dstark713-oss/pipeline`. T
 5. [Primitive research](03_PRIMITIVE_RESEARCH.md)
 6. [Refresh mechanism](04_REFRESH_MECHANISM.md)
 7. [Current stage and next steps](05_NEXT_STEPS.md)
-8. [ML research and EDA specification](06_ML_DIRECTION_FEATURE_RESEARCH.md)
+8. [ML research and EDA findings](06_ML_DIRECTION_FEATURE_RESEARCH.md)
 9. [Research journal](RESEARCH_JOURNAL.md)
 10. [Change log](CHANGELOG.md)
 
 ## Current project
 
-The active research stage is descriptive EDA on the PIT TOP50 panel. The approved specification is `docs/research/eda/EDA_SPEC.md`; implementation is in `scripts/experiments/ml_1/eda/`. Horizons 1/5/20 are descriptive comparisons only. No target, model, or prediction horizon has been selected.
+The active stage is targeted diagnostic validation after the completed PIT TOP50 EDA run. Read:
+- Approved scope: `docs/research/eda/EDA_SPEC.md`
+- Generated results: `docs/research/eda/EDA_REPORT.md`
+- Research interpretation and proposed checks: `docs/research/eda/EDA_ANALYSIS.md`
+- Implementation: `scripts/experiments/ml_1/eda/`
+
+No target, label, model, feature family, or prediction horizon has been selected. The +1/+5/+20 horizons are descriptive only.
 
 The first primitive research cycle and market-state screener hypothesis are closed. The screener is the first runtime analytical tool, not the boundary of future research.
 
