@@ -61,7 +61,7 @@ def main() -> None:
         "bar_available_rows": int(panel["bar_available"].eq(1).sum()),
         "horizons_in_market_sessions": list(HORIZONS),
         "future_price_cohort": "PIT TOP50 membership at t with bar_available=1 and positive adjusted_close at t",
-        "future_endpoint_rule": "adjusted_close at t+h on the full TQBR/EQBR market-session calendar; missing endpoints are not filled or bridged",
+        "future_endpoint_rule": "adjusted_close at the exact t+h endpoint on the full TQBR/EQBR market-session calendar; no forward-fill or intermediate interpolation",
         "price_board_rule": "complete OHLC row first, then TQBR, then EQBR",
         "numtrades_analyzed": False,
         "target_defined": False,
