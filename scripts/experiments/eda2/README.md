@@ -51,3 +51,6 @@ NumPy используется для численных массивов, по�
 
 - `data/` содержит рабочие машинные данные и расчётные артефакты.
 - `docs/research/eda2/results/block_03/` содержит агрегированный отчёт для чтения и интерпретации Research Agent.
+
+
+При следующем запуске модуль дополнительно публикует в `docs/research/eda2/results/block_03/` агрегированные материалы для Research Agent: `EDA2_BLOCK_03_REPORT.md`, `pairwise_correlation_distribution.csv`, `yearly_dependence_summary.csv`, `rolling_dependence_summary.csv` и `spectral_summary.json`. Построчные пары, полные матрицы и технические metadata остаются в `data/`.
