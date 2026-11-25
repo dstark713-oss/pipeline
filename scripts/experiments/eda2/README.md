@@ -80,3 +80,38 @@ data/processed/top50/top50_panel.parquet, если явно не передан 
 
 Блок 3 завершён. Его методика и результаты описаны в
 docs/research/eda2/results/block_03/EDA2_BLOCK_03_REPORT.md.
+
+
+## Блок 4. Поперечный разброс и breadth-статистики
+
+Запуск:
+
+    python scripts/experiments/eda2/04_cross_sectional_dispersion.py
+
+Исследуются:
+- поперечные mean, median, std, немасштабированный MAD, IQR и квантили доходностей на каждую дату;
+- доли положительных, отрицательных и нулевых доходностей и фактическое число бумаг в сечении;
+- временные распределения и годовые сводки поперечных метрик;
+- rolling mean и rolling standard deviation на окнах 60, 120 и 240 сессий;
+- ACF агрегированных временных рядов на лагах 1, 5, 10 и 20 при минимуме 60 валидных лаговых пар;
+- описательное сравнение периодов 2005–2012, 2013–2019 и 2020–2026.
+
+Машинные артефакты:
+- data/interim/eda2/block_04/daily_cross_sectional_metrics.csv
+- data/interim/eda2/block_04/run_metadata.json
+
+Агрегаты для анализа Research Agent:
+- docs/research/eda2/results/block_04/temporal_distribution_summary.csv
+- docs/research/eda2/results/block_04/yearly_summary.csv
+- docs/research/eda2/results/block_04/period_summary.csv
+- docs/research/eda2/results/block_04/rolling_summary.csv
+- docs/research/eda2/results/block_04/aggregate_acf_summary.csv
+- docs/research/eda2/results/block_04/EDA2_BLOCK_04_REPORT.md
+
+Методологические правила:
+- Доходности рассчитываются только между соседними датами панели при валидных конечных наблюдениях.
+- Поперечные статистики используют только валидные доходности даты; размер сечения сохраняется отдельно.
+- ACF использует точные лаговые пары строк панели без заполнения и склеивания пропусков.
+- Скользящие окна измеряются в строках дат панели и требуют полного окна.
+- Breadth-доли являются описательными статистиками, не торговыми сигналами.
+- Блок описательный: без моделей, прогнозов, IC, отбора признаков, торговых правил и портфельных метрик.
