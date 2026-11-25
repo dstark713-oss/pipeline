@@ -7,7 +7,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from scipy.stats import rankdata
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -126,6 +125,19 @@ def rank_columns(frame: pd.DataFrame) -> pd.DataFrame:
     return frame.rank(axis=0, method="average", na_option="keep")
 
 
+def average_ranks(values: np.ndarray) -> np.ndarray:
+    order = np.argsort(values, kind="mergesort")
+    sorted_values = values[order]
+    _, starts, counts = np.unique(
+        sorted_values, return_index=True, return_counts=True
+    )
+    average = starts + (counts + 1.0) / 2.0
+    sorted_ranks = np.repeat(average, counts)
+    ranks = np.empty(len(values), dtype=np.float64)
+    ranks[order] = sorted_ranks
+    return ranks
+
+
 def pairwise_spearman(
     frame: pd.DataFrame,
     min_obs: int,
@@ -144,8 +156,8 @@ def pairwise_spearman(
             counts[i, j] = counts[j, i] = n
             if n < min_obs:
                 continue
-            ri = rankdata(xi[common], method="average")
-            rj = rankdata(x[common, j], method="average")
+            ri = average_ranks(xi[common])
+            rj = average_ranks(x[common, j])
             value = np.corrcoef(ri, rj)[0, 1]
             corr[i, j] = corr[j, i] = value
 
