@@ -1,0 +1,15 @@
+check,n_checked,violations,violation_rate,note
+OHLC complete among bar_available=1,199169,1214,0.006095326079861826,A current bar is expected to contain all four adjusted OHLC values.
+high >= low,197955,0,0.0,Constraint checked only where all OHLC values exist.
+"high >= max(open, close)",197955,0,0.0,No automatic correction is applied.
+"low <= min(open, close)",197955,0,0.0,No automatic correction is applied.
+adjusted_open > 0,197955,0,0.0,"Non-positive adjusted prices are flagged, not modified."
+adjusted_high > 0,197956,0,0.0,"Non-positive adjusted prices are flagged, not modified."
+adjusted_low > 0,197956,0,0.0,"Non-positive adjusted prices are flagged, not modified."
+adjusted_close > 0,197955,0,0.0,"Non-positive adjusted prices are flagged, not modified."
+volume >= 0,199169,0,0.0,Checked on rows with bar_available=1 to avoid treating unavailable-bar placeholders as market activity.
+value >= 0,199169,0,0.0,Checked on rows with bar_available=1 to avoid treating unavailable-bar placeholders as market activity.
+bar_available=0 but adjusted_close present,203403,0,0.0,Checks consistency between availability flag and panel close.
+bar_available=1 but adjusted_close missing,203403,1214,0.0059684468763980866,Checks consistency between availability flag and panel close.
+bar_available=1 but selected adjusted history close missing,199169,1214,0.006095326079861826,Compares the panel bar with the board-selected adjusted SQLite history.
+panel close differs from selected adjusted history close,197955,0,0.0,"Tolerance: rtol=1e-8, atol=1e-8; flags possible board/aggregation/snapshot mismatch."

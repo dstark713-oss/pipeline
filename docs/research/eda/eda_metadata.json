@@ -1,0 +1,44 @@
+{
+  "generated_at_utc": "2026-11-25T18:51:06.498408+00:00",
+  "started_at_utc": "2026-11-25T18:50:56.074817+00:00",
+  "code_revision": "46fb41a8a289609313c06defce2ec3f72c1e500e",
+  "runtime": {
+    "python": "3.12.7",
+    "pandas": "3.0.2",
+    "numpy": "2.4.4"
+  },
+  "panel_path": "C:\\Users\\Danil\\Desktop\\pipeline\\data\\processed\\top50\\top50_panel.parquet",
+  "adjusted_db_path": "C:\\Users\\Danil\\Desktop\\pipeline\\data\\processed\\moex_daily_adjusted.sqlite",
+  "source_fingerprints": {
+    "panel": {
+      "size_bytes": 7961774,
+      "mtime_ns": 1795626655850309100
+    },
+    "adjusted_db": {
+      "size_bytes": 655880192,
+      "mtime_ns": 1795626620177120600
+    }
+  },
+  "panel_start": "2005-01-11",
+  "panel_end": "2026-11-25",
+  "panel_rows": 203403,
+  "dates": 5490,
+  "secids": 214,
+  "calendar_sessions": 5740,
+  "bar_available_rows": 199169,
+  "horizons_in_market_sessions": [
+    1,
+    5,
+    20
+  ],
+  "future_price_cohort": "PIT TOP50 membership at t with bar_available=1 and positive adjusted_close at t",
+  "future_endpoint_rule": "adjusted_close at the exact t+h endpoint on the full TQBR/EQBR market-session calendar; no forward-fill or intermediate interpolation",
+  "price_board_rule": "complete OHLC row first, then TQBR, then EQBR",
+  "numtrades_analyzed": false,
+  "target_defined": false,
+  "model_selected": false,
+  "features_created": false,
+  "ic_calculated": false,
+  "portfolio_metrics_calculated": false,
+  "source_databases_modified": false
+}
