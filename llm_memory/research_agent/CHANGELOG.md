@@ -41,3 +41,12 @@
 - Reaffirmed statistical learning, probability, information theory, and time-series analysis as the feature-discovery lens.
 - Recorded Statistical Learning under Uncertainty as a methodological direction and temporal dependence as a possible next research question, pending user approval.
 - No feature code or experiment was created or run.
+
+
+## 2026-11-25
+
+- Added `RESEARCH_WORKFLOW.md` with the user's approval-gated stage protocol.
+- Added `00_CUMULATIVE_KNOWLEDGE.md` as the concise cross-cycle knowledge index.
+- Updated `01_ROLE_AND_RULES.md`, `README.md`, and `RESEARCH_JOURNAL.md` to reflect the workflow and context architecture.
+- Corrected the ML feature-research file's stale next-step text: Rolling Statistical Moments remains closed, the OHLC decomposition proposal remains withdrawn, and no next feature family is approved.
+- Clarified that `docs/` stores compact research reports/results as well as tool documentation; raw datasets and bulky dumps remain excluded.
