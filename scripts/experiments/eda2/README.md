@@ -6,16 +6,16 @@
 
 Из корня репозитория:
 
-\`\`\`powershell
+```powershell
 python scripts/experiments/eda2/03_cross_sectional_dependence.py
-\`\`\`
+```
 
-Панель читается из \`data/processed/top50/top50_panel.parquet\`. Скрипт не обращается к MOEX ISS, не запускает сборку датасета и не изменяет SQLite.
+Панель читается из `data/processed/top50/top50_panel.parquet`. Скрипт не обращается к MOEX ISS, не запускает сборку датасета и не изменяет SQLite.
 
 ## Расчёты
 
 - Дневные логарифмические доходности adjusted close на соседних торговых сессиях.
-- В расчёт входят только даты, где бумага является PIT member и имеет \`bar_available=1\` на обеих соседних сессиях.
+- В расчёт входят только даты, где бумага является PIT member и имеет `bar_available=1` на обеих соседних сессиях.
 - Парные Pearson и Spearman корреляции с попарным исключением отсутствующих наблюдений.
 - Годовые сводки межбумажных корреляций.
 - Скользящие корреляционные сводки для окон 60, 120 и 240 сессий, с шагом 20 сессий.
@@ -25,17 +25,17 @@ NumPy используется для численных массивов, по�
 
 ## Выходы
 
-В \`data/interim/eda2/block_03/\`:
-- \`pairwise_correlations.csv\`
-- \`yearly_dependence_summary.csv\`
-- \`yearly_eigen_spectrum.csv\`
-- \`rolling_dependence_summary.csv\`
-- \`full_sample_eigen_spectrum.csv\`
-- \`full_sample_pearson_matrix.csv\`
-- \`run_metadata.json\`
+В `data/interim/eda2/block_03/`:
+- `pairwise_correlations.csv`
+- `yearly_dependence_summary.csv`
+- `yearly_eigen_spectrum.csv`
+- `rolling_dependence_summary.csv`
+- `full_sample_eigen_spectrum.csv`
+- `full_sample_pearson_matrix.csv`
+- `run_metadata.json`
 
-В \`data/processed/eda2/block_03/\`:
-- \`EDA2_BLOCK_03_REPORT.md\`
+В `data/processed/eda2/block_03/`:
+- `EDA2_BLOCK_03_REPORT.md`
 
 ## Методологические оговорки
 
