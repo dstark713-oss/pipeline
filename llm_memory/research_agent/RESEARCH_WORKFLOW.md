@@ -45,6 +45,15 @@ Maintain separate, purpose-specific files under `llm_memory/research_agent/`:
 
 Avoid duplicating full content across files. Put each fact in its canonical home and link to it from other files. Update the index whenever files are added or reorganized.
 
+## Context maintenance: current state, not accumulation
+
+- Treat agent memory as an operational model of the current project, not a transcript or archive.
+- When a decision, specification, status, or next step changes, rewrite the canonical section/file so it contains only the current valid instruction.
+- Remove superseded instructions and stale next actions. Do not leave contradictory alternatives in active context.
+- Keep the journal limited to concise, decision-relevant history: what changed, the current replacement, and why that matters. Do not append every discussion or duplicate the current specification.
+- Keep cumulative knowledge genuinely reusable and current. Retire or replace claims when evidence changes; do not preserve obsolete hypotheses as active knowledge.
+- Prefer deleting or rewriting stale text over adding explanatory layers that make the context longer.
+
 ## Evidence and storage discipline
 
 - GitHub is the source of truth for committed code and Research Agent context.
