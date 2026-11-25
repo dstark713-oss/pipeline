@@ -1,81 +1,89 @@
-# ML Research: EDA Findings and Prediction-Problem Design
+# ML Research: EDA Findings and Current Direction
 
 Last updated: 2026-11-26
 
-## Project objective
+## Objective and methodological rules
 
-Use the PIT TOP50 MOEX daily market dataset to determine which analytical or prediction problems, if any, are supported by the observed data. Do not assume one model, a binary target, a fixed horizon, or that a predictive model is necessary.
+Use the PIT TOP50 MOEX daily panel to understand statistical structure and decide which research problems, if any, are justified. Do not assume a predictive model is necessary, or preselect a single target, horizon, or model.
 
-Methodology is DS-first: statistics, probability, information theory, time-series analysis, statistical learning, uncertainty, heterogeneity, and nonstationarity. Do not use trader-style indicators or price-action heuristics as feature templates. Explicit exclusions include ATR, RSI, MACD, Bollinger Bands, stochastic oscillators, and candlestick patterns. OHLCV is the raw observation domain, not a mandate to construct trading signals.
+Use a DS-first lens: statistics, probability, information theory, time-series analysis, statistical learning, uncertainty, heterogeneity, and nonstationarity. No trader-style indicators, technical signals, candlestick patterns, or price-action heuristics (including ATR, RSI, MACD, Bollinger Bands, stochastic oscillators, and disguised equivalents).
 
-## Current stage: EDA reviewed; targeted validation pending
+No feature selection, IC leaderboard, model fitting, walk-forward validation, trading rules, or portfolio metrics during EDA. Descriptive conditional distributions may be used for hypothesis generation, not presented as predictive evidence.
+
+## First EDA pass: results and limitations
 
 Canonical specification: `docs/research/eda/EDA_SPEC.md`  
-Generated report: `docs/research/eda/EDA_REPORT.md`  
-Researcher's interpretation: `docs/research/eda/EDA_ANALYSIS.md`  
-Implementation: `scripts/experiments/ml_1/eda/`
+User-run report: `docs/research/eda/EDA_REPORT.md`  
+Researcher's review: `docs/research/eda/EDA_ANALYSIS.md`
 
-The user ran the EDA locally on 2026-11-25 using code revision `46fb41a8a289609313c06defce2ec3f72c1e500e`, Python 3.12.7, pandas 3.0.2, and NumPy 2.4.4. The generated outputs are committed to `main`. This is user-run evidence, not an independent rerun by the Research Agent.
+The user ran EDA locally on 2026-11-25 using code revision `46fb41a8a289609313c06defce2ec3f72c1e500e`, Python 3.12.7, pandas 3.0.2, NumPy 2.4.4. Outputs are committed to main. The Research Agent reviewed committed outputs but did not independently execute the run.
 
-### Dataset snapshot from this run
-
-- Panel: 2005-01-11 to 2026-11-25.
-- 203,403 PIT membership rows, 214 SECIDs, 5,490 panel dates.
+Snapshot:
+- 203,403 PIT membership rows; 214 SECIDs; 5,490 panel dates (2005-01-11 to 2026-11-25).
 - Full TQBR/EQBR calendar: 5,740 sessions.
-- 199,169 rows with `bar_available=1`; overall bar coverage 97.918%.
-- 197,955 observations have positive adjusted Close at t and form the future-price starting cohort.
-- Daily membership averaged 37.05; early years had substantially fewer than 50 members. The 5th percentile of daily bar coverage is 81.82%.
+- 199,169 rows marked bar-available (97.918%); 4,234 membership rows without a selected board bar.
+- 197,955 valid positive adjusted-Close starting observations.
+- Mean daily membership 37.05; early years have fewer constituents, reaching an average of 50 from 2015.
+- Bar coverage is lower in 2006 (83.52%) and 2011 (76.91%).
 
-### Main descriptive findings
+Findings:
+1. Pooled adjusted Close, Volume, and Value levels are strongly right-skewed/heavy-tailed. These pooled moments mix instruments, scales, and periods and do not characterize a homogeneous variable.
+2. On 197,955 comparable observations, panel Close matched selected adjusted SQLite Close at tolerance 1e-8. Checked OHLC ordering constraints had zero violations on complete bars.
+3. The 1,214 incomplete bars are a known refresh-pipeline defect: the refresh process does not replace incomplete history rows with complete same-day MOEX candle data. This is understood, not an open EDA investigation.
+4. One BELU quarantined row is known and intentionally not a separate work item.
+5. Exact future endpoint coverage at +1/+5/+20 sessions is 99.682% / 99.406% / 98.574%.
+6. Direction shares at +1/+5/+20 are close to balanced. At +20 mean simple return is +0.521%, while mean log return is -0.165%; return distributions are heavy-tailed and annual summaries vary.
+7. These are descriptive pooled summaries only. Serial dependence, cross-sectional dependence, dispersion dynamics, instrument heterogeneity, rank mobility, uncertainty, and multiplicity were not studied.
 
-1. **Coverage and composition vary through time.** Average daily membership was roughly 10-17 in 2005-2009, 21 in 2010, 30 in 2011, and 50 from 2015 onward. Bar coverage was 83.52% in 2006 and 76.91% in 2011, versus near 99-100% in most recent years. Do not treat the panel as a constant 50-security cross-section over the full history.
-2. **Pooled level distributions are extremely skewed and heavy-tailed.** Adjusted Close skewness is 17.74 with excess kurtosis 408.86; Volume skewness is 87.20 with excess kurtosis 10,755.3. These pooled statistics mix different securities, scales, and periods. They are diagnostics, not evidence that raw levels are useful features or that extreme values are errors.
-3. **Most complete OHLC rows pass internal constraints.** On 197,955 complete OHLC rows, price ordering constraints have zero violations; non-positive adjusted prices were not found among non-missing values. Panel Close matches the board-selected adjusted SQLite Close on all 197,955 comparable rows at tolerance 1e-8.
-4. **A bar-availability semantic issue remains.** 1,214 of 199,169 rows marked `bar_available=1` have incomplete OHLC; the same count is marked as missing adjusted Close and missing selected adjusted-history Close. Verify whether `bar_available` means source-row existence or usable-bar completeness before relying on it as an eligibility flag.
-5. **Board/adjustment composition:** selected price board is TQBR for 81.56% and EQBR for 18.44% of available rows. There are 1,218 two-board rows, 4,234 no-board rows, and one `QUARANTINED_MIXED_SCALE` row. The aggregate output does not identify that row's SECID/date.
-6. **Future endpoint coverage is high:** 99.682% at +1, 99.406% at +5, and 98.574% at +20 market sessions. Exact t+h endpoints on the full calendar are used; no interpolation or future TOP50 membership requirement is applied.
-7. **Pooled direction shares are close to balanced.** Positive/negative/zero shares are 48.12/50.47/1.41% at +1, 49.46/49.99/0.55% at +5, and 50.43/49.34/0.23% at +20. These are descriptive realized shares, not forecasts.
-8. **Return distributions are heavy-tailed and temporally heterogeneous.** At +20, simple-return mean is +0.521% while log-return mean is -0.165%; simple-return standard deviation is 11.76%. +20 log-return annual means range from -11.19% in 2008 and -4.00% in 2022 to +6.74% in 2009 and +3.04% in 2023. This is descriptive time variation, confounded by changing PIT cohort composition and dependence.
+The first EDA pass is therefore **not a completed substantive EDA**. Its report is a preliminary descriptive/consistency pass. The previous proposal to spend the next stage on repeated source audits is withdrawn.
 
-### Interpretation limits
+## Active engineering task: incomplete-bar repair overlay
 
-- Repeated security-date observations and overlapping horizons are dependent; row counts are not independent sample sizes.
-- Cross-sectional dependence, serial dependence, uncertainty intervals, and multiple testing were not analyzed.
-- Changing PIT membership and early low-universe periods affect pooled and annual summaries.
-- Missing endpoints and incomplete bars may be informative rather than random.
-- The report does not identify the quarantined row or extreme return observations at SECID/date level.
-- No target, label, feature, IC, feature-target association, model, walk-forward protocol, or portfolio metric has been selected or evaluated.
+The raw SQLite database remains append-only. A standalone utility has been added:
+- `scripts/dataset/06_repair_incomplete_bars.py`
+- Unit tests: `scripts/dataset/tests/test_incomplete_bar_repair.py`
+- Usage: `scripts/dataset/README.md`
 
-## Next stage: targeted diagnostic validation
+It identifies distinct SECID/BOARDID/TRADEDATE keys with NULL OHLC fields in raw SQLite, requests exact daily candles from MOEX ISS, validates complete OHLC, and writes corrections to `data/interim/bar_repairs/moex_candle_repairs.sqlite`. It never modifies raw SQLite.
 
-The proposed checks are documented in `docs/research/eda/EDA_ANALYSIS.md`:
-1. Characterize the 1,214 incomplete bars and clarify `bar_available` semantics.
-2. Identify and trace the single quarantined mixed-scale observation.
-3. Trace extreme future returns at each horizon to source rows and adjustment provenance.
-4. Unit-test exact calendar endpoint mapping, return formulas, missing endpoints, and signal-date PIT cohort logic.
-5. Characterize the 4,234 no-board rows, especially the 2006 and 2011 coverage gaps.
+The adjusted builder `scripts/dataset/04_build_adjusted_dataset.py` now reads the optional overlay and applies its values while rebuilding adjusted data. It records `bar_repair_id` and `bar_repair_fetched_at_utc` in the derived table. The repair utility and builder integration are committed but **not runtime-tested on the user's local database**. User must pull, run a small dry-run, then perform the repair and rebuild; results must be inspected before declaring success.
 
-These checks are **proposed, not yet approved or implemented**. Do not change project code until the user approves their scope.
+Commands:
+```powershell
+python scripts/dataset/06_repair_incomplete_bars.py --dry-run --limit 10
+python scripts/dataset/06_repair_incomplete_bars.py
+python scripts/dataset/04_build_adjusted_dataset.py
+python -m unittest discover -s scripts/dataset/tests -v
+```
 
-After validation, formulate a separate prediction-problem design from the evidence. It must decide whether prediction is justified, which outcomes/horizons warrant study, and whether one model, multiple models, or no model is appropriate. No feature/model implementation before explicit approval.
+## Next research stage: EDA v2
+
+Proposed plan: `docs/research/eda/EDA_V2_PLAN.md`. This is a plan only; implementation has not started and requires user approval.
+
+EDA v2 should investigate:
+1. Return distribution geometry: per-security, pooled/equal-security-weighted, tail asymmetry, quantiles, annual/rolling variation.
+2. Temporal dependence: ACF of signed returns, absolute returns, squared returns; per-security Ljung-Box with minimum sample sizes and BH correction.
+3. Cross-sectional dependence: pairwise correlations, rolling dependence, covariance eigenvalue concentration, exploratory PCA.
+4. Date-level cross-sectional dispersion: median, MAD, IQR, standard deviation, positive/negative shares, persistence.
+5. Instrument heterogeneity: between- and within-security scale/shape differences, rolling dispersion.
+6. PIT membership and rank mobility: tenure, entries/exits, persistence, rank transition matrices.
+7. Activity concentration and descriptive stratification by PIT rank/Value/Volume, without IC rankings or predictive claims.
+
+Statistical inference must respect serial and cross-sectional dependence, use dependence-aware uncertainty where appropriate, correct repeated test families, and report effect sizes/sample sizes alongside p-values.
+
+The known incomplete-bar problem and single BELU quarantined row are not EDA research tasks. Missingness may be described only when needed to understand population/sample composition.
 
 ## Completed prior research
 
-### Log returns
+- Log returns: `r_t = ln(P_t / P_{t-1})` are additive across consecutive periods and scale-normalized, but do not guarantee stationarity.
+- Rolling Statistical Moments: **CLOSED on 2026-11-25**. Do not reopen absent explicit request or concrete new evidence.
 
-Daily log return `r_t = ln(P_t / P_{t-1})` is additive over consecutive periods and scale-normalized, but does not guarantee stationarity.
+## Binding boundaries
 
-### Rolling Statistical Moments
-
-**CLOSED on 2026-11-25.** The completed experiment covered rolling mean, variance, skewness, and Fisher excess kurtosis over 20/60/120/240-session windows. Do not reopen, repeat its IC/correlation analysis, or add diagnostics without explicit user request or concrete new evidence. Closure does not imply automatic promotion of candidates.
-
-## Binding research boundaries
-
-- DS-first methods only; no trader-style indicators or disguised price-action heuristics.
 - Preserve PIT membership, SECID identity, market-session timing, and missingness.
 - Never forward-fill, create synthetic bars, bridge missing sessions, or automatically delete outliers.
-- Do not repeat the already completed general structure/quality audit.
 - `numtrades` is absent from the current EDA data contract.
-- No feature engineering, IC, feature-target association, model fitting, walk-forward evaluation, or portfolio metrics during EDA and targeted validation.
-- Portfolio metrics remain prohibited until a final model is approved; after approval, only the separately authorized decisive portfolio-level run is permitted.
-- Repository inspection is not execution. Preserve provenance distinctions between user-run results, code inspection, and independent runtime validation.
+- No target, label, model count, or prediction horizon is currently selected.
+- No portfolio metrics before final model approval; after approval, only the separately authorized decisive portfolio-level run.
+- Repository inspection is not execution. Distinguish committed code from runtime-verified behavior.
+- Keep canonical memory current; replace superseded decisions instead of accumulating contradictory history.
