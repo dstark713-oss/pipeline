@@ -43,7 +43,7 @@ The consistency checks are strong on rows with complete OHLC:
 There is one important unresolved data-contract issue:
 
 - 1,214 of 199,169 `bar_available=1` rows (0.610%) have incomplete OHLC.
-- The same 1,214 rows are flagged as `bar_available=1` with missing adjusted Close and as missing the selected adjusted-history Close.
+- Separate checks also report 1,214 `bar_available=1` rows with missing adjusted Close and 1,214 with missing selected adjusted-history Close. The aggregate report does not provide a row-level cross-tab proving these are exactly the same observations.
 
 This may mean `bar_available` denotes the existence of a source/board row rather than the availability of a usable adjusted OHLC bar. The report does not establish the cause. The flag's semantics should be verified before it is used as a general eligibility condition.
 
