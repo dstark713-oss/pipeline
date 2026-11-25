@@ -156,6 +156,34 @@ def overall_summary(
     return pd.DataFrame([row])
 
 
+def security_heterogeneity_summary(security_stats: pd.DataFrame) -> pd.DataFrame:
+    """Compact cross-security distributions, not just averages."""
+    metrics = [
+        "n", "mean", "median", "std", "mad", "skewness", "excess_kurtosis",
+        "q01", "q05", "q95", "q99",
+        "share_abs_ge_2pct", "share_abs_ge_5pct", "share_abs_ge_10pct",
+    ]
+    rows = []
+    for metric in metrics:
+        values = pd.to_numeric(security_stats[metric], errors="coerce").dropna()
+        if values.empty:
+            continue
+        rows.append({
+            "statistic": metric,
+            "n_securities": int(values.size),
+            "mean_across_securities": float(values.mean()),
+            "std_across_securities": float(values.std(ddof=1)) if len(values) > 1 else np.nan,
+            "q10_across_securities": float(values.quantile(0.10)),
+            "q25_across_securities": float(values.quantile(0.25)),
+            "median_across_securities": float(values.median()),
+            "q75_across_securities": float(values.quantile(0.75)),
+            "q90_across_securities": float(values.quantile(0.90)),
+            "min_across_securities": float(values.min()),
+            "max_across_securities": float(values.max()),
+        })
+    return pd.DataFrame(rows)
+
+
 def yearly_summary(returns: pd.DataFrame) -> pd.DataFrame:
     rows = []
     for year, sample in returns.groupby(returns.index.year):
@@ -267,6 +295,10 @@ def write_report(
         f"- Среднее индивидуальных MAD: {pooled['equal_security_avg_mad']:.8f}",
         f"- Среднее индивидуальных эксцессов: {pooled['equal_security_avg_excess_kurtosis']:.6f}",
         "",
+        "## Неоднородность между бумагами",
+        "Распределения индивидуальных статистик по бумагам сохранены в security_heterogeneity_summary.csv. "
+        "Таблица показывает квантили и диапазоны межбумажного разброса, а не только средние значения.",
+        "",
         "## Годовая динамика",
         "Полная таблица pooled-оценок и средних индивидуальных оценок находится "
         "в yearly_distribution_summary.csv.",
@@ -288,6 +320,7 @@ def write_report(
         "",
         "## Файлы",
         "- overall_distribution_summary.csv",
+        "- security_heterogeneity_summary.csv",
         "- yearly_distribution_summary.csv",
         "- cross_sectional_time_summary.csv",
         "- EDA2_BLOCK_01_REPORT.md",
@@ -303,6 +336,7 @@ def main() -> None:
     returns, metadata = load_returns(args.panel)
     security_stats = per_security_distribution(returns)
     overall = overall_summary(returns, security_stats)
+    security_heterogeneity = security_heterogeneity_summary(security_stats)
     yearly = yearly_summary(returns)
     daily = daily_cross_section(returns)
     cross_time = cross_section_time_summary(daily)
@@ -312,6 +346,9 @@ def main() -> None:
     daily.to_csv(args.output_dir / "daily_cross_sectional_distribution.csv", index=False)
 
     overall.to_csv(args.docs_dir / "overall_distribution_summary.csv", index=False)
+    security_heterogeneity.to_csv(
+        args.docs_dir / "security_heterogeneity_summary.csv", index=False
+    )
     yearly.to_csv(args.docs_dir / "yearly_distribution_summary.csv", index=False)
     cross_time.to_csv(args.docs_dir / "cross_sectional_time_summary.csv", index=False)
 
@@ -322,6 +359,7 @@ def main() -> None:
         "quantiles": list(QUANTILES),
         "extreme_absolute_return_thresholds": list(EXTREME_THRESHOLDS),
         "security_statistics_count": int(len(security_stats)),
+        "security_heterogeneity_summary_rows": int(len(security_heterogeneity)),
         "yearly_slices": int(len(yearly)),
         "cross_sectional_dates": int(len(daily)),
         "method_notes": [
@@ -343,6 +381,7 @@ def main() -> None:
         ],
         "research_outputs": [
             "overall_distribution_summary.csv",
+            "security_heterogeneity_summary.csv",
             "yearly_distribution_summary.csv",
             "cross_sectional_time_summary.csv",
             "EDA2_BLOCK_01_REPORT.md",
