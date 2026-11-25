@@ -12,7 +12,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_PANEL = ROOT / "data" / "processed" / "top50" / "top50_panel.parquet"
 DEFAULT_OUTPUT = ROOT / "data" / "interim" / "eda2" / "block_03"
-DEFAULT_PROCESSED = ROOT / "data" / "processed" / "eda2" / "block_03"
+DEFAULT_PROCESSED = ROOT / "docs" / "research" / "eda2" / "results" / "block_03"
 
 WINDOWS = (60, 120, 240)
 ROLLING_STEP = 20
@@ -340,7 +340,7 @@ def main() -> None:
         "spectral_summary": spectral_summary,
         "method_notes": [
             "Pairwise-complete observations; no imputation or forward-fill.",
-            "Spearman uses average ranks within each security over the analyzed sample.",
+            "Spearman ranks each pair on that pair’s shared dates using average ranks.",
             "Rolling matrices are sampled every rolling_step_sessions to control runtime.",
             "Eigen analysis is restricted to the complete-correlation sub-universe.",
             "Pairwise deletion may make the full correlation matrix non-positive-semidefinite.",
@@ -353,6 +353,7 @@ def main() -> None:
             "rolling_dependence_summary.csv",
             "full_sample_eigen_spectrum.csv",
             "full_sample_pearson_matrix.csv",
+            "aggregated_report: docs/research/eda2/results/block_03/EDA2_BLOCK_03_REPORT.md",
         ],
     })
     (args.output_dir / "run_metadata.json").write_text(
