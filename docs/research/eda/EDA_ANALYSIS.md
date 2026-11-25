@@ -76,18 +76,15 @@ Annual cohort summaries vary substantially. Examples for mean +20 log return inc
 - The aggregate report does not identify the SECID/date of the quarantined mixed-scale row or the most extreme future-return observations.
 - No confidence intervals, hypothesis tests, multiple-testing corrections, IC, feature-target association, model fitting, walk-forward evaluation, or portfolio metrics were computed.
 
-## 6. Proposed targeted validation before prediction-problem design
+## 6. Corrected assessment and next stage
 
-This is a proposal for the next stage, not an authorization to implement. Agree the checks before code changes.
+The first EDA pass is **not a completed substantive EDA**. It mainly described marginal variable distributions, coverage, internal consistency, and pooled future-price summaries. It did not study the panel's central statistical structure: temporal dependence, cross-sectional dependence, date-level dispersion, instrument heterogeneity, membership/rank mobility, or activity concentration. The previous recommendation to spend another stage on generic data audits was incorrect and is withdrawn.
 
-1. **Clarify `bar_available` semantics and the 1,214 incomplete rows.** Produce compact counts by year, SECID, selected board, and missing OHLC field; inspect a small traceable sample against the adjusted SQLite rows. Decide whether the flag means source-row existence or usable-bar completeness. Do not mutate the source data.
-2. **Trace the single quarantined mixed-scale row.** Identify SECID/date, board composition, adjustment event/status, and corresponding raw/adjusted source values. Confirm whether it is the already documented BELU event.
-3. **Trace extreme future returns.** For each horizon, identify a small set of minimum/maximum simple and log-return observations with SECID, signal date, endpoint date, current/future adjusted Close, and source adjustment status. Determine whether they are legitimate market/corporate-action outcomes or data anomalies. Do not remove them automatically.
-4. **Test endpoint and return calculations.** Unit tests should verify exact calendar offsets for +1/+5/+20, simple/log return formulas, missing endpoint behavior, and the rule that future membership in TOP50 is not required. Intermediate missing bars must not be interpolated.
-5. **Characterize missing-bar coverage.** Explain the 4,234 rows with no board bar, with special attention to 2006 and 2011, and distinguish no source observation from other known exclusions or data availability boundaries.
+Known engineering/data issues:
+- The 1,214 incomplete bars are a known refresh defect. They are handled by a separate repair utility and append-only correction overlay; this is not an EDA investigation.
+- The single BELU quarantined row is known and is not a separate research task.
+- The 4,234 no-board rows are not an automatic audit task. Missingness/coverage should be described only where needed to interpret the sample and selection effects.
 
-No generic structure/quality audit should be repeated. No feature engineering, IC, target selection, model fitting, or portfolio evaluation is part of these checks.
+The next research proposal is EDA v2: `docs/research/eda/EDA_V2_PLAN.md`. It covers return distribution geometry, serial dependence, cross-sectional co-movement, date-level dispersion, instrument heterogeneity, PIT membership/rank mobility, and activity concentration/conditional descriptive structure.
 
-## Current decision
-
-EDA is **reviewed; descriptive stage is ready for targeted validation**. Prediction-problem design remains blocked until the user approves and the agreed diagnostics are completed. No target, label, model, or forecast horizon is selected.
+No EDA v2 implementation has started. The plan and output contract require user approval. No target, feature set, model, or forecast horizon is selected.
