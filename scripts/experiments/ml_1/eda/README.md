@@ -25,7 +25,7 @@ This stage describes the data before any target or model is designed. It does no
 - Future endpoints are taken from the adjusted SQLite history for the same SECID, not from future TOP50 membership. This avoids dropping an endpoint merely because the instrument later leaves TOP50.
 - Horizon is counted on the TQBR/EQBR market-session calendar, excluding the already-defined market suspension interval.
 - Board selection matches the panel pipeline: complete OHLC row first, then TQBR priority, EQBR fallback.
-- Missing prices remain missing. A return is not calculated across a missing market session.
+- No price is forward-filled. The horizon is counted on the full market calendar; only the observed start and exact t+h endpoint are required. Intermediate missing bars are never interpolated.
 - SQLite is opened read-only.
 
 ## Run
