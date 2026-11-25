@@ -217,3 +217,15 @@ Avoid duplication; maintain canonical placement and update the index when the st
 ### Implementation boundary
 
 The protocol does not authorize unapproved scope changes. Plan approval authorizes only the implementation explicitly described in that plan. Runtime checks must not be reported as passed without actual execution output. GitHub inspection is not execution.
+
+## 2026-11-25 | EDA approved and implemented
+
+The user approved descriptive EDA with these corrections:
+- The general structure/quality audit is already complete and must not be repeated.
+- `numtrades` is absent from the current EDA data contract and is excluded.
+- Future adjusted-close behavior is described at +1, +5, and +20 market sessions. These are exploratory horizons, not a selected target or model specification.
+- The research must not assume a single model, a binary label, or even that a predictive model is warranted.
+
+Committed the EDA implementation under `scripts/experiments/ml_1/eda/` and its approved scope under `docs/research/eda/EDA_SPEC.md`. Updated the canonical ML research specification, next steps, cumulative knowledge, repository index, and panel field description to remove the stale fixed t-to-t+5 target and walk-forward assumptions.
+
+Implementation is code-inspected but not run here. The user will pull, execute against local Parquet/SQLite data, and push compact outputs under `docs/research/eda/` for analysis. No runtime findings are available yet.
