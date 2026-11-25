@@ -177,7 +177,7 @@ def future_price_analysis(
     panel: pd.DataFrame,
     prices: pd.DataFrame,
     calendar: pd.DatetimeIndex,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Describe Close[t] -> Close[t+h] for h in market sessions; no model target is defined."""
     start = panel.loc[
         panel["bar_available"].eq(1)
