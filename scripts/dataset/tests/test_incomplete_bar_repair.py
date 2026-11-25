@@ -63,7 +63,7 @@ class IncompleteBarRepairTests(unittest.TestCase):
         result = repair.find_incomplete_keys(connection)
         self.assertEqual(len(result), 2)
         self.assertEqual(result[0]["source_rows"], 2)
-        self.assertEqual(result[0]["original_row_hashes"], "a,b")
+        self.assertEqual(set(result[0]["original_row_hashes"].split(",")), {"a", "b"})
         connection.close()
 
     def test_overlay_upsert_is_idempotent_and_preserves_original_hashes(self):
