@@ -262,3 +262,19 @@ EDA is reviewed. The next proposed stage is targeted diagnostics: classify the 1
 These checks are proposed and await user approval. Do not implement them or move to prediction-problem design before scope approval and validation. No target, label, model, feature family, or forecast horizon is selected.
 
 During this review, the active ML research memory file was found to contain unresolved Git conflict markers and stale fixed-target/OHLC-feature instructions. It has been replaced with a clean current specification; superseded instructions were removed rather than retained.
+
+
+## 2026-11-26 | EDA direction corrected; repair overlay implemented
+
+The user clarified that the 1,214 incomplete bars are a known refresh defect: same-day MOEX candles can be retrieved, but the refresh process does not replace existing incomplete history rows. The user authorized a separate repair script, explicitly not a refresh-pipeline modification. The raw SQLite database must remain append-only; corrections are stored in a separate overlay. The single BELU quarantined row requires no additional investigation.
+
+Implemented and committed:
+- `scripts/dataset/06_repair_incomplete_bars.py`: selects raw SECID/BOARDID/TRADEDATE keys with NULL OHLC, requests exact daily candles from MOEX ISS, validates full OHLC, and writes a provenance-bearing overlay.
+- `data/interim/bar_repairs/moex_candle_repairs.sqlite`: local runtime overlay path; database itself is not committed.
+- `scripts/dataset/04_build_adjusted_dataset.py`: applies overlay values when rebuilding adjusted data and records repair ID/fetch timestamp in derived output.
+- `scripts/dataset/tests/test_incomplete_bar_repair.py`: offline unit tests for candle validation, candidate grouping, and idempotent overlay upsert.
+- `scripts/dataset/README.md`: run instructions.
+
+Implementation is code-inspected but has not been run against the user's local raw SQLite. Runtime correctness remains unverified.
+
+The user correctly objected that the first EDA pass had devolved into repeated data-quality audits and had not studied the statistical behaviour of the TOP50 panel. The previous targeted-audit follow-up was withdrawn. Added `docs/research/eda/EDA_V2_PLAN.md` for substantive analysis of return distributions, temporal dependence, cross-sectional dependence, date-level dispersion, instrument heterogeneity, PIT rank/membership mobility, and activity concentration. The plan is proposed and awaits approval; no EDA v2 code has been implemented.
