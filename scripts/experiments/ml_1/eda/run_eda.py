@@ -1,4 +1,6 @@
-"""Run descriptive EDA. Run from repository root with pandas, numpy and pyarrow installed."""
+# Path: scripts/experiments/ml_1/eda/run_eda.py
+# Purpose: EDA implementation module.
+"""Run descriptive EDA from the repository root."""
 from __future__ import annotations
 
 import sys
