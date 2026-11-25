@@ -49,7 +49,7 @@ Describe the observed panel and the empirical behavior of adjusted closing price
 - Adjusted history: `data/processed/moex_daily_adjusted.sqlite`, opened read-only.
 - Market-session calendar: distinct TQBR/EQBR dates, excluding 2022-02-28 through 2022-03-23.
 - Price selection: complete OHLC row first, then TQBR priority, EQBR fallback.
-- No forward-fill, synthetic bars, bridging across missing sessions, or source-data mutation.
+- No forward-fill, synthetic bars, or source-data mutation. Horizons use exact calendar endpoints; intermediate missing bars are not interpolated.
 - No raw row-level exports. Save only compact aggregate outputs.
 
 ## Implementation
