@@ -153,10 +153,18 @@ Core logic:
 - A member can remain in membership with `bar_available=0`; no price forward-fill.
 - Output is written only after validation.
 
-Last user-provided panel shape:
-- 203,053 rows in the last user-provided snapshot; the current EDA field contract is listed below.
-- Dates: 2005-01-11 through 2026-11-20
-- Known panel fields: tradedate, ranking_asof_date, secid, value_60d, rank, universe_size, selection_method, volume, value, n_boards, boards, adjusted_open, adjusted_high, adjusted_low, adjusted_close, price_board, adjustment_status, bar_available. The current EDA data contract does not include `numtrades`; do not assume a Number of Trades variable is available.
+Latest user-run EDA snapshot (2026-11-25):
+- 203,403 PIT membership rows; 214 SECIDs; 5,490 panel dates.
+- Dates: 2005-01-11 through 2026-11-25.
+- Full TQBR/EQBR calendar: 5,740 sessions.
+- 199,169 rows have `bar_available=1` (97.918% of membership rows); 4,234 have no selected board bar.
+- 197,955 rows have positive adjusted Close and form the EDA future-price starting cohort.
+- Mean daily membership: 37.05; early years have fewer than 50 constituents, with mean membership reaching 50 from 2015 onward.
+- Bar coverage is 83.52% in 2006 and 76.91% in 2011; most recent years are near 99-100%.
+- 1,214 rows marked `bar_available=1` have incomplete OHLC and missing adjusted Close; the flag's semantics require targeted validation.
+- The current EDA data contract does not include `numtrades`; do not assume a Number of Trades variable is available.
+
+Known panel fields: tradedate, ranking_asof_date, secid, value_60d, rank, universe_size, selection_method, volume, value, n_boards, boards, adjusted_open, adjusted_high, adjusted_low, adjusted_close, price_board, adjustment_status, bar_available.
 
 ## Data flow
 
