@@ -10,6 +10,7 @@ import sys
 import time
 from datetime import date, datetime, timezone
 from pathlib import Path
+from urllib.parse import quote
 from typing import Any
 
 
@@ -41,7 +42,7 @@ def load_module(module_name: str, path: Path):
 
 
 def sqlite_readonly(path: Path) -> sqlite3.Connection:
-    uri = f"file:{path.resolve().as_posix()}?mode=ro"
+    uri = f"file:{quote(path.resolve().as_posix(), safe='/:')}?mode=ro"
     connection = sqlite3.connect(uri, uri=True, timeout=30)
     connection.execute("PRAGMA query_only=ON")
     return connection
