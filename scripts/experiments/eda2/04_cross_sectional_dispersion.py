@@ -99,6 +99,11 @@ def daily_cross_section(returns: pd.DataFrame) -> pd.DataFrame:
         x = row.to_numpy(dtype=np.float64)
         x = x[np.isfinite(x)]
         if x.size == 0:
+            rows.append({
+                "tradedate": date,
+                "n_securities": 0,
+                **{metric: np.nan for metric in CROSS_METRICS if metric != "n_securities"},
+            })
             continue
         median = float(np.median(x))
         q05, q25, q50, q75, q95 = np.quantile(x, [0.05, 0.25, 0.50, 0.75, 0.95])
