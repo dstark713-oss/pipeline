@@ -115,3 +115,26 @@ docs/research/eda2/results/block_03/EDA2_BLOCK_03_REPORT.md.
 - Скользящие окна измеряются в строках дат панели и требуют полного окна.
 - Breadth-доли являются описательными статистиками, не торговыми сигналами.
 - Блок описательный: без моделей, прогнозов, IC, отбора признаков, торговых правил и портфельных метрик.
+
+
+## Блок 5. Неоднородность масштаба и волатильности
+
+Запуск:
+
+    python scripts/experiments/eda2/05_scale_heterogeneity.py
+
+Исследуются rolling sample std и немасштабированный MAD каждой бумаги на окнах 20, 60, 120 и 240 panel sessions; распределения rolling scale across securities/time; temporal variability внутри бумаги (временные медианы, квантили, IQR и range); медианный scale по бумаге в периодах 2005–2012, 2013–2019 и 2020–2026; Spearman/Pearson корреляции относительного ранга масштаба между периодами по общим бумагам.
+
+Machine outputs:
+- data/interim/eda2/block_05/rolling_scale_by_security.csv
+- data/interim/eda2/block_05/period_security_scale.csv
+- data/interim/eda2/block_05/run_metadata.json
+
+Агрегаты:
+- docs/research/eda2/results/block_05/rolling_scale_distribution_summary.csv
+- docs/research/eda2/results/block_05/per_security_temporal_variability.csv
+- docs/research/eda2/results/block_05/period_security_scale.csv
+- docs/research/eda2/results/block_05/cross_period_rank_stability.csv
+- docs/research/eda2/results/block_05/EDA2_BLOCK_05_REPORT.md
+
+Rolling window требует полного окна; пропуски не заполняются и сегменты не соединяются. MAD не масштабируется. Сопоставления рангов между периодами описательные. Не выполняются модели, прогнозы, IC, feature selection или торговые выводы.
