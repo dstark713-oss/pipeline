@@ -305,8 +305,12 @@ def main() -> None:
         if not spectrum.empty:
             yearly_spectra.append(spectrum)
 
-    pd.DataFrame(yearly_rows).to_csv(
+    yearly_summary = pd.DataFrame(yearly_rows)
+    yearly_summary.to_csv(
         args.output_dir / "yearly_dependence_summary.csv", index=False
+    )
+    yearly_summary.to_csv(
+        args.processed_dir / "yearly_dependence_summary.csv", index=False
     )
     if yearly_spectra:
         pd.concat(yearly_spectra, ignore_index=True).to_csv(
@@ -317,10 +321,25 @@ def main() -> None:
         returns, WINDOWS, args.rolling_step, MIN_ROLLING_PAIR_OBS
     )
     rolling.to_csv(args.output_dir / "rolling_dependence_summary.csv", index=False)
+    rolling.to_csv(args.processed_dir / "rolling_dependence_summary.csv", index=False)
+
+    correlation_distribution = pd.DataFrame([
+        {"metric": "pearson", **matrix_summary(pearson)},
+        {"metric": "spearman", **matrix_summary(spearman)},
+    ])
+    correlation_distribution.to_csv(
+        args.processed_dir / "pairwise_correlation_distribution.csv",
+        index=False,
+    )
 
     spectrum, spectral_summary = eigen_spectrum(pearson, tickers, "full_sample")
     if not spectrum.empty:
         spectrum.to_csv(args.output_dir / "full_sample_eigen_spectrum.csv", index=False)
+
+    (args.processed_dir / "spectral_summary.json").write_text(
+        json.dumps(spectral_summary, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
 
     # Persist the pooled Pearson matrix for downstream inspection.
     pd.DataFrame(pearson, index=tickers, columns=tickers).to_csv(
