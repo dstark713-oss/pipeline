@@ -28,25 +28,36 @@ Daily log return `r_t = ln(P_t / P_{t-1})` is additive over consecutive periods 
 
 ### Rolling Statistical Moments
 
-**CLOSED on 2026-11-25.** The experiment covered rolling mean, variance, skewness, and Fisher excess kurtosis over 20/60/120/240 sessions. Closure means the research pass is finished, not that every candidate is approved for future use. Do not reopen without explicit request or concrete new evidence.
+**CLOSED on 2026-11-25.** The experiment covered rolling mean, variance, skewness, and Fisher excess kurtosis over 20/60/120/240 sessions. Do not reopen without explicit request or concrete new evidence.
 
-## Active project: PIT TOP50 EDA
+## PIT TOP50 EDA: current understanding
 
-EDA was run locally by the user on 2026-11-25 and its outputs were committed to `docs/research/eda/`. The Research Agent reviewed the report and recorded its interpretation in `docs/research/eda/EDA_ANALYSIS.md`.
-
-Run snapshot:
-- 203,403 PIT membership rows, 214 SECIDs, 5,490 panel dates; 5,740 TQBR/EQBR calendar sessions.
-- 199,169 bar-available rows (97.918% of membership rows); 4,234 have no board bar.
+First EDA run (user-executed 2026-11-25):
+- 203,403 PIT membership rows; 214 SECIDs; 5,490 panel dates; 5,740 TQBR/EQBR calendar sessions.
+- 199,169 rows marked bar-available (97.918%); 4,234 membership rows without a selected board bar.
 - 197,955 valid positive adjusted-Close starting observations.
-- 1,214 rows flagged bar-available have incomplete OHLC and missing adjusted Close; clarify `bar_available` semantics.
-- Panel Close matches the selected adjusted SQLite Close on all 197,955 comparable observations.
-- Future endpoint coverage at +1/+5/+20 sessions is 99.682% / 99.406% / 98.574%.
-- Pooled return distributions are heavy-tailed; annual return summaries vary materially. These are descriptive results only, with no inference.
+- Average daily membership 37.05; early years have fewer constituents, reaching an average of 50 from 2015.
+- Panel Close matched selected adjusted SQLite Close on all 197,955 comparable observations at tolerance 1e-8.
+- Future endpoint coverage at +1/+5/+20 sessions: 99.682% / 99.406% / 98.574%.
+- Return distributions are heavy-tailed; pooled arithmetic and log-return means differ materially at +20. Annual summaries vary.
+- This first pass was preliminary. It did not study serial dependence, cross-sectional dependence, date-level dispersion, instrument heterogeneity, rank mobility, or activity concentration. Do not call substantive EDA complete.
 
-The PIT universe is not a constant 50-security cross-section over the entire history: average daily membership was roughly 10-17 in 2005-2009 and reached 50 from 2015 onward. Historical comparisons must account for changing universe size, composition, and coverage.
+Known issues are not open research investigations:
+- 1,214 incomplete bars are caused by a known refresh defect: incomplete history rows are not replaced with same-day MOEX candle data. Repair via a standalone overlay utility; raw SQLite remains append-only.
+- One BELU quarantined row is known; no separate investigation is needed.
 
-The arithmetic and logarithmic return means can differ materially under skewed, heavy-tailed distributions. Positive/negative/zero shares are descriptive frequencies, not forecasts. Repeated security-date observations and overlapping horizons are dependent; raw row counts are not independent sample sizes.
+Active next research proposal: `docs/research/eda/EDA_V2_PLAN.md`. It covers distribution geometry, temporal dependence, cross-sectional co-movement, dispersion, instrument heterogeneity, PIT membership/rank mobility, and activity concentration. Await user approval before implementation.
 
-Current status: broad EDA is reviewed; targeted diagnostics are proposed and await user approval. No target, label, forecast horizon, feature family, or model is selected. See `05_NEXT_STEPS.md` and `06_ML_DIRECTION_FEATURE_RESEARCH.md`.
+## Incomplete-bar repair architecture
 
-No feature engineering, IC, feature-target association, model fitting, walk-forward evaluation, or portfolio metrics are part of the current stage.
+- Raw SQLite remains append-only and read-only to the repair utility.
+- Standalone script `scripts/dataset/06_repair_incomplete_bars.py` fetches exact daily MOEX candles for raw keys with NULL OHLC and validates complete OHLC.
+- Corrections are stored in `data/interim/bar_repairs/moex_candle_repairs.sqlite`.
+- Adjusted builder applies overlay values at rebuild time and records repair provenance in derived data.
+- Code is committed but not yet run against the user's local database. No runtime success claim is valid until the user runs it and shares results.
+
+## Research boundaries
+
+No fixed target, label, model count, or prediction horizon is selected. No feature engineering, IC leaderboard, model fitting, walk-forward evaluation, trading rules, or portfolio metrics during EDA. Descriptive conditional distributions can generate hypotheses but are not predictive evidence.
+
+No forward-fill, synthetic bars, bridging missing sessions, automatic outlier deletion, or source-data mutation. Preserve PIT membership and missingness. Portfolio metrics remain prohibited until a final model is approved.
