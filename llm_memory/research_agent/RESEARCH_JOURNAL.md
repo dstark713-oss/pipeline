@@ -229,3 +229,36 @@ The user approved descriptive EDA with these corrections:
 Committed the EDA implementation under `scripts/experiments/ml_1/eda/` and its approved scope under `docs/research/eda/EDA_SPEC.md`. Updated the canonical ML research specification, next steps, cumulative knowledge, repository index, and panel field description to remove the stale fixed t-to-t+5 target and walk-forward assumptions.
 
 Implementation is code-inspected but not run here. The user will pull, execute against local Parquet/SQLite data, and push compact outputs under `docs/research/eda/` for analysis. No runtime findings are available yet.
+
+
+## 2026-11-26 | EDA results reviewed; targeted validation proposed
+
+The user ran the approved EDA locally and committed the generated outputs to `main`. The run metadata records 2026-11-25 18:51 UTC, code revision `46fb41a8a289609313c06defce2ec3f72c1e500e`, Python 3.12.7, pandas 3.0.2, and NumPy 2.4.4.
+
+### Dataset snapshot
+
+- 203,403 PIT membership rows; 214 SECIDs; 5,490 dates from 2005-01-11 to 2026-11-25.
+- Full TQBR/EQBR market calendar: 5,740 sessions.
+- 199,169 rows with `bar_available=1` (97.918%); 4,234 membership rows have no board bar.
+- 197,955 valid positive adjusted-Close observations form the future-price starting cohort.
+- Daily membership averaged 37.05. Early history had substantially fewer than 50 members; average membership reached 50 from 2015 onward. Bar coverage was notably lower in 2006 (83.52%) and 2011 (76.91%).
+
+### EDA findings
+
+- Pooled adjusted-price, Volume, and Value levels are strongly right-skewed/heavy-tailed; pooled moments are descriptive only and mix instruments, scales, and periods.
+- Among 197,955 complete OHLC observations, checked price-order constraints had zero violations; non-positive adjusted prices were not found among non-missing values.
+- Panel Close matched selected adjusted SQLite Close on all 197,955 comparable rows at tolerance 1e-8.
+- 1,214/199,169 bar-available rows have incomplete OHLC and missing adjusted Close. Clarify the semantics of `bar_available`.
+- Selected board shares: TQBR 81.56%, EQBR 18.44%; one row is flagged `QUARANTINED_MIXED_SCALE`, but aggregate outputs do not identify it.
+- Exact endpoint coverage at +1/+5/+20 sessions: 99.682% / 99.406% / 98.574%.
+- Positive/negative/zero return shares are close to balanced. At +5 they are 49.46% / 49.99% / 0.55%; at +20, 50.43% / 49.34% / 0.23%.
+- Returns are heavy-tailed and annual summaries vary materially. At +20 the mean simple return is +0.521%, while mean log return is -0.165%; this reflects distribution asymmetry and must not be interpreted as a forecast edge.
+- No inference, IC, feature-target association, model fitting, WF evaluation, or portfolio metrics were computed.
+
+### Decisions and next work
+
+EDA is reviewed. The next proposed stage is targeted diagnostics: classify the 1,214 incomplete bars and verify `bar_available`; trace the quarantined mixed-scale row; trace extreme future returns to exact source observations; test calendar endpoint/return calculations and PIT cohort semantics; characterize the 4,234 no-board rows, especially 2006 and 2011.
+
+These checks are proposed and await user approval. Do not implement them or move to prediction-problem design before scope approval and validation. No target, label, model, feature family, or forecast horizon is selected.
+
+During this review, the active ML research memory file was found to contain unresolved Git conflict markers and stale fixed-target/OHLC-feature instructions. It has been replaced with a clean current specification; superseded instructions were removed rather than retained.
