@@ -14,7 +14,7 @@ Last updated: 2026-11-26
 Key findings:
 - 203,403 membership rows; 214 SECIDs; 5,490 panel dates; 5,740 market-calendar sessions.
 - Overall `bar_available` coverage 97.918%; 4,234 PIT rows have no board bar.
-- 1,214 rows marked bar-available have incomplete OHLC and missing adjusted Close. Clarify flag semantics.
+- The OHLC completeness check reports 1,214 incomplete bar-available rows; separate checks each report 1,214 missing panel Close and selected-history Close values. Row-level overlap is not established by the aggregate report. Clarify flag semantics.
 - Panel Close matches selected adjusted SQLite Close on all 197,955 comparable observations.
 - Future endpoint coverage is 99.682% / 99.406% / 98.574% at +1/+5/+20.
 - Pooled returns are heavy-tailed and annual distributions vary; no target or model is selected.
