@@ -181,3 +181,39 @@ Binding constraint clarified:
 The prior discussion identified Statistical Learning under Uncertainty as a broader methodological direction: weak signals, dependence between observations, uncertainty, and unstable/nonstationary distributions. A possible next research question is temporal dependence in the return-generating process (autocovariance/autocorrelation, partial dependence, estimation uncertainty, lag selection, and nonstationarity). This remains a proposal, not an approved feature family or experiment.
 
 The next conversation must teach and scope the statistical question before selecting features or coding. No implementation or experiment was run for the withdrawn OHLC proposal.
+
+
+## 2026-11-25 | Research workflow and context architecture approved
+
+The user approved a mandatory stage-by-stage Data Science research workflow.
+
+### Binding workflow
+
+For every stage:
+1. Research Agent proposes a plan.
+2. User approves the plan.
+3. Research Agent implements the approved scope in GitHub.
+4. Compact, decision-relevant outputs required for analysis are saved under the appropriate `docs/` path. Do not upload thousands of CSV rows or bulky raw/intermediate data; prefer concise Markdown summaries, tables, aggregates, and diagnostics.
+5. Research Agent analyzes the evidence and reports findings.
+6. Necessary tests and checks are proposed and agreed with the user.
+7. Agreed checks are implemented/run, and both code and actual results are reported with execution provenance.
+8. Stage status is decided; the next stage is proposed using the previous stage's evidence and decisions, then approved before implementation.
+
+At the end of the full research cycle, deliver a consolidated account of findings, supported/rejected/unresolved hypotheses, limitations, completed checks, reusable knowledge, and the next research plan.
+
+### Context file architecture
+
+The Research Agent context is separated into:
+- `01_ROLE_AND_RULES.md`: role, boundaries, permissions, hard methodological rules.
+- `RESEARCH_WORKFLOW.md`: mandatory stage protocol.
+- `00_CUMULATIVE_KNOWLEDGE.md`: concise reusable knowledge across completed research cycles.
+- `RESEARCH_JOURNAL.md`: chronological decisions, corrections, and stage events.
+- Project-specific files such as `06_ML_DIRECTION_FEATURE_RESEARCH.md`: active project specifications and detailed stage context.
+- `README.md`: navigation and source-of-truth index.
+- `CHANGELOG.md`: concise context maintenance history.
+
+Avoid duplication; maintain canonical placement and update the index when the structure changes.
+
+### Implementation boundary
+
+The protocol does not authorize unapproved scope changes. Plan approval authorizes only the implementation explicitly described in that plan. Runtime checks must not be reported as passed without actual execution output. GitHub inspection is not execution.
