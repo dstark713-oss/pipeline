@@ -217,6 +217,7 @@ README:
 - scripts/experiments/eda2/04_cross_sectional_dispersion.py
 - initial commit: 1b8ac27a9fe82fd9265ada382673cb033e4ca27d
 - correction to report formatting and period summary: c28cf18d65a84be1ce2c551e1d1445e550a642c1
+- preserve empty panel-date rows for rolling windows and exact row lags: 73a4fe30c6be97990db9b88c2f5619eb14491c6b
 
 README обновлён:
 - scripts/experiments/eda2/README.md
