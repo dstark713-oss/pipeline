@@ -156,7 +156,7 @@ Core logic:
 Last user-provided panel shape:
 - 203,053 rows × 19 columns
 - Dates: 2005-01-11 through 2026-11-20
-- Columns: tradedate, ranking_asof_date, secid, value_60d, rank, universe_size, selection_method, volume, value, n_boards, boards, numtrades, adjusted_open, adjusted_high, adjusted_low, adjusted_close, price_board, adjustment_status, bar_available.
+- Known panel fields: tradedate, ranking_asof_date, secid, value_60d, rank, universe_size, selection_method, volume, value, n_boards, boards, adjusted_open, adjusted_high, adjusted_low, adjusted_close, price_board, adjustment_status, bar_available. The current EDA data contract does not include `numtrades`; do not assume a Number of Trades variable is available.
 
 ## Data flow
 
