@@ -175,6 +175,7 @@ def summarize(
     block: int,
     reps: int,
     rng: np.random.Generator,
+    common_mask: np.ndarray | None = None,
 ) -> dict:
     frame = pd.concat(
         [asset_fwd.rename("asset"), lqdt_fwd.rename("lqdt"), breadth.rename("breadth")],
@@ -183,6 +184,8 @@ def summarize(
     excess = (frame["asset"] - frame["lqdt"]).to_numpy(dtype=float)
     low = (frame["breadth"].to_numpy(dtype=float) <= threshold)
     valid = low & np.isfinite(excess)
+    if common_mask is not None:
+        valid &= common_mask
     selected = excess[valid]
     labels, n_episodes = episode_labels(low & np.isfinite(frame["breadth"].to_numpy(dtype=float)))
     selected_labels = labels[valid]
@@ -248,26 +251,36 @@ def main():
 
     for horizon in HORIZONS:
         lqdt_fwd = forward_return(lqdt_daily, horizon)
-        for asset in ("T", "GCHE", "EW_TOP50"):
-            if asset not in daily:
-                continue
-            asset_fwd = forward_return(daily[asset], horizon)
-            for threshold in THRESHOLDS:
-                result = summarize(
-                    asset_fwd, lqdt_fwd, breadth, threshold,
-                    args.hac_lag, args.block_length, args.bootstrap_reps, rng,
-                )
-                rows.append({"asset": asset, "horizon": horizon, "threshold": threshold, **result})
-                if threshold == 0.10:
-                    report.append(
-                        f"{asset} H{horizon} | n={result['n']} episodes={result['episodes']} "
-                        f"mean={pct(result['mean_excess'])} median={pct(result['median_excess'])} "
-                        f"positive={result['positive_share']:.1%} "
-                        f"HAC95=[{pct(result['hac95_low'])}, {pct(result['hac95_high'])}] "
-                        f"block95=[{pct(result['block95_low'])}, {pct(result['block95_high'])}] "
-                        f"largest_episode_n={result['largest_episode_n']} "
-                        f"mean_ex_largest={pct(result['mean_ex_ex_largest'])}"
+        asset_fwds = {
+            asset: forward_return(daily[asset], horizon)
+            for asset in ("T", "GCHE", "EW_TOP50") if asset in daily
+        }
+        # Common dates make cross-asset comparisons fair: every asset and LQDT
+        # must have a complete forward window on the exact same signal date.
+        common_frame = pd.concat([lqdt_fwd.rename("LQDT")] + [s.rename(k) for k, s in asset_fwds.items()], axis=1)
+        common_dates = common_frame.notna().all(axis=1).to_numpy()
+        for asset, asset_fwd in asset_fwds.items():
+            for sample_type, common_mask in (("asset_specific", None), ("common_dates", common_dates)):
+                for threshold in THRESHOLDS:
+                    result = summarize(
+                        asset_fwd, lqdt_fwd, breadth, threshold,
+                        args.hac_lag, args.block_length, args.bootstrap_reps, rng,
+                        common_mask=common_mask,
                     )
+                    rows.append({
+                        "asset": asset, "horizon": horizon, "threshold": threshold,
+                        "sample_type": sample_type, **result,
+                    })
+                    if threshold == 0.10:
+                        report.append(
+                            f"{asset} H{horizon} [{sample_type}] | n={result['n']} episodes={result['episodes']} "
+                            f"mean={pct(result['mean_excess'])} median={pct(result['median_excess'])} "
+                            f"positive={result['positive_share']:.1%} "
+                            f"HAC95=[{pct(result['hac95_low'])}, {pct(result['hac95_high'])}] "
+                            f"block95=[{pct(result['block95_low'])}, {pct(result['block95_high'])}] "
+                            f"largest_episode_n={result['largest_episode_n']} "
+                            f"mean_ex_largest={pct(result['mean_ex_ex_largest'])}"
+                        )
 
     result_df = pd.DataFrame(rows)
     OUT.mkdir(parents=True, exist_ok=True)
