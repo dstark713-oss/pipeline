@@ -49,6 +49,7 @@ Generated under `docs/research/eda/`:
 - `instrument_coverage_summary.csv`
 - `temporal_by_year.csv`
 - `consistency_checks.csv`
+- `consistency_categories.csv`
 - `future_price_summary.csv`
 - `future_price_by_year.csv`
 - `future_price_by_secid.csv`
