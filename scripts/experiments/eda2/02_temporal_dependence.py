@@ -107,19 +107,24 @@ def series_variants(values: np.ndarray) -> dict[str, np.ndarray]:
 
 
 def pairwise_lag_correlation(values: np.ndarray, lag: int, min_pairs: int) -> tuple[float, int]:
-    """Pearson correlation of valid observations exactly lag panel rows apart."""
+    """Sample ACF: global centering/variance, pairwise-valid lag covariance."""
     x = np.asarray(values, dtype=np.float64)
-    if lag <= 0 or len(x) <= lag:
+    finite = np.isfinite(x)
+    if lag <= 0 or len(x) <= lag or finite.sum() < min_pairs:
+        return np.nan, 0
+    mean = float(np.mean(x[finite]))
+    denominator = float(np.sum(np.square(x[finite] - mean)))
+    if denominator <= 0:
         return np.nan, 0
     left, right = x[:-lag], x[lag:]
     valid = np.isfinite(left) & np.isfinite(right)
     n = int(valid.sum())
     if n < min_pairs:
         return np.nan, n
-    a, b = left[valid], right[valid]
-    if np.std(a) == 0 or np.std(b) == 0:
-        return np.nan, n
-    return float(np.corrcoef(a, b)[0, 1]), n
+    covariance_numerator = float(
+        np.sum((left[valid] - mean) * (right[valid] - mean))
+    )
+    return covariance_numerator / denominator, n
 
 
 def longest_finite_run(values: np.ndarray) -> np.ndarray:
@@ -347,7 +352,7 @@ def write_report(
     lines.extend([
         "",
         "## Методологические ограничения",
-        "- ACF по полной выборке оценивается как корреляция пар валидных наблюдений, разделённых ровно lag строками панели; пропущенные значения не заполняются.",
+        "- ACF по полной выборке использует общее среднее и знаменатель дисперсии валидного ряда, а в числителе — только валидные пары, разделённые ровно lag строками панели; пропуски не заполняются.",
         "- Ljung–Box рассчитывается отдельно на самом длинном непрерывном валидном участке. Поэтому тест может охватывать только часть доступной истории бумаги.",
         "- Стандартная асимптотическая калибровка Ljung–Box применяется к непрерывному участку; результаты не переносятся автоматически на всю разреженную историю бумаги.",
         "- BH-коррекция выполняется отдельно для каждого сочетания ряда и максимального лага по протестированным бумагам.",
@@ -408,7 +413,7 @@ def main() -> None:
         "method_notes": [
             "Returns are computed only between adjacent panel sessions with valid endpoints.",
             "No forward-fill, zero imputation, or bridging over missing sessions.",
-            "Full-sample ACF is pairwise correlation at exact panel-row lags with at least 60 valid pairs.",
+            "Full-sample ACF uses the global valid-series mean and variance with a pairwise-valid lag covariance numerator; at least 60 lag pairs are required.",
             "Ljung-Box is evaluated only on each security-series' longest uninterrupted valid run.",
             "Ljung-Box p-values use the chi-square approximation with degrees of freedom equal to the tested maximum lag.",
             "BH correction is applied separately for each series and maximum lag across tested securities.",
