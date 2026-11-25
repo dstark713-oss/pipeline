@@ -170,7 +170,7 @@ def main():
     ew = pd.DataFrame(ew_rows, columns=["date", "ew_ret", "ew_n"]).set_index("date").sort_index()
     market_ret = ew.ew_ret.reindex(dates)
 
-    lqdt = load_lqdt(args.lqdt_csv)
+    lqdt = load_lqdt(args.lqdt_csv).reindex(dates)
     OUT.mkdir(parents=True, exist_ok=True)
     lines = []
     lines.append(f"Snapshot: {dates.max().date()} | breadth: {breadth.loc[dates.max(), 'breadth']:.1%}")
