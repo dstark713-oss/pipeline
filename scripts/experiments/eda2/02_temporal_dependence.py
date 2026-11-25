@@ -23,6 +23,7 @@ PERIODS = (
     ("2020_2026", "2020-01-01", "2026-12-31"),
 )
 MIN_CONTIGUOUS_OBS = 250
+MIN_ACF_PAIRS = 60
 
 
 def parse_args() -> argparse.Namespace:
@@ -105,7 +106,7 @@ def series_variants(values: np.ndarray) -> dict[str, np.ndarray]:
     return {"returns": x, "absolute_returns": absolute, "squared_returns": squared}
 
 
-def pairwise_lag_correlation(values: np.ndarray, lag: int) -> tuple[float, int]:
+def pairwise_lag_correlation(values: np.ndarray, lag: int, min_pairs: int) -> tuple[float, int]:
     """Pearson correlation of valid observations exactly lag panel rows apart."""
     x = np.asarray(values, dtype=np.float64)
     if lag <= 0 or len(x) <= lag:
@@ -113,7 +114,7 @@ def pairwise_lag_correlation(values: np.ndarray, lag: int) -> tuple[float, int]:
     left, right = x[:-lag], x[lag:]
     valid = np.isfinite(left) & np.isfinite(right)
     n = int(valid.sum())
-    if n < 3:
+    if n < min_pairs:
         return np.nan, n
     a, b = left[valid], right[valid]
     if np.std(a) == 0 or np.std(b) == 0:
@@ -188,7 +189,7 @@ def calculate_acf(
             variants = series_variants(sample[secid].to_numpy(dtype=np.float64))
             for metric, values in variants.items():
                 for lag in LAGS:
-                    rho, n_pairs = pairwise_lag_correlation(values, lag)
+                    rho, n_pairs = pairwise_lag_correlation(values, lag, MIN_ACF_PAIRS)
                     acf_rows.append({
                         "period": period_name,
                         "secid": secid,
@@ -394,6 +395,7 @@ def main() -> None:
         "block": 2,
         "block_name": "Временная зависимость",
         "acf_lags": list(LAGS),
+        "min_valid_lag_pairs_for_acf": MIN_ACF_PAIRS,
         "ljung_box_max_lags": list(LJUNG_BOX_LAGS),
         "min_contiguous_obs_for_ljung_box": args.min_contiguous_obs,
         "periods": [
@@ -406,7 +408,7 @@ def main() -> None:
         "method_notes": [
             "Returns are computed only between adjacent panel sessions with valid endpoints.",
             "No forward-fill, zero imputation, or bridging over missing sessions.",
-            "Full-sample ACF is pairwise correlation at exact panel-row lags.",
+            "Full-sample ACF is pairwise correlation at exact panel-row lags with at least 60 valid pairs.",
             "Ljung-Box is evaluated only on each security-series' longest uninterrupted valid run.",
             "Ljung-Box p-values use the chi-square approximation with degrees of freedom equal to the tested maximum lag.",
             "BH correction is applied separately for each series and maximum lag across tested securities.",
