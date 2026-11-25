@@ -28,6 +28,9 @@
 - Среднее индивидуальных MAD: 0.01572263
 - Среднее индивидуальных эксцессов: 15.751484
 
+## Неоднородность между бумагами
+Распределения индивидуальных статистик по бумагам сохранены в security_heterogeneity_summary.csv. Таблица показывает квантили и диапазоны межбумажного разброса, а не только средние значения.
+
 ## Годовая динамика
 Полная таблица pooled-оценок и средних индивидуальных оценок находится в yearly_distribution_summary.csv.
 - Годовых срезов: 22
@@ -47,6 +50,7 @@
 
 ## Файлы
 - overall_distribution_summary.csv
+- security_heterogeneity_summary.csv
 - yearly_distribution_summary.csv
 - cross_sectional_time_summary.csv
 - EDA2_BLOCK_01_REPORT.md
