@@ -1,0 +1,6 @@
+{
+  "period": "full_sample",
+  "spectral_status": "insufficient_complete_correlation_universe",
+  "complete_tickers": 0,
+  "interpretation": "No spectral result. Strict complete-correlation subset criterion excluded all tickers because at least one pair per ticker lacked an estimable correlation. This is a limitation of the current spectral procedure, not evidence that common dependence is absent."
+}
