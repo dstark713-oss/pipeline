@@ -91,7 +91,7 @@ These are descriptive flags only. No observation is automatically corrected or r
 
 ## 4. Future adjusted-close behavior
 
-For each PIT TOP50 observation with a valid current bar, compare adjusted Close at t with adjusted Close at t+h, where h is a number of market-calendar sessions. Missing endpoints remain unavailable; sessions are not bridged. Both absolute price change and scale-relative returns are reported.
+For each PIT TOP50 observation with a valid current bar, compare adjusted Close at t with the observed adjusted Close at the exact t+h market-calendar endpoint. Missing endpoints remain unavailable; intermediate missing bars are not interpolated. Both absolute price change and scale-relative returns are reported.
 
 {_markdown_table(future_summary)}
 
