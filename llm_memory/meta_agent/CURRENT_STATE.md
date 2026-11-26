@@ -57,3 +57,17 @@ The Research Agent owns the active EDA/research stage and its next-step decision
 During the architecture review, the Research Agent's `README.md`, `05_NEXT_STEPS.md`, and `06_ML_DIRECTION_FEATURE_RESEARCH.md` still described EDA v2 as awaiting approval / implementation, while the repository contains committed EDA2 block 5 artifacts. This is a stale status conflict, not a reason for Meta-Agent to infer the next research stage.
 
 Ownership: Quant Research / Research Agent (Qwen-led, GPT critique). Meta-Agent must route this discrepancy to the research owner and verify that the owner synchronizes its context. Do not edit research methods, reports, calculations, or next-stage decisions from this role.
+
+
+## Conversational agent pilot (user-approved, 2026-11-26)
+
+Three role instruction sets are now present under `llm_memory/agents/`:
+- Aggressive Trading — Qwen.
+- Conservative Investment — ChatGPT.
+- Sizing — ChatGPT.
+
+Operating mode is deliberately manual: the user is the orchestrator and transfers context and outputs between ordinary conversations. No API integration, autonomous orchestration, or paid runtime is authorized or required for this pilot. The goal is to establish usefulness before automation.
+
+All agents use CONTEXT → HYPOTHESIS → CHECK → CONCLUSION. CHECK contains separate deterministic Python confirmation and falsification stages; the conclusion interprets both. The objective is positive EV across the aggregate of decisions over a long horizon, robust to non-stationarity. No benchmark outperformance mandate. IC is diagnostic, not a universal pass/fail threshold; IC below 0.5 is not automatic rejection. ML is supplementary information for Sizing only under the current policy, not a required dependency or signal source.
+
+These are operating instructions only. No agent runtime, Risk Engine, or automated controls are claimed to exist.
