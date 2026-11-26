@@ -139,3 +139,6 @@ Commits:
 - User explicitly authorized zero weights for candidates that do not merit capital; the reported ten names are not a mandatory buy list.
 - Fixed capital mandate remains 50% Aggressive / 50% Conservative. Cash is permitted inside either sleeve. No cross-sleeve transfer.
 - No live positions or orders changed.
+
+- Final audit clarification: HAC inference is on the date-level equal-weight mean of overlapping h-session cohort forward returns (zero on dates with no eligible cohort), not a marked-to-market daily portfolio return stream. This avoids overstating what the cohort test estimates.
+- Final script clarification commit: `09fbbece29e592118829ff524d1d8cd860a39688`.
