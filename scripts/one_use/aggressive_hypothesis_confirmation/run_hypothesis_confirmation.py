@@ -177,6 +177,32 @@ def benjamini_hochberg(p_values):
     return q
 
 
+def h4_volatility_contrast(panel, future):
+    merged = panel[[
+        "tradedate", "secid", "H4_low_vol_high_rs", "H4_high_vol_high_rs"
+    ]].merge(
+        future[["tradedate", "secid", "horizon", "forward_rs"]],
+        on=["tradedate", "secid"], how="left", validate="one_to_many"
+    )
+    rows = []
+    for horizon, data in merged.groupby("horizon"):
+        for date, day in data.groupby("tradedate"):
+            low = day.loc[day.H4_low_vol_high_rs, "forward_rs"].dropna()
+            high = day.loc[day.H4_high_vol_high_rs, "forward_rs"].dropna()
+            if len(low) < 2 or len(high) < 2:
+                continue
+            rows.append({
+                "hypothesis": "H4_low_vol_minus_high_vol_within_high_rs",
+                "horizon": int(horizon), "tradedate": date,
+                "signal_n": len(low), "control_n": len(high),
+                "signal_mean_forward_rs": low.mean(),
+                "control_mean_forward_rs": high.mean(),
+                "daily_mean_difference": low.mean() - high.mean(),
+                "signal_hit_rate": (low > 0).mean(),
+            })
+    return pd.DataFrame(rows)
+
+
 def summarize(spreads):
     rows = []
     for (hypothesis, horizon), g in spreads.groupby(["hypothesis", "horizon"]):
@@ -283,7 +309,7 @@ def write_report(path, panel, summary, stability, impulse, h4):
         "1. **H1 impulse concentration:** positive 5-session return in the top cross-sectional quintile.",
         "2. **H2 relative-strength persistence:** positive 20-session RS in the top cross-sectional quintile.",
         "3. **H3 aligned momentum:** positive absolute returns over both 5 and 20 sessions.",
-        "4. **H4 volatility explanation:** positive 5-session RS in the top cross-sectional quintile; inspect its association with 20-session realized volatility.",
+        "4. **H4 volatility explanation:** positive 5-session RS in the top cross-sectional quintile; inspect its association with 20-session realized volatility and compare forward RS of low-volatility versus high-volatility members within that high-RS group.",
         "5. **H5 persistent weakness:** negative 5-session and 20-session RS, both in the bottom cross-sectional quintile.",
         "", "## Main results", "",
         "| Hypothesis | Horizon | Mean daily spread | NW 95% CI | Block-bootstrap 95% CI | NW t | BH q | Dates | Hit rate |",
@@ -372,6 +398,7 @@ def main():
     print("Calculating date-level signal/control comparisons...")
     flags = ["H1_impulse", "H2_high_rs20", "H3_aligned_positive", "H4_high_rs5", "H5_persistent_weakness"]
     frames = [daily_spreads(panel, future, flag) for flag in flags]
+    frames.append(h4_volatility_contrast(panel, future))
     spreads = pd.concat([x for x in frames if not x.empty], ignore_index=True)
     if spreads.empty:
         raise RuntimeError("No valid comparisons. Check the PIT universe and forward-data coverage.")
