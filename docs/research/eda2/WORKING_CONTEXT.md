@@ -265,11 +265,11 @@ Outputs: machine в data/interim/eda2/block_05/, агрегаты и отчёт 
 
 Код опубликован:
 - `scripts/experiments/eda2/06_membership_rank_mobility.py`
-- commit: `6cc97c4f5602c836d9b2951b1ea8a3096ad52045`
+- initial commit: `6cc97c4f5602c836d9b2951b1ea8a3096ad52045`\n- calendar/baseline correction: `19f3a03654cc5f3e82cd1dfaacfe5945ef761a47`
 
 Источники:
 - PIT membership и готовый rank: `data/processed/top50/top50_membership.parquet`.
-- Полный календарь торговых сессий, включая даты с нулевым universe: `data/interim/top50_build/daily_summary.csv`.
+- Полный календарь торговых сессий от начала панели, включая начальные даты с нулевым universe: `data/interim/top50_build/daily_summary.csv`. Первая непустая выборка universe используется как baseline для turnover, а не записывается как дневные входы.
 - Скрипт не перестраивает TOP50 и не пересчитывает rank. Используется исторический rank из membership.
 
 Согласованные параметры:
