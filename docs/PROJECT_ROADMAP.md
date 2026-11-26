@@ -27,9 +27,9 @@ The root README and project documentation define the current repository scope. L
 | Data and research foundation | Reproducible, point-in-time datasets and validated analytical capabilities | Partially implemented; MOEX research foundation exists |
 | Quant Research workflow | Qwen-led exploration plus independent GPT critique and evidence-backed handoff | Research workflow/context exists; multi-model operating protocol not yet implemented as a system |
 | Signal LLM | BUY / SELL / NO SIGNAL from approved evidence | Not implemented as a formal component |
-| Aggressive Trading profile | Higher-opportunity application of approved evidence | Role defined; runtime not implemented |
-| Conservative Investment profile | Strict evidence/stability selection profile | Role defined; runtime not implemented |
-| Sizing LLM | Allocation proposal under approved Risk Profile | Not implemented as a formal component |
+| Aggressive Trading profile | Higher-opportunity application of approved evidence | Conversational pilot instructions created; no runtime or API |
+| Conservative Investment profile | Strict evidence/stability selection profile | Conversational pilot instructions created; no runtime or API |
+| Sizing LLM | Allocation proposal under approved Risk Profile | Conversational pilot instructions created; no runtime or API; hard validation engine not implemented |
 | Python Risk Engine | Deterministic calculation and hard-constraint validation | Not implemented as a formal component |
 | Meta-Agent | Repository, agent, configuration, research-request and lifecycle governance | Role defined; dedicated memory is being established; runtime not implemented |
 | Agent interfaces and audit trail | Typed inputs/outputs, provenance, logs and versioned contracts | Not implemented as a complete system |
@@ -118,3 +118,14 @@ Every phase must satisfy:
 ## 6. Roadmap maintenance
 
 The Meta-Agent owns this roadmap. Update it when a capability is implemented, validated, promoted, blocked, or explicitly descoped. Every status change must link to repository evidence or a user decision. Do not mark a component complete merely because its role has been described.
+
+
+## 7. Manual agent pilot (current operating mode)
+
+The user is the orchestrator. Aggressive Trading (Qwen), Conservative Investment (ChatGPT), and Sizing (ChatGPT) operate through ordinary conversations. The user supplies context and manually transfers handoffs. Do not build API integration or autonomous orchestration before the pilot demonstrates value.
+
+All three agents follow **CONTEXT → HYPOTHESIS → CHECK → CONCLUSION**. CHECK requires separate deterministic Python confirmation and falsification stages, followed by a conclusion interpreting both. Proposed Python is not treated as executed Python.
+
+The objective is positive EV across the aggregate of decisions, robust over a long horizon under non-stationarity. There is no benchmark-outperformance mandate. IC is diagnostic, not a universal threshold; IC below 0.5 does not automatically invalidate a hypothesis. ML is not required; under the current policy, future ML outputs are supplementary information for Sizing only.
+
+The pilot instructions are in `llm_memory/agents/`. Their existence does not mean agent runtime, Python Risk Engine, or production controls have been implemented.
