@@ -163,6 +163,7 @@ def latest_risk_snapshot(panel, dates, close, signals):
     reconstructed = set(current.loc[current.long, "secid"])
     names = sorted(set(REPORTED_LONG) | reconstructed)
     returns = close.pct_change(fill_method=None)
+    value_panel = panel.pivot(index="tradedate", columns="secid", values="value").reindex(dates)
     rows = []
     current_rows = panel.loc[panel.tradedate.eq(latest)].set_index("secid")
     for ticker in names:
@@ -170,14 +171,15 @@ def latest_risk_snapshot(panel, dates, close, signals):
             rows.append({"ticker": ticker, "in_reported_list": ticker in REPORTED_LONG,
                          "reconstructed_long": ticker in reconstructed, "current_bar": False})
             continue
-        r = returns[ticker].dropna()
-        v20 = r.tail(20).std(ddof=1) * np.sqrt(252) if len(r.tail(20)) >= 15 else np.nan
-        v60 = r.tail(60).std(ddof=1) * np.sqrt(252) if len(r.tail(60)) >= 45 else np.nan
+        r20 = returns[ticker].tail(20).dropna()
+        r60 = returns[ticker].tail(60).dropna()
+        v20 = r20.std(ddof=1) * np.sqrt(252) if len(r20) >= 15 else np.nan
+        v60 = r60.std(ddof=1) * np.sqrt(252) if len(r60) >= 45 else np.nan
         val = pd.to_numeric(current_rows.loc[ticker, "value"], errors="coerce")
-        hist_value = pd.to_numeric(panel.loc[(panel.secid.eq(ticker)) & (panel.tradedate.le(latest)), "value"], errors="coerce").tail(20)
+        hist_value = pd.to_numeric(value_panel[ticker].tail(20), errors="coerce").dropna()
         rows.append({"ticker": ticker, "in_reported_list": ticker in REPORTED_LONG,
                      "reconstructed_long": ticker in reconstructed, "current_bar": bool(current_rows.loc[ticker, "bar_available"] == 1),
-                     "current_value": val, "median_value_20d": hist_value.median(),
+                     "current_value": val, "median_value_last20sessions": hist_value.median(),
                      "vol20_ann": v20, "vol60_ann": v60,
                      "return20_abs": close[ticker].iloc[-1] / close[ticker].iloc[-21] - 1
                      if len(close[ticker].dropna()) >= 21 and close[ticker].iloc[-21] > 0 else np.nan})
