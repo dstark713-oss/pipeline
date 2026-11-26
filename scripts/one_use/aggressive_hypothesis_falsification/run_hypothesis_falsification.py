@@ -261,11 +261,12 @@ def h1_daily_spreads(metrics, future):
 def h2_conditional_tests(panel, future):
     # RS20 and absolute return20 are not separately identifiable cross-sectionally:
     # RS20 = return20 - same-date benchmark20, so their within-date ranks are identical.
-    # Therefore the incremental test controls RS5 and absolute return5, but does
-    # not include return20 alongside RS20 (perfect date-level collinearity).
+    # RS5 and absolute return5 are also date-level collinear, so RS5 is the
+    # equivalent control for absolute 5D performance. Add realized volatility
+    # as a non-collinear control; do not put both RS5 and return5 in one model.
     x = panel[[
         "tradedate", "secid", "rs5_quintile", "rs20_top",
-        "rs_20d", "rs_5d", "return_5d",
+        "rs_20d", "rs_5d", "realized_vol_20d_ann",
     ]].merge(
         future[["tradedate", "secid", "horizon", "forward_rs"]],
         on=["tradedate", "secid"], how="left", validate="one_to_many"
@@ -311,7 +312,7 @@ def h2_conditional_tests(panel, future):
             "module": "F1_H2_RS20_conditional_regression",
             "horizon": int(h), "tradedate": date,
             "n": int(valid.sum()), "beta_rs20": beta[1],
-            "beta_rs5": beta[2], "beta_return5": beta[3],
+            "beta_rs5": beta[2], "beta_vol20": beta[3],
         })
     return pd.DataFrame(contrasts), pd.DataFrame(regressions)
 
@@ -476,10 +477,10 @@ def write_report(path, panel, future, f1, f1_reg, f1_reg_summary, f2, f2_interac
         "- Daily date-level spreads retain the full cross-section before time-series inference; date-block resampling therefore preserves within-date cross-sectional dependence.",
         "- No strategy return, BUY/SELL instruction, or position sizing is produced.",
         "", "## Important identification note", "",
-        "- RS20 equals absolute return20 minus the same-date benchmark return20. Within a date, these differ only by a constant; their cross-sectional ranks are identical and their coefficients cannot be separately identified with date effects.",
-        "- Therefore F1 tests RS20 incremental to RS5 and absolute return5. It does not pretend to estimate a separate RS20 effect after controlling for absolute return20, which is mathematically collinear.",
+        "- RS20 equals absolute return20 minus the same-date benchmark return20, and RS5 equals absolute return5 minus the same-date benchmark return5. Each pair is therefore perfectly collinear within a date. RS5 is the equivalent cross-sectional control for absolute return5; realized volatility20 is added as a separate non-collinear control.",
+        "- Therefore F1 tests RS20 incremental to RS5 and realized volatility20. It does not include absolute return5 beside RS5 or absolute return20 beside RS20, because those pairs are mathematically collinear within each date.",
         "", "## F1: Does RS20 add information beyond RS5?", "",
-        "Two complementary tests: (a) within each RS5 quintile, compare top-quintile RS20 names with the remaining names in that same RS5 stratum; (b) date-wise cross-sectional regressions of forward RS on standardized RS20, RS5, and absolute return5. The coefficient series is then tested through time.",
+        "Two complementary tests: (a) within each RS5 quintile, compare top-quintile RS20 names with the remaining names in that same RS5 stratum; (b) date-wise cross-sectional regressions of forward RS on standardized RS20, RS5, and realized volatility20. The coefficient series is then tested through time.",
         "", "## F2: Does 5D/20D alignment add information?", "",
         "Report forward relative returns for all four sign quadrants and estimate a date-wise continuous interaction model: forward RS ~ standardized return5 + standardized return20 + their interaction. Alignment is not credited merely because the positive-both group beats the universe; its incremental interaction must also be considered.",
         "", "## F3: Is persistent weakness more than a one-horizon effect?", "",
@@ -630,7 +631,7 @@ def main():
     f3_summary = summarize_spreads(f3, ["module", "contrast", "horizon"], signal_calendar) if len(f3) else pd.DataFrame()
     f4_summary = summarize_spreads(f4, ["module", "horizon"], signal_calendar) if len(f4) else pd.DataFrame()
     f1_reg_summary = summarize_date_series(
-        f1_reg, ["beta_rs20", "beta_rs5", "beta_return5"], ["module", "horizon"], signal_calendar
+        f1_reg, ["beta_rs20", "beta_rs5", "beta_vol20"], ["module", "horizon"], signal_calendar
     ) if len(f1_reg) else pd.DataFrame()
     f2_int_summary = summarize_date_series(
         f2_interaction, ["beta_return5", "beta_return20", "beta_interaction"], ["horizon"], signal_calendar
