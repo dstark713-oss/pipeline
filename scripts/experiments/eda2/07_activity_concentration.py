@@ -230,6 +230,7 @@ def conditional_summary(panel: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame
             data.dropna(subset=[group_column]), ["period", group_column], "return"
         )
         if not summary.empty:
+            summary = summary.rename(columns={group_column: "group"})
             summary.insert(0, "conditioning_axis", f"daily_{activity}")
             rows.append(summary)
     # Structural PIT rank groups. value_60d is the ranking basis, not an independent axis.
@@ -239,6 +240,7 @@ def conditional_summary(panel: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame
     ).astype("object")
     rank_summary = distribution_summary(data, ["period", "rank_group"], "return")
     if not rank_summary.empty:
+        rank_summary = rank_summary.rename(columns={"rank_group": "group"})
         rank_summary.insert(0, "conditioning_axis", "pit_rank_value60d")
         rows.append(rank_summary)
     all_summary = pd.concat(rows, ignore_index=True) if rows else pd.DataFrame()
@@ -301,7 +303,7 @@ def write_report(path: Path, meta: dict, pooled: pd.DataFrame,
     ]
     for r in conditional.itertuples(index=False):
         lines.append(
-            f"| {r.conditioning_axis} | {r.period} | {r.group_column}={r.group} | "
+            f"| {r.conditioning_axis} | {r.period} | {r.group} | "
             f"{r.observations:,} | {r.mean:.4%} | {r.median:.4%} | {r.std:.4%} | "
             f"{r.mad:.4%} | {r.q05:.4%} | {r.q95:.4%} |"
         )
