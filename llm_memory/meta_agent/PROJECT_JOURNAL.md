@@ -70,3 +70,8 @@ The Meta-Agent monitors research scope, process, provenance, reproducibility, va
 4. Review model preferences only when comparable evidence exists.
 5. Receive current portfolio state before any numerical sizing proposal.
 6. Review Investment Agent work against the sector-first process and update instructions only when needed.
+
+
+### Open process discrepancy found during source review
+
+The committed EDA2 block 5 report exists under `docs/research/eda2/results/block_05/`, but `docs/research/eda2/WORKING_CONTEXT.md` still says the local run is pending and that the user should run/publish the outputs. The report's provenance and the working-context status need to be reconciled by the Research Agent. Meta-Agent does not infer a runtime execution claim beyond the committed report and does not rewrite the research interpretation.

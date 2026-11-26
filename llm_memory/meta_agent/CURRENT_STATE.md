@@ -15,7 +15,7 @@ Last updated: 2026-11-27
 - Research Agent memory and staged research workflow exist under `llm_memory/research_agent/`.
 - EDA2 result folders are committed through block 5.
 - Block 5 report: 5,490 panel dates, 214 securities and 196,663 return observations; rolling scale distributions and cross-period relative-scale stability are described. The report explicitly makes no GARCH, forecasting, ML, IC, feature-selection or trading claims.
-- The Research Agent's own journal is the source for chronological scientific decisions. Its latest committed entry predates some current EDA2 results; do not infer missing scientific status from project-level memory.
+- The Research Agent's own journal and EDA2 working context are the sources for chronological scientific decisions. A status discrepancy remains: block 5 report artifacts are committed, while EDA2 WORKING_CONTEXT still says local execution is pending. Research Agent must reconcile provenance/status; Meta-Agent does not infer runtime execution from file presence alone.
 - The user's `daily_report.txt` is user-owned and must remain unmodified.
 
 ## Architecture decision — 2026-11-27
