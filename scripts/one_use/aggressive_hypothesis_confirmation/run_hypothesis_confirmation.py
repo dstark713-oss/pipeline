@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import math
 import sys
 from pathlib import Path
 
@@ -81,6 +82,8 @@ def add_flags(snapshot):
     p["H2_high_rs20"] = (p.q_rs_20d >= 0.80) & (p.rs_20d > 0)
     p["H3_aligned_positive"] = (p.return_5d > 0) & (p.return_20d > 0)
     p["H4_high_rs5"] = (p.q_rs_5d >= 0.80) & (p.rs_5d > 0)
+    p["H4_low_vol_high_rs"] = p["H4_high_rs5"] & (p.q_vol_20d <= 1 / 3)
+    p["H4_high_vol_high_rs"] = p["H4_high_rs5"] & (p.q_vol_20d >= 2 / 3)
     p["H5_persistent_weakness"] = (
         (p.q_rs_5d <= 0.20) & (p.q_rs_20d <= 0.20)
         & (p.rs_5d < 0) & (p.rs_20d < 0)
@@ -137,20 +140,66 @@ def daily_spreads(panel, future, flag):
     return pd.DataFrame(records)
 
 
+def block_bootstrap_ci(values, block_length, repetitions=1000, seed=713):
+    x = np.asarray(values, dtype=float)
+    x = x[np.isfinite(x)]
+    n = len(x)
+    if n < max(10, block_length * 2):
+        return np.nan, np.nan
+    rng = np.random.default_rng(seed + block_length + n)
+    estimates = np.empty(repetitions)
+    blocks_needed = int(np.ceil(n / block_length))
+    for i in range(repetitions):
+        starts = rng.integers(0, n, size=blocks_needed)
+        sample = np.concatenate([
+            x[(start + np.arange(block_length)) % n] for start in starts
+        ])[:n]
+        estimates[i] = sample.mean()
+    return tuple(np.quantile(estimates, [0.025, 0.975]))
+
+
+def normal_two_sided_p(t_stat):
+    if not np.isfinite(t_stat):
+        return np.nan
+    return math.erfc(abs(float(t_stat)) / math.sqrt(2.0))
+
+
+def benjamini_hochberg(p_values):
+    p = np.asarray(p_values, dtype=float)
+    q = np.full(len(p), np.nan)
+    valid = np.flatnonzero(np.isfinite(p))
+    if not len(valid):
+        return q
+    order = valid[np.argsort(p[valid])]
+    ranked = p[order] * len(order) / np.arange(1, len(order) + 1)
+    adjusted = np.minimum.accumulate(ranked[::-1])[::-1]
+    q[order] = np.minimum(adjusted, 1.0)
+    return q
+
+
 def summarize(spreads):
     rows = []
     for (hypothesis, horizon), g in spreads.groupby(["hypothesis", "horizon"]):
         mean, se, t = nw_mean(g.daily_mean_difference, NW_LAGS[int(horizon)])
+        boot_low, boot_high = block_bootstrap_ci(
+            g.sort_values("tradedate").daily_mean_difference,
+            block_length=int(horizon),
+        )
         rows.append({
             "hypothesis": hypothesis, "horizon": int(horizon),
             "n_dates": g.tradedate.nunique(),
             "mean_daily_difference": mean, "newey_west_se": se, "newey_west_t": t,
-            "ci95_low": mean - 1.96 * se if np.isfinite(se) else np.nan,
-            "ci95_high": mean + 1.96 * se if np.isfinite(se) else np.nan,
+            "nw_ci95_low": mean - 1.96 * se if np.isfinite(se) else np.nan,
+            "nw_ci95_high": mean + 1.96 * se if np.isfinite(se) else np.nan,
+            "block_bootstrap_ci95_low": boot_low,
+            "block_bootstrap_ci95_high": boot_high,
+            "normal_approx_p": normal_two_sided_p(t),
             "mean_signal_hit_rate": g.signal_hit_rate.mean(),
             "mean_signal_n": g.signal_n.mean(), "mean_control_n": g.control_n.mean(),
         })
-    return pd.DataFrame(rows)
+    result = pd.DataFrame(rows)
+    result["bh_q_value"] = benjamini_hochberg(result["normal_approx_p"].to_numpy())
+    return result
 
 
 def stability_table(spreads):
@@ -237,14 +286,15 @@ def write_report(path, panel, summary, stability, impulse, h4):
         "4. **H4 volatility explanation:** positive 5-session RS in the top cross-sectional quintile; inspect its association with 20-session realized volatility.",
         "5. **H5 persistent weakness:** negative 5-session and 20-session RS, both in the bottom cross-sectional quintile.",
         "", "## Main results", "",
-        "| Hypothesis | Horizon | Mean daily signal-control forward RS | 95% CI | NW t | Dates | Signal hit rate |",
-        "|---|---:|---:|---:|---:|---:|---:|",
+        "| Hypothesis | Horizon | Mean daily spread | NW 95% CI | Block-bootstrap 95% CI | NW t | BH q | Dates | Hit rate |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for r in summary.sort_values(["hypothesis", "horizon"]).itertuples(index=False):
         lines.append(
             f"| {r.hypothesis} | {r.horizon} | {r.mean_daily_difference:.3%} | "
-            f"[{r.ci95_low:.3%}, {r.ci95_high:.3%}] | {r.newey_west_t:.2f} | "
-            f"{r.n_dates:,} | {r.mean_signal_hit_rate:.1%} |"
+            f"[{r.nw_ci95_low:.3%}, {r.nw_ci95_high:.3%}] | "
+            f"[{r.block_bootstrap_ci95_low:.3%}, {r.block_bootstrap_ci95_high:.3%}] | "
+            f"{r.newey_west_t:.2f} | {r.bh_q_value:.3f} | {r.n_dates:,} | {r.mean_signal_hit_rate:.1%} |"
         )
     lines += ["", "## H1 path concentration", ""]
     if len(impulse):
@@ -279,7 +329,8 @@ def write_report(path, panel, summary, stability, impulse, h4):
         "- Newey-West inference addresses serial correlation in date-level spreads, but not every universe, data-quality, or selection issue.",
         "- Forward windows overlap; inference remains approximate.",
         "- H1 and H4 diagnostics are descriptive and do not establish causal mechanisms.",
-        "- No multiple-testing-adjusted p-values are used as a decision gate in this first pass. The five hypotheses and four horizons form a related test family; the next falsification stage must address this.",
+        "- The summary CSV includes a Benjamini-Hochberg q-value across all reported hypothesis/horizon tests. P-values use a normal approximation to the Newey-West t-statistic and are screening diagnostics, not exact finite-sample inference.",
+        "- Block-bootstrap confidence intervals resample circular date blocks with block length equal to the forward horizon; they are an additional robustness interval, not a substitute for the Newey-West interval.",
         "- Review effect size, confidence interval, sample size, and subperiod stability together. Do not treat one p-value as a verdict.",
         "", "## Local machine-readable outputs", "",
         "All CSV files are written to data/interim/aggressive_hypothesis_confirmation/.",
