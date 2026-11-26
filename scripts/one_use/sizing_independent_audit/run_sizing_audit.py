@@ -98,9 +98,18 @@ def evaluate_aggressive(dates, close, signals, cost_bps):
     results = []
     for horizon in HORIZONS:
         future = close.shift(-horizon).div(close).sub(1)
+        # Require every intervening global session bar; endpoints alone can hide gaps.
+        future_complete = close.notna().iloc[::-1].rolling(
+            horizon + 1, min_periods=horizon + 1
+        ).sum().iloc[::-1].eq(horizon + 1)
+        future = future.where(future_complete)
+        future_benchmark = future.mean(axis=1)
+        future_excess = future.sub(future_benchmark, axis=0)
         future_long = future.rename_axis(index="tradedate", columns="secid").stack().rename("fwd_return").reset_index()
+        excess_long = future_excess.rename_axis(index="tradedate", columns="secid").stack().rename("fwd_excess").reset_index()
         day = signals[["tradedate", "secid", "long", "short", "rs_5d", "rs_20d", "return_20d"]]
         z = day.merge(future_long, on=["tradedate", "secid"], how="left", validate="one_to_one")
+        z = z.merge(excess_long, on=["tradedate", "secid"], how="left", validate="one_to_one")
         for side, col in [("LONG", "long"), ("SHORT", "short")]:
             q = z.loc[z[col] & z.fwd_return.notna()].copy()
             if side == "SHORT":
@@ -113,6 +122,7 @@ def evaluate_aggressive(dates, close, signals, cost_bps):
                 "side": side, "horizon": horizon, "signals": len(q),
                 "signal_dates": int(daily.size), "mean_net": q.net_return.mean(),
                 "median_net": q.net_return.median(), "hit_rate_net": (q.net_return > 0).mean(),
+                "mean_excess": q.fwd_excess.mean(),
                 "positive_year_fraction": (years > 0).mean() if len(years) else np.nan,
                 "worst_year_mean": years.min() if len(years) else np.nan,
                 "best_year_mean": years.max() if len(years) else np.nan,
@@ -203,6 +213,7 @@ def main():
         f"Latest snapshot rebuilt from panel: {len(current_long)} Long / {len(current_short)} Short. "
         f"Overlap with reported 26-Nov list: Long {long_overlap}/10; Short {short_overlap}/4.",
         "A low overlap means the committed name packet is not reproducible from this independent reconstruction; inspect benchmark/feature definitions before sizing.",
+        "Long results also report excess return versus the same-date PIT equal-weight cross-section; Short results are evaluated on absolute short P&L. Every intervening session bar is required for forward outcomes.",
         "Historical cohort means are diagnostics, not a fully executable portfolio backtest: signals overlap and no turnover/borrow/slippage model beyond the stated round-trip cost is included.",
         "",
         "## Conservative Investment — falsification",
@@ -235,7 +246,7 @@ def main():
     print(f"PIT look-ahead: PASS | cost={args.cost_bps_rt:.1f} bps RT")
     print("\nAGGRESSIVE: historical cohort falsification (net of stated cost)")
     print(aggressive.to_string(index=False, formatters={
-        "mean_net": fmt_pct, "median_net": fmt_pct, "hit_rate_net": lambda x: f"{x:.1%}",
+        "mean_net": fmt_pct, "median_net": fmt_pct, "mean_excess": fmt_pct, "hit_rate_net": lambda x: f"{x:.1%}",
         "positive_year_fraction": lambda x: f"{x:.1%}",
         "worst_year_mean": fmt_pct, "best_year_mean": fmt_pct,
     }))
