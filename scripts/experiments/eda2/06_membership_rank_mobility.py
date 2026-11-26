@@ -58,9 +58,9 @@ def load_inputs(membership_path, calendar_path):
     calendar["universe_size"] = pd.to_numeric(calendar["universe_size"], errors="coerce")
     calendar = calendar.dropna(subset=["tradedate"]).drop_duplicates("tradedate")
     calendar = calendar.sort_values("tradedate").reset_index(drop=True)
-    calendar = calendar.loc[calendar["tradedate"].between(
-        membership["tradedate"].min(), membership["tradedate"].max()
-    )].copy()
+    calendar = calendar.loc[
+        calendar["tradedate"] <= membership["tradedate"].max()
+    ].copy()
     if calendar.empty:
         raise ValueError("No calendar sessions overlap membership sample.")
 
@@ -139,26 +139,37 @@ def summarize_spells(spells):
 
 def make_composition(membership, calendar):
     members = {d: set(g["secid"]) for d, g in membership.groupby("tradedate")}
-    rows, previous = [], set()
-    for i, row in enumerate(calendar.itertuples(index=False)):
+    rows, previous, baseline_set = [], set(), False
+    for row in calendar.itertuples(index=False):
         date = pd.Timestamp(row.tradedate)
         current = members.get(date, set())
-        retained = previous & current if i else set()
-        entrants = current - previous if i else set()
-        exits = previous - current if i else set()
+        # The first non-empty universe establishes the comparison baseline.
+        # Its initial population is not misclassified as daily turnover.
+        baseline = bool(current) and not baseline_set
+        if baseline:
+            retained, entrants, exits = set(), set(), set()
+            previous_size = 0
+            baseline_set = True
+        else:
+            retained = previous & current
+            entrants = current - previous
+            exits = previous - current
+            previous_size = len(previous)
         union = previous | current
         rows.append({
             "tradedate": date, "universe_size": len(current),
-            "previous_universe_size": len(previous) if i else 0,
+            "previous_universe_size": previous_size,
             "retained_count": len(retained), "entry_count": len(entrants), "exit_count": len(exits),
-            "retention_of_previous": len(retained) / len(previous) if previous else np.nan,
-            "retention_of_current": len(retained) / len(current) if current else np.nan,
-            "jaccard_similarity": len(retained) / len(union) if union else np.nan,
-            "composition_changed": bool(entrants or exits),
+            "retention_of_previous": len(retained) / previous_size if previous_size and not baseline else np.nan,
+            "retention_of_current": len(retained) / len(current) if current and not baseline else np.nan,
+            "jaccard_similarity": len(retained) / len(union) if union and not baseline else np.nan,
+            "composition_changed": bool(entrants or exits) if not baseline else False,
+            "is_initial_baseline": baseline,
             "entry_tickers": ";".join(sorted(entrants)),
             "exit_tickers": ";".join(sorted(exits)),
         })
-        previous = current
+        if current or baseline_set:
+            previous = current
     return pd.DataFrame(rows)
 
 
@@ -266,7 +277,7 @@ def write_report(path, meta, spell_summary, security_summary, composition_summar
         f"- Бумаг: {meta['securities']:,}; строк membership: {meta['membership_rows']:,}",
         f"- Период: {meta['sample_start']} — {meta['sample_end']}",
         "- Используется готовый PIT rank из top50_membership.parquet; повторное ранжирование не выполняется.",
-        "- Лаги измеряются по календарю торговых сессий TOP50 builder, включая сессии с нулевым universe.", "",
+        "- Лаги измеряются по полному календарю торговых сессий TOP50 builder от начала панели, включая начальные сессии с нулевым universe."); "",
         "## Длительность членства",
         "Spell включает обе граничные сессии. Начало/конец наблюдаемого окна помечаются как левое/правое цензурирование.",
         "",
@@ -310,7 +321,7 @@ def write_report(path, meta, spell_summary, security_summary, composition_summar
         lines.append(f"| {r.period} | {r.sessions:,} | {r.mean_universe_size:.2f} | {r.mean_retained_count:.2f} | {r.mean_entry_count:.2f} | {r.mean_exit_count:.2f} | {r.mean_retention_of_previous:.1%} | {r.mean_jaccard_similarity:.1%} | {r.composition_change_share:.1%} |")
     lines += [
         "", "- Retention(prev) = retained / previous universe; Jaccard = retained / union(previous, current).",
-        "- На первой сессии начальный состав не считается входом; это левосторонне ограниченное наблюдение.",
+        "- Первая непустая выборка universe используется как baseline и не считается дневным входом/выходом; последующие изменения сравниваются с предыдущей торговой сессией.",
         "- Точные тикеры входов/выходов сохранены в daily_composition.csv.", "",
         "## Ограничения",
         "- Только описательная динамика PIT membership: без моделей, IC, прогнозов, торговых правил и портфельных выводов.",
