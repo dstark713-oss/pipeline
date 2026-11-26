@@ -1,165 +1,809 @@
-# Master Specification: System Architecture
+# QUANT RESEARCH PIPELINE — MASTER SPECIFICATION
 
-**Status:** canonical target architecture  
-**Repository:** `dstark713-oss/pipeline`  
-**Scope:** target system and operating boundaries. This document does not claim that every target component is implemented.
+> Canonical source transferred into `dstark713-oss/pipeline/docs/architecture/` on 2026-11-26. The original 17-stage specification is preserved below; the Architecture Governance Addendum records the subsequently approved multi-agent architecture without altering the stage catalog.
 
-## 1. Purpose
+## Задача
 
-Build a systematic, multi-asset quantitative research and position-trading platform. The system develops evidence-backed analytical capabilities, converts approved evidence into instrument-level directional decisions, allocates capital under explicit constraints, and maintains a controlled lifecycle for models, agents, and configuration.
+Спроектировать и последовательно реализовать полноценный Quant Research Pipeline для systematic multi-asset position trading.
 
-The platform is not a monolithic autonomous trading bot. Research, signal generation, sizing, deterministic controls, and orchestration are separate responsibilities with explicit interfaces.
+Pipeline состоит ровно из 17 последовательных исследовательских и производственных этапов.
 
-The research program is organized around the user's 17-stage Quant Research Pipeline. This specification preserves that pipeline as a governing research framework; it does not recreate or rename its stage catalog. The exact stage definitions remain owned by the canonical research plan.
+Это единый сквозной процесс: от определения рынка и получения данных до production deployment, live trading, performance attribution и эволюции торговых агентов.
 
-## 2. System architecture
+Не сокращай этапы, не объединяй их и не добавляй новые этапы без отдельного архитектурного обоснования.
 
-The target architecture has three top-level system components:
+Для каждого этапа необходимо определить:
+- назначение и границы ответственности;
+- входные данные и зависимости;
+- конкретные исследовательские задачи;
+- методы и инструменты;
+- процедуры контроля качества;
+- критерии успешного завершения;
+- условия отклонения результатов;
+- выходные артефакты;
+- зависимости от предыдущих и последующих этапов.
 
-1. **Signal LLM** — evaluates approved analytical evidence and produces a directional instrument-level decision: BUY, SELL, or NO SIGNAL. It does not determine position size or override portfolio constraints.
-2. **Sizing LLM** — translates approved signals and portfolio context into proposed capital allocations within the active Risk Profile and deterministic constraints. It does not generate alpha.
-3. **Meta-Agent** — governs the lifecycle of the system: repository state, agent instructions, research requests, evidence review, configuration changes, versioning, testing, shadow evaluation, promotion, and rollback.
+Pipeline должен быть воспроизводимым, модульным, artifact-driven и пригодным для автоматизации.
 
-A deterministic Python Risk Engine independently calculates and validates numerical constraints. It is a hard-control layer, not an LLM persona and not a substitute for human authorization.
+---
 
-## 3. Functional roles and model assignment
+## STAGE 01 — Market & Universe Definition
 
-Five functional roles operate within the architecture. A role is a responsibility boundary, not necessarily a separate executable process.
+**Цель:** формально определить исследуемый рынок и universe инструментов.
 
-| Functional role | Primary responsibility | Model assignment |
+Содержание:
+- Asset Class Definition.
+- Instrument Universe.
+- Market Coverage.
+- Liquidity Requirements.
+- Trading Sessions.
+- Exchange Calendars.
+- Contract Specifications.
+- Historical Universe Reconstruction.
+- Instrument Inclusion/Exclusion Rules.
+- Delisted and Expired Instruments.
+- Point-in-Time Universe Integrity.
+
+Необходимо учитывать специфику различных классов активов: futures, equities, ETFs, FX, rates, commodities, indices и других при необходимости.
+
+**Output:**
+- `universe_specification`
+- `instrument_master`
+- `market_calendar`
+- `contract_specification_registry`
+
+## STAGE 02 — Data Acquisition
+
+**Цель:** организовать получение исходных рыночных и фундаментальных данных.
+
+Источники и типы данных:
+- OHLCV.
+- Open Interest.
+- Volume.
+- Futures Term Structure.
+- Individual Futures Contracts.
+- Continuous Futures Data.
+- Contract Specifications.
+- Macro Data.
+- Interest Rates.
+- Yield Curves.
+- Positioning Data.
+- Fundamentals.
+- Alternative Data.
+
+Принципы:
+- Биржи и первичные источники имеют приоритет.
+- Сторонние агрегаторы используются как fallback.
+- Хранить provenance каждого набора данных.
+- Разделять raw data и обработанные данные.
+- Поддерживать историческую загрузку и регулярное обновление.
+- Контролировать задержки, полноту и доступность источников.
+
+Для каждого источника определить:
+- API или способ получения;
+- доступную глубину истории;
+- частоту обновления;
+- ограничения;
+- стоимость;
+- лицензионные условия;
+- fallback source.
+
+**Output:**
+- `raw_market_data`
+- `data_source_registry`
+- `acquisition_logs`
+
+## STAGE 03 — Data Engineering & Quality Control
+
+**Цель:** преобразовать исходные данные в качественные исследовательские datasets.
+
+Содержание:
+- Data Cleaning.
+- Data Normalization.
+- Timestamp and Timezone Standardization.
+- Exchange Calendar Alignment.
+- Missing Data Handling.
+- Outlier Detection.
+- Duplicate Detection.
+- Currency Conversion.
+- Corporate Actions.
+- Futures Contract Stitching.
+- Futures Roll Adjustment.
+- Continuous Contract Construction.
+- OHLCV Aggregation and Resampling.
+- Cross-Asset Alignment.
+- Data Quality Metrics.
+- Dataset Versioning.
+
+Особое внимание:
+- не допускать использования будущей информации;
+- не смешивать реальные контрактные цены с искусственно скорректированными continuous series без явного обозначения;
+- сохранять связь между continuous contract и исходными контрактами;
+- обеспечивать воспроизводимость исторических datasets.
+
+**Output:**
+- `validated_datasets`
+- `data_quality_report`
+- `continuous_contracts`
+- `dataset_versions`
+
+## STAGE 04 — Exploratory Data Analysis (EDA)
+
+**Цель:** исследовать статистические и структурные свойства рынка до разработки гипотез и моделей.
+
+Содержание:
+- Distribution Analysis.
+- Descriptive Statistics.
+- Return Distribution.
+- Volatility Analysis.
+- Autocorrelation.
+- Cross-Correlation.
+- Serial Dependence.
+- Seasonality.
+- Trend Characteristics.
+- Mean Reversion Characteristics.
+- Regime Analysis.
+- Cross-Sectional Analysis.
+- Tail Risk.
+- Extreme Events.
+- Market Microstructure (если доступны соответствующие данные).
+- Futures Curve Characteristics.
+
+Результаты должны описывать:
+- характерные свойства каждого инструмента;
+- различия между классами активов;
+- временную стабильность свойств;
+- потенциальные аномалии;
+- ограничения и качество данных.
+
+**Output:**
+- `eda_report`
+- `market_characteristics`
+- `instrument_statistics`
+
+## STAGE 05 — Hypothesis Research
+
+**Цель:** формировать экономически и статистически обоснованные исследовательские гипотезы.
+
+Направления:
+- Momentum.
+- Trend Following.
+- Mean Reversion.
+- Carry.
+- Futures Term Structure.
+- Seasonality.
+- Volatility Premium.
+- Cross-Asset Relationships.
+- Relative Value.
+- Positioning Effects.
+- Macro Relationships.
+- Regime-Dependent Effects.
+- Liquidity Effects.
+
+Для каждой гипотезы определить:
+- экономический механизм;
+- предполагаемое поведение рынка;
+- предполагаемое направление эффекта;
+- инструменты и классы активов;
+- временной горизонт;
+- необходимые данные;
+- предполагаемые признаки;
+- потенциальные confounding factors;
+- условия применимости;
+- критерии подтверждения;
+- критерии опровержения.
+
+Гипотеза не должна приниматься только потому, что она показывает хорошую историческую доходность.
+
+**Output:**
+- `research_hypothesis`
+- `hypothesis_registry`
+- `research_priority`
+
+## STAGE 06 — Research Design & Method Selection
+
+**Цель:** спроектировать исследование и выбрать подходящие методы проверки гипотезы.
+
+Содержание:
+- Target Variable Definition.
+- Prediction Horizon.
+- Benchmark Definition.
+- Research Methodology.
+- Statistical Test Selection.
+- Candidate Model Families.
+- Validation Design.
+- Evaluation Metrics.
+- Data Requirements.
+- Acceptance Criteria.
+- Rejection Criteria.
+- Computational Requirements.
+
+Возможные методы:
+- Descriptive and Inferential Statistics.
+- OLS and Linear Models.
+- Logistic Regression.
+- Time-Series Models.
+- GARCH Family.
+- Tree-Based Models.
+- Random Forest.
+- XGBoost.
+- Hidden Markov Models.
+- Clustering.
+- Rule-Based Models.
+- Other ML/Statistical Methods where justified.
+
+Метод выбирается исходя из исследовательской задачи, а не из популярности алгоритма.
+
+Здесь определяется пространство допустимых методов, но ещё не выбирается окончательная production-модель.
+
+**Output:**
+- `research_design`
+- `candidate_method_space`
+- `validation_protocol`
+- `acceptance_criteria`
+
+## STAGE 07 — Feature Engineering
+
+**Цель:** сформировать исследовательское пространство признаков.
+
+Содержание:
+- Feature Discovery.
+- Feature Construction.
+- Feature Transformation.
+- Feature Normalization.
+- Rolling Features.
+- Lagged Features.
+- Cross-Sectional Features.
+- Volatility Features.
+- Momentum Features.
+- Mean Reversion Features.
+- Term Structure Features.
+- Carry Features.
+- Positioning Features.
+- Macro Features.
+- Regime Features.
+- Feature Selection.
+- Feature Importance.
+- Multicollinearity Analysis.
+- Feature Stability.
+- Leakage Detection.
+
+Для каждого признака документировать:
+- экономический смысл;
+- формулу;
+- источник данных;
+- временную доступность;
+- период расчёта;
+- допустимые значения;
+- правила обработки пропусков;
+- версию реализации.
+
+**Output:**
+- `feature_dataset`
+- `feature_specification`
+- `feature_registry`
+
+## STAGE 08 — Signal & Model Development
+
+**Цель:** разработать и реализовать кандидатов моделей и торговых сигналов.
+
+Содержание:
+- Signal Construction.
+- Model Implementation.
+- Model Training.
+- Parameter Estimation.
+- Baseline Development.
+- Candidate Model Development.
+- Prediction Generation.
+- Directional Classification.
+- Forecast Generation.
+- Thresholding.
+- Signal Calibration.
+- Initial Performance Evaluation.
+
+Возможные выходы моделей:
+- Directional Forecasts.
+- Expected Returns.
+- Probabilities.
+- Ranking Scores.
+- Volatility Forecasts.
+- Regime Probabilities.
+- Carry Estimates.
+- Relative Value Signals.
+
+Важно разделять прогноз модели и торговое решение стратегии.
+
+**Output:**
+- `candidate_models`
+- `candidate_signals`
+- `model_training_reports`
+
+## STAGE 09 — Model Selection & Optimization
+
+**Цель:** выбрать наиболее подходящую модель среди разработанных кандидатов.
+
+Содержание:
+- Candidate Model Comparison.
+- Hyperparameter Optimization.
+- Cross-Validation.
+- Baseline Comparison.
+- Performance Evaluation.
+- Stability Analysis.
+- Complexity Analysis.
+- Computational Cost Analysis.
+- Sensitivity Analysis.
+- Model Robustness.
+- Champion/Challenger Framework.
+- Model Selection.
+
+Оптимизация должна быть защищена от overfitting.
+
+Не выбирать модель исключительно по максимальному историческому Sharpe или доходности.
+
+Учитывать:
+- стабильность;
+- воспроизводимость;
+- сложность;
+- чувствительность к параметрам;
+- обобщающую способность;
+- экономическую интерпретируемость;
+- эксплуатационные затраты.
+
+**Output:**
+- `selected_model`
+- `model_version`
+- `experiment_report`
+- `model_selection_report`
+
+## STAGE 10 — Alpha Validation
+
+**Цель:** установить, существует ли реальный, устойчивый и экономически значимый alpha.
+
+Содержание:
+- Predictive Performance Validation.
+- Statistical Significance.
+- Multiple Testing Correction.
+- Temporal Stability.
+- Cross-Sectional Stability.
+- Regime Stability.
+- Signal Decay.
+- Robustness Testing.
+- Economic Interpretation.
+- Alpha Persistence.
+- Capacity Considerations.
+- Alternative Explanations.
+
+Разделять:
+- статистическую значимость;
+- предсказательную способность;
+- экономическую значимость;
+- реализуемость после транзакционных издержек.
+
+Гипотеза может быть отклонена, даже если отдельные тесты показывают положительные результаты.
+
+**Output:**
+- `validated_alpha`
+- `alpha_validation_report`
+- `alpha_quality_metrics`
+
+## STAGE 11 — Strategy Development
+
+**Цель:** превратить валидированный alpha в формализованную торговую стратегию.
+
+Содержание:
+- Strategy Logic.
+- Entry Rules.
+- Exit Rules.
+- Long/Short Logic.
+- Holding Period.
+- Signal Frequency.
+- Rebalancing.
+- Position Transition Rules.
+- Strategy Parameters.
+- Instrument Constraints.
+- Trading Calendar.
+- Execution Assumptions.
+- Strategy State Management.
+
+Необходимо отделять:
+- модельный прогноз;
+- торговый сигнал;
+- правила стратегии;
+- портфельное распределение капитала.
+
+Стратегия не должна самостоятельно определять глобальный портфельный риск.
+
+**Output:**
+- `strategy_definition`
+- `strategy_configuration`
+- `strategy_logic_specification`
+
+## STAGE 12 — Backtesting
+
+**Цель:** проверить историческую экономическую эффективность стратегии в реалистичной симуляции.
+
+Содержание:
+- Historical Simulation.
+- Trade Simulation.
+- Position Tracking.
+- Transaction Costs.
+- Commissions.
+- Slippage.
+- Market Impact.
+- Liquidity Constraints.
+- Turnover.
+- Trade-Level Analysis.
+- Return Attribution.
+- Drawdown Analysis.
+- Benchmark Comparison.
+- Exposure Analysis.
+- Portfolio-Level Simulation.
+
+Основные метрики:
+- CAGR.
+- Annualized Return.
+- Volatility.
+- Sharpe Ratio.
+- Sortino Ratio.
+- Calmar Ratio.
+- Maximum Drawdown.
+- Win Rate.
+- Profit Factor.
+- Average Trade.
+- Turnover.
+- Exposure.
+- Tail Metrics.
+
+Обязательно учитывать реальные особенности исполнения конкретных инструментов.
+
+**Output:**
+- `backtest_report`
+- `trade_history`
+- `performance_metrics`
+- `exposure_report`
+
+## STAGE 13 — Out-of-Sample & Robustness Validation
+
+**Цель:** проверить способность стратегии работать вне выборки разработки и при изменении рыночных условий.
+
+Содержание:
+- Train/Validation/Test Separation.
+- Out-of-Sample Testing.
+- Walk-Forward Analysis.
+- Purged Cross-Validation.
+- Embargo.
+- Bootstrap.
+- Monte Carlo.
+- Parameter Sensitivity.
+- Stress Testing.
+- Regime Robustness.
+- Alternative Data Assumptions.
+- Transaction Cost Sensitivity.
+- Execution Sensitivity.
+- Parameter Stability.
+
+Необходимо исключить:
+- look-ahead bias;
+- leakage;
+- survivorship bias;
+- selection bias;
+- data snooping;
+- backtest overfitting.
+
+Результат должен определять, выдерживает ли стратегия независимую проверку и какие ограничения применимости у неё есть.
+
+**Output:**
+- `oos_validation_report`
+- `robustness_report`
+- `strategy_validation_status`
+
+## STAGE 14 — Portfolio Construction
+
+**Цель:** объединить валидированные стратегии и возможности в согласованную портфельную структуру.
+
+Содержание:
+- Strategy Allocation.
+- Cross-Asset Diversification.
+- Correlation Analysis.
+- Risk Contribution.
+- Volatility Targeting.
+- Risk Budgeting.
+- Portfolio Optimization.
+- Capital Allocation.
+- Exposure Management.
+- Portfolio Simulation.
+- Concentration Analysis.
+
+Рассматривать не только отдельные стратегии, но и их совместное поведение.
+
+Учитывать:
+- корреляции;
+- общие факторы риска;
+- пересечение инструментов;
+- концентрацию;
+- ликвидность;
+- доступный капитал;
+- маржу;
+- совместные просадки.
+
+**Output:**
+- `portfolio_model`
+- `target_allocations`
+- `portfolio_construction_report`
+
+## STAGE 15 — Portfolio Risk Validation
+
+**Цель:** проверить соответствие сформированного портфеля заданному Risk Profile.
+
+Содержание:
+- Portfolio Volatility.
+- VaR / CVaR.
+- Maximum Drawdown.
+- Stress Testing.
+- Tail Risk.
+- Correlated Exposure.
+- Leverage.
+- Margin Requirements.
+- Liquidity Risk.
+- Concentration Risk.
+- Asset Class Limits.
+- Instrument Limits.
+- Risk Budget Compliance.
+- Scenario Analysis.
+
+Risk Profile должен задаваться отдельно и быть формализованным.
+
+Hard Risk Limits:
+- проверяются детерминированным кодом;
+- не могут быть изменены LLM;
+- не могут обходиться ради привлекательного сигнала;
+- применяются независимо от рекомендаций торговых агентов.
+
+**Output:**
+- `validated_portfolio`
+- `risk_validation_report`
+- `risk_limit_status`
+
+## STAGE 16 — Production Packaging & Trading Deployment
+
+**Цель:** подготовить проверенные модели и стратегии к использованию в торговой системе.
+
+Содержание:
+- Model Packaging.
+- Model Versioning.
+- Strategy Configuration.
+- Signal Definitions.
+- Input/Output Schemas.
+- Dependency Management.
+- Automated Tests.
+- Model Registry.
+- Production Status.
+- Activation.
+- Rollback.
+- Monitoring Requirements.
+- Agent Input Packages.
+
+Интеграция двух торговых LLM:
+
+**Signal LLM**
+- получает production-ready модели и стратегии;
+- сканирует universe;
+- отбирает торговые возможности;
+- возвращает BUY / SELL / NO SIGNAL;
+- не определяет размер позиции.
+
+**Sizing LLM**
+- получает отобранные возможности;
+- получает актуальное состояние портфеля;
+- учитывает Risk Profile и portfolio constraints;
+- определяет целевую экспозицию от нуля до верхнего лимита;
+- не создаёт собственные alpha-сигналы.
+
+Все реальные изменения позиций остаются под ручным подтверждением человека.
+
+**Output:**
+- `production_model_registry`
+- `agent_input_packages`
+- `production_configs`
+- `deployment_report`
+
+## STAGE 17 — Live Trading, Attribution & Agent Evolution
+
+**Цель:** отслеживать реальную работу системы, оценивать качество решений и совершенствовать торговую логику и поведение агентов.
+
+Содержание:
+
+**Live Performance Monitoring**
+- Live Strategy Performance.
+- Portfolio Performance.
+- Exposure Monitoring.
+- Risk Monitoring.
+- Drawdown Monitoring.
+- Signal Monitoring.
+- Strategy Degradation.
+
+**Performance Attribution**
+- Signal Attribution.
+- Sizing Attribution.
+- Strategy Attribution.
+- Portfolio Attribution.
+- Instrument Attribution.
+- Regime Attribution.
+- Transaction Cost Attribution.
+
+**Agent Evaluation**
+- Signal Selection Quality.
+- Signal Direction Quality.
+- False Positive Analysis.
+- False Negative Analysis.
+- Sizing Quality.
+- Portfolio Allocation Quality.
+- Rejected Opportunity Analysis.
+- Human Approval/Rejection Analysis.
+- Recommendation vs Actual Execution.
+- Agent Consistency.
+
+**Alpha Monitoring**
+- Alpha Decay.
+- Model Drift.
+- Feature Drift.
+- Regime Changes.
+- Performance Degradation.
+- Strategy Capacity.
+
+**Agent Evolution**
+- Journal Analysis.
+- Behavioral Pattern Discovery.
+- Error Classification.
+- Learning Hypothesis Generation.
+- Research Request Generation.
+- Agent Configuration Improvement.
+- Instruction Optimization.
+- Threshold and Policy Revision.
+- Shadow Testing.
+- Controlled Promotion.
+
+Meta-Agent совершенствует торговых агентов через версионирование инструкций, конфигураций, policies и thresholds.
+
+Изменение весов LLM и fine-tuning не входят в базовый механизм улучшения.
+
+Никакие изменения не должны автоматически попадать в ACTIVE без предусмотренной процедуры проверки и promotion.
+
+**Output:**
+- `agent_performance_report`
+- `performance_attribution`
+- `learning_hypotheses`
+- `research_requests`
+- `proposed_agent_updates`
+
+---
+
+## 8. Сквозная инфраструктура Pipeline
+
+Следующие компоненты не являются дополнительными этапами. Они обслуживают все 17 этапов:
+
+- Data Registry.
+- Dataset Versioning.
+- Instrument Master.
+- Feature Registry.
+- Method Registry.
+- Experiment Tracking.
+- Experiment Engine.
+- Evaluation Framework.
+- Model Registry.
+- Strategy Registry.
+- Artifact Storage.
+- Configuration Management.
+- Logging and Monitoring.
+- Reproducibility Infrastructure.
+
+## 9. Обязательные архитектурные принципы
+
+1. Каждый этап имеет формальные входы и выходы.
+2. Результаты исследований сохраняются как версионируемые артефакты.
+3. Любой эксперимент можно воспроизвести.
+4. Любое решение о продвижении модели имеет обоснование и критерии приёмки.
+5. Никакая модель не попадает в production только из-за хорошего backtest.
+6. Статистическая значимость не равна экономической эффективности.
+7. Gross alpha не равен net alpha.
+8. OOS и robustness validation обязательны.
+9. Отрицательный исследовательский результат — полноценный результат.
+10. LLM не заменяет детерминированные расчёты и контроль риска.
+11. Signal и Sizing имеют строго разделённые зоны ответственности.
+12. Ручное подтверждение реальных изменений позиций обязательно.
+
+## 10. Требуемый результат проектирования
+
+Не ограничивайся описанием этапов.
+
+Нужно постепенно превратить эту спецификацию в реализуемую архитектуру:
+
+- модульная структура Python-проекта;
+- контракты данных;
+- schemas;
+- интерфейсы компонентов;
+- pipeline orchestration;
+- experiment tracking;
+- artifact management;
+- validation gates;
+- model registry;
+- production deployment;
+- agent integration;
+- monitoring and feedback loop.
+
+Каждый этап должен быть реализуемым независимо, но интегрированным в общую систему.
+
+Не начинай писать весь проект одним большим коммитом. Сначала исследуй существующую архитектуру и данные, затем составляй план реализации.
+
+**Главный принцип: 17 этапов — единый исследовательский процесс от рыночных данных до эволюции торговых агентов. Сохраняй эту структуру и не смешивай её с архитектурой отдельных LLM.**
+
+---
+
+# Architecture Governance Addendum
+
+**Approved:** 2026-11-26  
+**Purpose:** extend the original 17-stage Quant Research Pipeline with the user's approved multi-agent architecture. This addendum does not merge, rename, remove, or add research stages.
+
+## A. Three top-level intelligent components
+
+1. **Signal LLM** — consumes approved analytical capabilities and returns an instrument-level directional decision: BUY, SELL, or NO SIGNAL. It does not determine position size.
+2. **Sizing LLM** — converts approved signals and portfolio context into proposed allocations under the user-approved Risk Profile. It does not generate alpha.
+3. **Meta-Agent** — governs architecture, repository and agent lifecycle, research requests, evidence handoffs, agent configuration, versioning, testing, shadow evaluation, promotion, and rollback.
+
+A deterministic Python Risk Engine independently enforces numerical calculations and hard constraints. It is not an LLM role.
+
+## B. Five functional roles and model assignment
+
+The five roles are responsibility boundaries, not a requirement to deploy five separate processes.
+
+| Functional role | Responsibility | Assigned model |
 |---|---|---|
-| Meta-Agent | System architecture, repository and agent lifecycle, governance | ChatGPT |
-| Quant Research | Discover and test analytical capabilities; formulate hypotheses and experiments | Qwen primary researcher; GPT independent methodological critic |
-| Sizing | Portfolio allocation proposals under approved constraints | ChatGPT, with deterministic Python Risk Engine validation |
-| Aggressive Trading | Apply approved evidence with a higher-opportunity, shorter-horizon selection profile | Qwen |
-| Conservative Investment | Apply stricter evidence quality, stability, and lower-turnover selection criteria | ChatGPT |
+| Meta-Agent | Architecture, repository governance, agent memory and lifecycle | ChatGPT |
+| Quant Research | Hypotheses, data analysis, experiment design, statistical validation and conclusions | Qwen primary researcher; GPT independent critic |
+| Sizing | Portfolio allocation proposals under approved constraints | ChatGPT, checked by Python |
+| Aggressive Trading | Apply approved evidence with a higher-opportunity and shorter-horizon selection profile | Qwen |
+| Conservative Investment | Apply stricter evidence quality, stability and lower-turnover selection criteria | ChatGPT |
 
-### 3.1 Role boundaries
+### Role boundaries
 
-**Quant Research**
-- Owns research questions, hypotheses, data analysis, experiment design, statistical interpretation, and research conclusions.
-- Qwen may lead exploration and propose analytical candidates.
-- GPT independently challenges methodology, leakage, overfitting, statistical inference, robustness, and economic interpretation.
-- The critic must have access to the underlying data, methodology, code, settings, and results, not only a summary.
-- Research outputs are candidates until explicitly validated and approved for downstream use.
+- **Quant Research owns research.** Research methodology, calculations, experiments, interpretation and scientific conclusions belong to this role. GPT's critic function must inspect underlying data, methodology, code, settings and results, not only summaries.
+- **Aggressive Trading and Conservative Investment are profiles within the Signal decision layer.** They apply approved research outputs; they do not independently promote unvalidated findings into production.
+- **Sizing owns allocation proposals, not alpha.** It consumes directional decisions and portfolio state. It cannot change the Risk Profile or override deterministic limits.
+- **Meta-Agent owns the brains and process.** It maintains system architecture, role contracts, repository state, persistent agent memory, handoffs, configuration governance and controlled lifecycle. It does not perform Quant Research's scientific work or decide the user's risk appetite.
+- **ChatGPT is the primary code author.** Qwen may propose hypotheses, mathematics and analytical candidates, but must not independently modify the working repository. All code remains subject to review and tests.
 
-**Aggressive Trading**
-- Searches for opportunities using approved models, signals, and evidence.
-- May apply momentum, breakout, trend-following, or other explicitly approved strategy logic.
-- Aggressiveness describes opportunity selection and review cadence. It never grants permission to exceed risk constraints or bypass validation.
+## C. Deterministic controls and human authority
 
-**Conservative Investment**
-- Applies stricter standards for evidence quality, persistence, robustness, and uncertainty.
-- Favors lower turnover and longer evaluation horizons where appropriate.
-- Evaluates candidate attractiveness; it does not allocate capital.
-
-**Sizing**
-- Consumes approved signals, portfolio state, and the active Risk Profile.
-- Produces proposed weights/exposures and reasons for constraints, reductions, or rejection.
-- Does not invent directional alpha or modify the signal's meaning.
-- All numerical constraints are independently checked by deterministic code.
-
-**Meta-Agent**
-- Owns the system-level view and coordinates boundaries between roles.
-- Does not perform Quant Research's analysis or decide its scientific conclusions.
-- Does not choose the user's risk appetite or invent risk limits.
-- Does not become an unapproved trading decision-maker.
-
-## 4. Signal and sizing contracts
-
-### Signal contract
-
-The Signal layer produces an instrument-level directional state:
-- `BUY`
-- `SELL`
-- `NO SIGNAL`
-
-Each decision must be traceable to approved model versions, evidence, timestamps, instrument identity, and applicable validity conditions. The signal layer does not output portfolio weights.
-
-Aggressive Trading and Conservative Investment are distinct selection profiles within this directional decision layer. They may differ in horizon, evidence thresholds, turnover tolerance, and opportunity selection, but both consume only approved analytical capabilities.
-
-### Sizing contract
-
-Sizing consumes:
-- approved directional signals and their provenance;
-- current portfolio positions and available capital;
-- the active, user-approved Risk Profile;
-- deterministic portfolio and instrument constraints.
-
-Sizing returns a proposed allocation, explanation, and constraint/rejection reasons. It cannot change the Risk Profile or weaken hard controls.
-
-### Deterministic Risk Engine
-
-Python is authoritative for numerical calculations and hard constraints, including exposure aggregation, concentration, and other explicitly configured limits. LLM-generated arithmetic is never the enforcement mechanism. A failed validation blocks promotion of the proposed allocation.
-
-This specification does not define numerical risk limits. Those belong to a separately approved Risk Profile.
-
-## 5. Meta-Agent governance
-
-The Meta-Agent maintains a controlled lifecycle:
-
-1. Discover and classify repository state and evidence.
-2. Maintain canonical architecture and agent-specific memory.
-3. Route work to the correct functional owner.
-4. Review outputs against the owner's contract and required evidence.
-5. Propose configuration or code changes with a clear diff and rationale.
-6. Obtain user approval where required.
-7. Version changes and run deterministic tests.
-8. Evaluate changes in shadow mode before promotion where the change affects system behavior.
-9. Preserve rollback paths and record the promotion decision.
-
-The Meta-Agent may coordinate and audit the research process, but must not silently take over research ownership. It checks whether research artifacts exist, whether statuses are synchronized, and whether handoffs are complete. Scientific methods, calculations, interpretation, and conclusions belong to Quant Research.
-
-## 6. Human authority and execution boundary
-
-- Trade execution is manual.
-- No broker API or automatic order submission is in scope.
-- No agent may automatically modify real portfolio positions.
+- Python is authoritative for numerical calculations and hard constraints.
+- The Risk Profile is user-owned. No numerical limit may be invented or silently changed by an LLM.
+- Signal and Sizing remain separate. Signal does not output weights; Sizing does not create directional alpha.
+- Trade execution is manual. No broker API, automatic order submission, or automatic modification of real positions is in scope.
 - Any action affecting a real position requires explicit human confirmation.
-- The absence or expiry of a signal is not, by itself, an instruction to close a position.
+- The absence or expiry of a signal is not, by itself, an instruction to close an existing position.
 - LLMs do not replace deterministic calculations or hard controls.
-- The user retains authority over strategic decisions, Risk Profile, live actions, and promotion to production.
 
-## 7. Evidence, versioning, and promotion
+## D. Meta-Agent lifecycle governance
 
-Every material output must identify its provenance: data snapshot, code revision, model/configuration version, parameters, execution status, and limitations.
+The Meta-Agent coordinates:
+1. Repository and artifact state discovery.
+2. Agent roles, permissions, instructions and persistent memory.
+3. Research requests and ownership routing.
+4. Evidence/provenance checks at handoff.
+5. Versioned change proposals with explicit diffs and rationale.
+6. Tests and deterministic validation.
+7. Shadow evaluation for behavior-affecting changes.
+8. Explicit promotion decisions and rollback paths.
+
+The Meta-Agent may audit process completeness and identify stale project-level references. It must not rewrite research methods, calculations, experiment outputs, or scientific conclusions. Those remain owned by Quant Research.
+
+## E. Current implementation versus target architecture
+
+The current `pipeline` repository is MOEX-focused research and data infrastructure. The 17-stage pipeline and the agent architecture above define the target system; they do not imply that all components already exist in code.
+
+Target capabilities not to be misrepresented as implemented include the Meta-Agent runtime, Signal LLM, Sizing LLM, deterministic Python Risk Engine, formal agent interfaces, multi-agent audit trail, shadow evaluation, promotion/rollback automation, and multi-asset expansion.
+
+## F. Evidence and promotion
 
 A backtest is not live performance. Statistical significance is not equivalent to economic value. A model or agent configuration is not production-ready merely because it produces plausible output.
 
-Production-affecting changes require:
-- explicit diff and rationale;
-- reproducible tests;
-- independent deterministic checks where applicable;
-- shadow evaluation against the current version;
-- an explicit promotion decision;
-- a documented rollback path.
-
-The Meta-Agent coordinates this process. It must not claim a test or local run succeeded without execution evidence.
-
-## 8. Current implementation versus target architecture
-
-The current `pipeline` repository is research and data infrastructure for systematic analysis of the Russian equity market using MOEX ISS data. It contains market-data collection/refresh, dataset construction, point-in-time panel work, and isolated research experiments.
-
-The following target components are architectural goals, not claims about existing implementation:
-- Meta-Agent runtime and governance automation;
-- Signal LLM and its Aggressive/Conservative profiles;
-- Sizing LLM;
-- deterministic Python Risk Engine;
-- formal agent-to-agent interfaces and audit logs;
-- configuration registry, shadow evaluation, promotion, and rollback workflows;
-- multi-asset expansion beyond the current MOEX research scope.
-
-Never describe a target component as implemented until code, tests, and operational evidence support that status.
-
-## 9. Ownership map
-
-| Domain | Owner |
-|---|---|
-| System architecture, repository governance, agent memory and lifecycle | Meta-Agent |
-| Research methodology, datasets for experiments, statistical analysis, conclusions | Quant Research |
-| Directional opportunity selection using approved evidence | Signal roles |
-| Capital allocation proposal | Sizing |
-| Numerical hard limits and calculations | Python Risk Engine |
-| Risk appetite, strategic approvals, live actions, production promotion | User |
-
-This ownership map is binding unless the user explicitly changes it.
+Production-affecting changes require a visible diff, rationale, reproducible tests, independent deterministic checks where applicable, shadow evaluation, explicit promotion, and a documented rollback path. The user retains final authority over architecture changes, Risk Profile, live actions and production promotion.
