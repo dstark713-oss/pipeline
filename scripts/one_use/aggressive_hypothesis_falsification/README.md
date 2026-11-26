@@ -37,7 +37,7 @@ where `t+h` means exactly h rows later on the global market calendar. Missing ti
 
 ## Inference
 
-Daily cross-sectional contrasts are calculated first. HAC Newey-West inference and circular moving-block bootstrap are then applied to the date-level series. Resampling dates rather than individual securities preserves contemporaneous cross-sectional dependence within each date. Forward horizons overlap; the NW lag is conservatively set to 19 sessions. The five-session block bootstrap is a robustness interval, not an exact finite-sample test.
+Daily cross-sectional contrasts are calculated first. HAC Newey-West inference and circular moving-block bootstrap are then applied to the date-level series. Resampling dates rather than individual securities preserves contemporaneous cross-sectional dependence within each date. Forward horizons overlap; the NW lag is conservatively set to 19 sessions. The twenty-session block bootstrap is a robustness interval, not an exact finite-sample test.
 
 Historical subperiods are fixed as through 2012, 2013-2019, and 2020 onward. Crisis exclusions are robustness diagnostics, not the primary sample.
 
