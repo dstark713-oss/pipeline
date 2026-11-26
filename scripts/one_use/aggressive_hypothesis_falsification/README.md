@@ -33,7 +33,7 @@ where `t+h` means exactly h rows later on the global market calendar. Missing ti
    - Identification constraint: RS20 and absolute return20 are perfectly collinear within a date; the same is true of RS5 and absolute return5. RS5 therefore serves as the equivalent cross-sectional control for absolute 5D performance, with realized volatility20 as an additional non-collinear control. The model does not claim to separately identify either RS/absolute-return pair.
 2. **F2, aligned momentum:** report all four sign quadrants of absolute 5D and 20D returns; estimate a date-wise interaction model with both standardized horizons and their product.
 3. **F3, persistent weakness:** compare simultaneous bottom-quintile RS5/RS20 weakness with RS5-only weakness, RS20-only weakness, and the remaining valid cross-section. Also report robustness outside predefined stress windows: 2008-09-15..2009-06-30, 2020-02-20..2020-06-30, and 2022-02-24..2022-12-30.
-4. **F4, impulse concentration:** within the positive 5D-return top quintile, split names by the date-wise median of the largest absolute daily log-return share; compare forward relative performance, hit rate, and negative-return frequency.
+4. **F4, impulse concentration:** within the positive 5D-return top quintile, split names by the date-wise median of the largest absolute daily log-return share; compare forward relative performance, hit rate, and negative-return frequency; also regress forward RS on concentration and 5D return within the impulse group to test whether concentration adds information beyond impulse magnitude.
 
 ## Inference
 
