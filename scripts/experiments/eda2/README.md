@@ -138,3 +138,38 @@ Machine outputs:
 - docs/research/eda2/results/block_05/EDA2_BLOCK_05_REPORT.md
 
 Rolling window требует полного окна; пропуски не заполняются и сегменты не соединяются. MAD не масштабируется. Сопоставления рангов между периодами описательные. Не выполняются модели, прогнозы, IC, feature selection или торговые выводы.
+
+
+## Блок 7. Торговая активность, концентрация и условная структура
+
+Запуск:
+
+    python scripts/experiments/eda2/07_activity_concentration.py
+
+Исследуются:
+- распределения Volume, Value и value_60d: pooled, по бумагам и по периодам;
+- дневная концентрация Value и Volume внутри PIT TOP50: доли TOP-5/TOP-10 и HHI;
+- условные распределения текущих доходностей по дневным terciles Volume/Value и по PIT rank groups 1–10, 11–25, 26–50;
+- периодная динамика условных распределений.
+
+Машинные артефакты:
+- data/interim/eda2/block_07/daily_activity_concentration.csv
+- data/interim/eda2/block_07/conditional_return_by_date.csv
+- data/interim/eda2/block_07/run_metadata.json
+
+Агрегаты для анализа Research Agent:
+- docs/research/eda2/results/block_07/activity_pooled_summary.csv
+- docs/research/eda2/results/block_07/activity_per_security_summary.csv
+- docs/research/eda2/results/block_07/activity_period_summary.csv
+- docs/research/eda2/results/block_07/concentration_overall_summary.csv
+- docs/research/eda2/results/block_07/concentration_yearly_summary.csv
+- docs/research/eda2/results/block_07/conditional_return_summary.csv
+- docs/research/eda2/results/block_07/EDA2_BLOCK_07_REPORT.md
+
+Методологические правила:
+- Концентрация рассчитывается только внутри PIT TOP50, не по всему российскому рынку; в HHI используются доли положительной валидной активности.
+- Дневные terciles строятся внутри каждого поперечного сечения отдельно; это относительные группы с меняющимися границами.
+- PIT rank и value_60d — одна связанная ось, поскольку ранг построен на trailing 60-session VALUE; не интерпретировать их как независимые характеристики.
+- Текущая доходность считается между соседними датами панели при валидных adjusted close и bar_available=1 на обеих датах. Будущие доходности не используются.
+- numtrades исключён: наличие поля само по себе не даёт исследовательского основания его включать.
+- Блок описательный: без IC, моделей, feature importance, прогнозов, торговых сигналов и портфельных выводов.
