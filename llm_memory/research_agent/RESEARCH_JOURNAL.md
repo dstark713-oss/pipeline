@@ -278,3 +278,58 @@ Implemented and committed:
 Implementation is code-inspected but has not been run against the user's local raw SQLite. Runtime correctness remains unverified.
 
 The user correctly objected that the first EDA pass had devolved into repeated data-quality audits and had not studied the statistical behaviour of the TOP50 panel. The previous targeted-audit follow-up was withdrawn. Added `docs/research/eda/EDA_V2_PLAN.md` for substantive analysis of return distributions, temporal dependence, cross-sectional dependence, date-level dispersion, instrument heterogeneity, PIT rank/membership mobility, and activity concentration. The plan is proposed and awaits approval; no EDA v2 code has been implemented.
+
+## 2026-11-27 | EDA2 closed; Hypothesis Research approved and documented
+
+### EDA2 closure
+
+The user completed and reviewed EDA2 blocks 1–7. The consolidated descriptive results were compiled in:
+- `docs/research/eda2/results/compilation/EDA2_RESULTS_COMPILATION.md`
+
+The compilation contains descriptions, findings, cross-block synthesis, methodological limitations, and terminology. It intentionally excludes hypotheses. EDA2 is closed; do not reopen completed blocks without concrete material error or explicit user request.
+
+### Stage 05 decision
+
+The user approved Hypothesis Research with exactly two economic-value categories:
+
+1. **Risk Control:** preserve capital and improve capital-use efficiency through earlier risk detection, exposure adaptation, and diversification.
+2. **Direct Monetization:** identify reproducible effects that can generate additional net returns after implementation costs.
+
+The approved initial hypothesis pool contains seven research candidates:
+
+Risk Control:
+- RC-001 — forecasting changes in volatility to adapt market exposure.
+- RC-002 — changing asset dependence as information about systemic portfolio risk.
+- RC-003 — unusual trading activity as a possible warning of future risk.
+
+Direct Monetization:
+- DM-001 — persistence of relative returns across instruments.
+- DM-002 — trading activity and future relative returns.
+- DM-003 — market heterogeneity and the opportunity set for asset selection.
+- DM-004 — compensation for bearing risk.
+
+These are approved for research, not empirically supported. EDA findings motivate or constrain some candidates; others are mechanism-driven and require independent theoretical justification. In particular, EDA2 did not establish future-return predictability.
+
+### Economic-value rule
+
+Every hypothesis must state how it could create economic value. A hypothesis without a credible monetization/risk-control mechanism does not enter the main research registry. Statistical significance, historical profitability, or correlation alone is insufficient.
+
+Risk Control and Direct Monetization must be evaluated separately:
+- Risk Control requires an economically meaningful comparison against a relevant baseline; merely holding more cash is not proof of improved risk management.
+- Direct Monetization requires positive, reproducible net economic value after commissions, slippage, liquidity and turnover constraints.
+
+Before any experiment, freeze the target/outcome, horizon, available information, candidate features, confounders/controls, test family, evaluation metrics, robustness checks, and acceptance/rejection criteria. Preserve PIT integrity, temporal validation, uncertainty, and multiple-testing controls.
+
+### Repository artifacts created
+
+- Updated `docs/architecture/MASTER_SPECIFICATION.md`, STAGE 05.
+- Created hypothesis passports under `docs/research/research_hypothesis/`, separated into `risk_control/` and `direct_monetization/`.
+- Created the registry and research-priority document.
+- Created `docs/research/hypothesis_research/PLAN.md` and a separate `results/` directory with its README.
+- Updated the Research Agent's next steps, cumulative knowledge, README index, and changelog.
+
+### Sprint status
+
+The Stage 05 architecture, initial hypothesis pool, documentation structure, and research plan are complete and approved. No hypothesis experiment, model, feature implementation, or backtest was run. No runtime or economic-performance claim is made.
+
+**Sprint closed for 2026-11-27.** The next activity is to select and refine the first hypothesis research design, then obtain explicit approval before implementation. Recommended starting point: DM-001, with RC-001 as the parallel risk-control foundation.
