@@ -296,7 +296,7 @@ def h2_conditional_tests(panel, future):
             })
         # Date-wise cross-sectional OLS. Standardize predictors within date;
         # coefficients are then comparable as relative cross-sectional effects.
-        cols = ["rs_20d", "rs_5d", "return_5d", "forward_rs"]
+        cols = ["rs_20d", "rs_5d", "realized_vol_20d_ann", "forward_rs"]
         d = day[cols].replace([np.inf, -np.inf], np.nan).dropna()
         if len(d) < 12:
             continue
