@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_PANEL = ROOT / "data" / "processed" / "top50" / "top50_panel.parquet"
 DEFAULT_OUT = ROOT / "data" / "interim" / "one_use" / "regime_check"
 REQUIRED = {"tradedate", "secid", "adjusted_close", "bar_available"}
@@ -118,7 +118,7 @@ def daily_breadth(returns: pd.DataFrame) -> pd.DataFrame:
             "top10_positive_contribution_count": min(10, len(r)),
         })
 
-    out = valid.groupby("tradedate", sort=True).apply(summarize, include_groups=False).reset_index()
+    out = valid.groupby("tradedate", sort=True).apply(summarize).reset_index()
     out["tradedate"] = pd.to_datetime(out["tradedate"])
     return out
 
