@@ -1,73 +1,61 @@
-# Meta-Agent: Current Project State
+# Meta-Agent — Current Project State
 
-Last updated: 2026-11-26
+Last updated: 2026-11-27
 
-## Repository
+## Canonical repository state
 
-- Working repository: `dstark713-oss/pipeline`.
+- Repository: `dstark713-oss/pipeline`.
 - Branch: `main`.
-- Latest repository commit inspected before this context update: `0e1008f231e71aa131cf303e1343304d4cd11833`.
-- Repository README describes a MOEX-focused research and data infrastructure, not a completed multi-agent trading platform.
+- Commit reviewed before this architecture update: `96a84dcbb17127c82aff3bc167bd3b40c80ab3e4`.
+- Current implementation is a MOEX-focused research/data foundation, not a completed trading platform.
 
-## Current implementation (repository-verified)
+## Current research state (repository-verified)
 
-The root README documents:
-- MOEX ISS data collection and incremental refresh;
-- historical universe and dataset construction;
-- adjusted datasets and point-in-time panels;
-- isolated statistical and ML experiments;
-- research-agent context under `llm_memory/research_agent/`.
+- MOEX ISS data collection, incremental refresh, adjusted datasets and PIT TOP50 panel exist.
+- Research Agent memory and staged research workflow exist under `llm_memory/research_agent/`.
+- EDA2 result folders are committed through block 5.
+- Block 5 report: 5,490 panel dates, 214 securities and 196,663 return observations; rolling scale distributions and cross-period relative-scale stability are described. The report explicitly makes no GARCH, forecasting, ML, IC, feature-selection or trading claims.
+- The Research Agent's own journal is the source for chronological scientific decisions. Its latest committed entry predates some current EDA2 results; do not infer missing scientific status from project-level memory.
+- The user's `daily_report.txt` is user-owned and must remain unmodified.
 
-The repository README records Log Returns as a completed base representation and Rolling Statistical Moments as closed on 2026-11-25. These are Research Agent facts; Meta-Agent does not reopen or reinterpret them.
+## Architecture decision — 2026-11-27
 
-## Target roles (user-approved)
+The previous conversational trading-agent pilot is retired.
 
-- Meta-Agent — ChatGPT.
-- Quant Research — Qwen primary researcher plus independent GPT critique.
-- Sizing — ChatGPT, backed by deterministic Python validation.
-- Aggressive Trading — Qwen.
-- Conservative Investment — ChatGPT.
+Active responsibilities:
+1. **Meta-Agent / Portfolio Steward — ChatGPT:** research-process governance, model/version trust tracking, conditional model preference, sizing and portfolio oversight across two sleeves, and governance of the Investment Agent.
+2. **Research Agent:** research, experiments, model development, validation and scientific conclusions. Its underlying LLM is not permanently fixed; model quality will be evaluated from evidence.
+3. **Investment Agent — ChatGPT:** separate sector/company fundamental investment process, governed by Meta-Agent.
 
-The five functional roles map to three top-level system components: Signal LLM, Sizing LLM, and Meta-Agent. Python Risk Engine is a deterministic hard-control layer.
+Retired: Aggressive Trading LLM, conversational Signal LLM, separate Sizing LLM and the former shared three-agent protocol. The former Conservative Investment role and journal have been migrated into Meta-Agent memory.
 
-## Important boundaries
+## Capital architecture
 
-- Research methods, calculations and conclusions are owned by Quant Research.
-- Meta-Agent owns architecture, agent memory, repository governance and lifecycle.
-- ChatGPT is the primary code author; Qwen is not authorized to independently modify the working repository.
-- No broker integration, automatic order submission or automatic changes to real positions.
-- No invented Risk Profile limits.
-- The current MOEX research implementation must not be described as a completed multi-asset platform.
+- Strategic allocation: 50% model-driven trading sleeve / 50% investment sleeve.
+- This is a split between mandates, not a requirement to fully deploy either sleeve.
+- Cash is a valid state when no eligible model signal or sufficiently evidenced investment opportunity exists.
+- Last explicit portfolio snapshot in the Investment Agent journal: 100% cash, no open positions, dated 2026-11-26. This is not assumed current without reconfirmation.
+- Real portfolio changes remain manual and require user approval.
 
-## Open architecture work
+## Model trust
 
-- Formalize typed contracts between research outputs, signal decisions, sizing proposals and deterministic validation.
-- Implement the Python Risk Engine only after its inputs, outputs and user-approved Risk Profile interface are specified.
-- Define versioned agent configuration and audit records.
-- Build shadow evaluation, promotion and rollback controls.
-- Expand beyond MOEX only when a concrete requirement and data-source contract exist.
+- No verified model registry with accumulated live track records exists yet.
+- `MODEL_REGISTER.md` defines the evidence fields and comparison policy.
+- Trust is multidimensional; no arbitrary scalar score or fixed model ranking is used.
+- Model preferences must be conditional on target, horizon, universe, data, market state and evidence quality.
 
-## Research handoff
+## Current governance priorities
 
-The Research Agent owns the active EDA/research stage and its next-step decisions. Meta-Agent checks process integrity and handoff readiness only. Any stale research-specific context must be resolved by its owner, not silently rewritten here.
+1. Keep the Research Agent focused on substantive research and reproducible model development; avoid spending hours on unnecessary conversational orchestration.
+2. Maintain clean research-to-model handoffs with version, data snapshot, horizon, validation status and uncertainty.
+3. Accumulate model evidence across walk-forward, shadow/paper and live stages without conflating them.
+4. Keep the Investment Agent sector-first and evidence-led.
+5. Review both sleeves together while preserving the 50/50 strategic capital split.
+6. Do not implement automated execution or alter user-owned risk limits.
 
+## Evidence and scope boundaries
 
-## Outstanding owner-level memory issue
-
-During the architecture review, the Research Agent's `README.md`, `05_NEXT_STEPS.md`, and `06_ML_DIRECTION_FEATURE_RESEARCH.md` still described EDA v2 as awaiting approval / implementation, while the repository contains committed EDA2 block 5 artifacts. This is a stale status conflict, not a reason for Meta-Agent to infer the next research stage.
-
-Ownership: Quant Research / Research Agent (Qwen-led, GPT critique). Meta-Agent must route this discrepancy to the research owner and verify that the owner synchronizes its context. Do not edit research methods, reports, calculations, or next-stage decisions from this role.
-
-
-## Conversational agent pilot (user-approved, 2026-11-26)
-
-Three role instruction sets are now present under `llm_memory/agents/`:
-- Aggressive Trading — Qwen.
-- Conservative Investment — ChatGPT.
-- Sizing — ChatGPT.
-
-Operating mode is deliberately manual: the user is the orchestrator and transfers context and outputs between ordinary conversations. No API integration, autonomous orchestration, or paid runtime is authorized or required for this pilot. The goal is to establish usefulness before automation.
-
-All agents use CONTEXT → HYPOTHESIS → CHECK → CONCLUSION. CHECK contains separate deterministic Python confirmation and falsification stages; the conclusion interprets both. The objective is positive EV across the aggregate of decisions over a long horizon, robust to non-stationarity. No benchmark outperformance mandate. IC is diagnostic, not a universal pass/fail threshold; IC below 0.5 is not automatic rejection. ML is supplementary information for Sizing only under the current policy, not a required dependency or signal source.
-
-These are operating instructions only. No agent runtime, Risk Engine, or automated controls are claimed to exist.
+- Repository inspection is not runtime execution.
+- Research methods and scientific conclusions remain Research Agent-owned.
+- Meta-Agent may correct role/process instructions and governance records, not rewrite research results.
+- No broker API or automatic position changes are authorized.

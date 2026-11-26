@@ -29,7 +29,7 @@ The exact contents of these directories evolve. Experiment outputs, downloaded d
 
 ## Target system architecture
 
-The current repository is the research/data foundation, not the completed target platform. The canonical target architecture is documented in [`docs/architecture/MASTER_SPECIFICATION.md`](docs/architecture/MASTER_SPECIFICATION.md), with the transition map in [`docs/PROJECT_ROADMAP.md`](docs/PROJECT_ROADMAP.md). Meta-Agent operating memory is maintained separately under [`llm_memory/meta_agent/`](llm_memory/meta_agent/README.md); Research Agent memory remains under `llm_memory/research_agent/`. The manually orchestrated trading-agent pilot is documented under [`llm_memory/agents/`](llm_memory/agents/README.md).
+The current repository is the research/data foundation, not the completed target platform. The canonical architecture is documented in [`docs/architecture/MASTER_SPECIFICATION.md`](docs/architecture/MASTER_SPECIFICATION.md), with the current transition map in [`docs/PROJECT_ROADMAP.md`](docs/PROJECT_ROADMAP.md). Meta-Agent governance, portfolio oversight, model evaluation and the separate Investment Agent are documented under [`llm_memory/meta_agent/`](llm_memory/meta_agent/README.md); Research Agent memory remains under `llm_memory/research_agent/`. Trading signals come from validated research models, not conversational trading agents.
 
 ## Data principles
 

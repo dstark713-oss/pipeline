@@ -1,6 +1,6 @@
 # QUANT RESEARCH PIPELINE — MASTER SPECIFICATION
 
-> Canonical source transferred into `dstark713-oss/pipeline/docs/architecture/` on 2026-11-26. The original 17-stage specification is preserved below; the Architecture Governance Addendum records the subsequently approved multi-agent architecture without altering the stage catalog.
+> Canonical source transferred into `dstark713-oss/pipeline/docs/architecture/` on 2026-11-26. The original 17-stage specification is preserved below. The architecture governance update dated 2026-11-27 at the end of this document is authoritative for the current operating model and supersedes legacy agent-role descriptions in the original stage text.
 
 ## Задача
 
@@ -736,3 +736,104 @@ Meta-Agent совершенствует торговых агентов чере
 Не начинай писать весь проект одним большим коммитом. Сначала исследуй существующую архитектуру и данные, затем составляй план реализации.
 
 **Главный принцип: 17 этапов — единый исследовательский процесс от рыночных данных до эволюции торговых агентов. Сохраняй эту структуру и не смешивай её с архитектурой отдельных LLM.
+
+---
+
+# Architecture governance update — 2026-11-27
+
+This update records the user's explicit replacement of the conversational multi-agent trading pilot. It is authoritative over any conflicting legacy references to Aggressive Trading, Signal LLM, Sizing LLM, or the previous three-agent conversational pilot above. The original 17 research and production stages remain unchanged.
+
+## 1. Operating architecture
+
+The project uses two distinct capital sleeves and three functional responsibilities:
+
+1. **Model-driven trading sleeve — 50% strategic capital allocation.** Trading signals originate from validated predictive/research models. No Aggressive Trading LLM, Conservative Trading LLM, or conversational signal selector sits between the model output and portfolio review. A model is the signal source.
+2. **Investment sleeve — 50% strategic capital allocation.** A separate Conservative Investment process remains active, led by ChatGPT under Meta-Agent governance. It uses business, sector, fundamental and valuation evidence and is not required to follow model signals.
+3. **Meta-Agent / Portfolio Steward — ChatGPT.** Owns process oversight, model-evidence and trust tracking, model preference recommendations, portfolio sizing proposals, cross-sleeve capital oversight, and governance of the Research Agent and Investment Agent.
+
+The 50/50 split is a strategic allocation between the two sleeves, not a requirement to keep either sleeve fully invested. If a sleeve has no justified opportunity or no eligible model, its capital may remain in cash. Do not force deployment to satisfy a target exposure.
+
+## 2. Trading signal source and model lifecycle
+
+- The research model produces the directional signal or forecast according to its own validated contract.
+- ChatGPT does not invent or replace the model's BUY/SELL output. ChatGPT receives model outputs and evaluates their provenance, current validity, uncertainty, portfolio implications and sizing.
+- Each output must identify the model and version, data/as-of timestamp, universe, target/horizon, signal/forecast, confidence or uncertainty representation, validity conditions and relevant research artifact.
+- Research status is not production status. A promising experiment does not automatically become an eligible live signal source.
+- Model activation, suspension, replacement and retirement require traceable evidence and an explicit user-approved promotion decision.
+- No automatic broker integration, order submission or unattended changes to real positions are authorized. Real portfolio changes remain subject to user confirmation.
+
+## 3. Model evidence and trust register
+
+The Meta-Agent maintains a model register and a longitudinal evidence record. Trust is an evidence-based profile, not an arbitrary single scalar score.
+
+For every model/version, record where applicable:
+- research question, model family, version and owner;
+- dataset and data snapshot, point-in-time rules, universe, target and horizon;
+- training/validation/test or walk-forward protocol and temporal coverage;
+- sample size, prediction coverage, missingness and benchmark/baseline definition;
+- predictive quality, calibration and uncertainty metrics appropriate to the target;
+- out-of-sample and walk-forward stability, subperiod and regime dependence;
+- robustness, sensitivity, leakage checks and known failure modes;
+- transaction-cost and implementation assumptions when economic evaluation is permitted;
+- shadow/paper observations and actual live outcomes, kept distinct;
+- current status, approval date, limitations and reason for status changes.
+
+Model preference must be conditional on the task, horizon, universe, market conditions and available evidence. Do not rank models using one metric, one backtest, one short period or an invented weighted score. When several models exist, compare them on common data and protocols where possible, expose uncertainty and disagreement, and state where evidence is insufficient to prefer one. A model may be preferred for one task or regime and not another.
+
+The Meta-Agent must not fabricate a model's track record or infer live reliability from code inspection or an in-sample result. Evidence labels must distinguish user-run, repository-verified, independently rerun, shadow and live observations.
+
+## 4. Portfolio and sizing responsibility
+
+The Meta-Agent is responsible for portfolio-level reasoning and sizing proposals across the two sleeves:
+- preserve the strategic 50/50 split unless the user explicitly changes it;
+- evaluate model-driven opportunities only from eligible model outputs and the current portfolio state;
+- evaluate investment opportunities through the separate Investment Agent's documented business/fundamental case;
+- account for concentration, correlation, liquidity, costs, uncertainty, model disagreement, capital availability and user-approved Risk Profile constraints;
+- explain proposed weights, alternatives, abstention and changes from the previous allocation;
+- keep unused sleeve capital in cash when evidence or constraints do not justify deployment.
+
+No Risk Profile limit may be invented or silently changed. The Meta-Agent may propose allocations but does not execute trades. Numerical sizing is provisional when required portfolio state, constraints or cost assumptions are missing.
+
+## 5. Research Agent governance
+
+The Research Agent remains an active specialist responsible for research questions, hypotheses, experiment design, implementation, statistical analysis, model development and scientific conclusions. Its underlying LLM is not architecturally fixed; Qwen may be used, but the project should accumulate evidence about model quality rather than assume a permanent winner.
+
+The Meta-Agent:
+- monitors research progress, approved scope, artifact provenance, reproducibility, validation status and handoff quality;
+- maintains model/version evidence and tracks downstream performance after promotion;
+- reviews the Research Agent's process and updates its role instructions when recurring process errors are observed;
+- may request clarification, replication or additional evidence;
+- does not take over scientific ownership or silently rewrite research methods/results.
+
+The Research Agent's own research journal remains the canonical chronological record of scientific research decisions and results. The Meta-Agent's project journal records project-level architecture, model governance, portfolio and process decisions. The user's personal journal remains separate and user-owned.
+
+## 6. Investment Agent governance
+
+The Conservative Investment Agent remains active as a separate investment-analysis process. It is governed by the Meta-Agent and has its own role instructions and journal under `llm_memory/meta_agent/`.
+
+Its key process correction is sector-first screening before selecting individual companies. It must assess sector economics and the business mechanism first, then identify leaders for company-level verification. It must not manufacture opportunities or infer fundamental quality from price-only market diagnostics.
+
+The Investment Agent does not generate model signals and does not control the model sleeve. Its recommendations feed the investment sleeve only.
+
+## 7. Retired conversational roles
+
+The following pilot roles are retired and are not active components:
+- Aggressive Trading LLM;
+- conversational Signal LLM;
+- separate Sizing LLM;
+- the former three-agent manual trading pilot and its shared operating protocol.
+
+The former Conservative Investment role is retained as the Investment Agent, migrated into Meta-Agent memory. Historical journals and project decisions are preserved where useful; retired role files are removed from the active agent directory.
+
+## 8. Operational cadence
+
+The default workflow is:
+1. Research Agent conducts research and returns reproducible model/evidence packages.
+2. Meta-Agent reviews process quality, provenance, validation status and model-register implications.
+3. Eligible model outputs are supplied to Meta-Agent for portfolio context and sizing proposals.
+4. Investment Agent independently develops or updates the fundamental investment case for its sleeve.
+5. Meta-Agent reviews both sleeves, maintains the 50/50 strategic capital split, and proposes portfolio actions or abstention.
+6. User reviews and manually approves any real portfolio changes.
+7. Actual outcomes and model versions are logged to update the evidence record and future model preferences.
+
+The priority is to spend time on substantive research and model quality, not on maintaining a slow conversational agent chain.
