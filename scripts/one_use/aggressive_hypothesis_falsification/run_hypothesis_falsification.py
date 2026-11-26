@@ -407,7 +407,7 @@ def summarize_spreads(spreads, keys, calendar):
             group_key = (group_key,)
         series = g.set_index("tradedate").daily_spread.reindex(calendar)
         mean, se, t = nw_mean(series, max(HORIZONS) - 1)
-        lo, hi = circular_block_ci(series, block_length=5)
+        lo, hi = circular_block_ci(series, block_length=20)
         row = dict(zip(keys, group_key))
         row.update({
             "n_dates": g.tradedate.nunique(), "mean_daily_spread": mean,
@@ -568,7 +568,7 @@ def write_report(path, panel, future, f1, f1_reg, f1_reg_summary, f2, f2_interac
     lines += [
         "", "## Inference and limitations", "",
         "- HAC Newey-West intervals and circular moving-block bootstrap are applied to daily date-level estimates. This preserves contemporaneous cross-sectional dependence because the resampling unit is the date-level statistic, not individual ticker rows.",
-        "- The bootstrap uses five-session circular blocks for all reported contrast series; this is a common dependence-aware robustness check, not an exact finite-sample test.",
+        "- The bootstrap uses 20-session circular blocks for all reported contrast series; this is a common dependence-aware robustness check, not an exact finite-sample test.",
         "- Forward horizons overlap. NW lag is conservatively set to 19 sessions for the reported date-level series.",
         "- BH q-values are screening adjustments within each summary table. Effect size, interval, sample size, period stability, and economic plausibility matter more than a threshold alone.",
         "- The subperiod split is descriptive and fixed: through 2012, 2013-2019, and 2020 onward.",
@@ -654,12 +654,8 @@ def main():
     else:
         f3_ex = pd.DataFrame()
 
-    crisis_mask = np.zeros(len(signal_calendar), dtype=bool)
-    for start, end in crisis_windows:
-        crisis_mask |= (signal_calendar >= pd.Timestamp(start)) & (signal_calendar <= pd.Timestamp(end))
-    ex_crisis_calendar = signal_calendar[~crisis_mask]
     f3_ex_summary = summarize_spreads(
-        f3_ex, ["module", "contrast", "horizon"], ex_crisis_calendar
+        f3_ex, ["module", "contrast", "horizon"], signal_calendar
     ) if len(f3_ex) else pd.DataFrame()
 
     # Fixed subperiod robustness for all daily contrast series.
