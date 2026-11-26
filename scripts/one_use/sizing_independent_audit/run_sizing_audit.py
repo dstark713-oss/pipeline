@@ -67,6 +67,7 @@ def build_signal_history(panel: pd.DataFrame):
     ret20, rs20 = records[1][1], records[1][2]
 
     rows = []
+    panel_by_date = {date: group for date, group in panel.groupby("tradedate", sort=True)}
     for date in dates:
         a = pd.DataFrame({
             "secid": close.columns,
@@ -76,7 +77,7 @@ def build_signal_history(panel: pd.DataFrame):
             "rs_20d": rs20.loc[date].to_numpy(),
             "close": close.loc[date].to_numpy(),
         })
-        membership = panel.loc[panel.tradedate.eq(date), ["secid", "rank", "bar_available", "value"]]
+        membership = panel_by_date[date][["secid", "rank", "bar_available", "value"]]
         a = a.merge(membership, on="secid", how="inner", validate="one_to_one")
         a["eligible"] = (a.bar_available.eq(1) & a.close.gt(0) & a.value.gt(0)
                          & a[["return_5d", "rs_5d", "return_20d", "rs_20d"]].notna().all(axis=1))
@@ -208,7 +209,7 @@ def main():
         "",
         "## Aggressive Trading — falsification",
         "",
-        aggressive.to_markdown(index=False, floatfmt=".4f"),
+        aggressive.to_string(index=False, float_format=lambda x: f"{x:.4f}"),
         "",
         f"Latest snapshot rebuilt from panel: {len(current_long)} Long / {len(current_short)} Short. "
         f"Overlap with reported 26-Nov list: Long {long_overlap}/10; Short {short_overlap}/4.",
@@ -218,7 +219,7 @@ def main():
         "",
         "## Conservative Investment — falsification",
         "",
-        conservative.to_markdown(index=False, floatfmt=".4f"),
+        conservative.to_string(index=False, float_format=lambda x: f"{x:.4f}"),
         "",
         f"Sector/fundamental columns present in panel: {fundamental_cols if fundamental_cols else 'NONE'}.",
         "The panel can challenge broad-market participation claims but cannot validate sector economics, company fundamentals, valuation, or a positive BUY case.",
