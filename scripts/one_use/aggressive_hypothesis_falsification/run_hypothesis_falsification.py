@@ -445,7 +445,7 @@ def add_periods(frame):
     return x
 
 
-def write_report(path, panel, future, f1, f1_reg, f2, f2_interaction, f3, f4, summaries):
+def write_report(path, panel, future, f1, f1_reg, f1_reg_summary, f2, f2_interaction, f2_int_summary, f2_quadrant_summary, f3, f4, summaries):
     path.parent.mkdir(parents=True, exist_ok=True)
     calendar_min = panel.tradedate.min().date()
     calendar_max = panel.tradedate.max().date()
@@ -497,7 +497,41 @@ def write_report(path, panel, future, f1, f1_reg, f2, f2_interaction, f3, f4, su
             )
         lines.append("")
     lines += [
-        "## Inference and limitations", "",
+        "## F1 conditional regression coefficients", "",
+        "| Horizon | Coefficient | Mean | NW 95% CI | Dates | q |",
+        "|---:|---|---:|---:|---:|---:|",
+    ]
+    for r in f1_reg_summary.itertuples(index=False):
+        lines.append(
+            f"| {r.horizon} | {r.coefficient} | {r.mean:.5f} | "
+            f"[{r.nw_ci_low:.5f}, {r.nw_ci_high:.5f}] | {r.n_dates:,} | {r.bh_q:.3f} |"
+        )
+    lines += [
+        "", "## F2 momentum quadrants", "",
+        "| Horizon | Quadrant | Mean forward RS | NW 95% CI | Dates | q |",
+        "|---:|---|---:|---:|---:|---:|",
+    ]
+    for r in f2_quadrant_summary.itertuples(index=False):
+        lines.append(
+            f"| {r.horizon} | {r.quadrant} | {r.mean:.3%} | "
+            f"[{r.nw_ci_low:.3%}, {r.nw_ci_high:.3%}] | {r.n_dates:,} | {r.bh_q:.3f} |"
+        )
+    lines += [
+        "", "## F2 continuous interaction", "",
+        "| Horizon | Coefficient | Mean | NW 95% CI | Dates | q |",
+        "|---:|---|---:|---:|---:|---:|",
+    ]
+    for r in f2_int_summary.itertuples(index=False):
+        lines.append(
+            f"| {r.horizon} | {r.coefficient} | {r.mean:.5f} | "
+            f"[{r.nw_ci_low:.5f}, {r.nw_ci_high:.5f}] | {r.n_dates:,} | {r.bh_q:.3f} |"
+        )
+    lines += [
+        "", "## F3 persistent weakness outside predefined crisis windows", "",
+        "Crisis windows excluded in this diagnostic: 2008-09-15 to 2009-06-30, "
+        "2020-02-20 to 2020-06-30, and 2022-02-24 to 2022-12-30. These exclusions "
+        "are a robustness view only; the full-sample results remain primary.",
+        "", "## Inference and limitations", "",
         "- HAC Newey-West intervals and circular moving-block bootstrap are applied to daily date-level estimates. This preserves contemporaneous cross-sectional dependence because the resampling unit is the date-level statistic, not individual ticker rows.",
         "- The bootstrap uses five-session circular blocks for all reported contrast series; this is a common dependence-aware robustness check, not an exact finite-sample test.",
         "- Forward horizons overlap. NW lag is conservatively set to 19 sessions for the reported date-level series.",
@@ -574,6 +608,27 @@ def main():
     f2_int_summary = summarize_date_series(
         f2_interaction, ["beta_return5", "beta_return20", "beta_interaction"], ["horizon"]
     ) if len(f2_interaction) else pd.DataFrame()
+    f2_quadrant_summary = summarize_date_series(
+        f2, ["mean_forward_rs"], ["horizon", "quadrant"]
+    ) if len(f2) else pd.DataFrame()
+
+    # Predefined crisis-window robustness for F3. Full sample remains primary.
+    crisis_windows = [
+        ("2008-09-15", "2009-06-30"),
+        ("2020-02-20", "2020-06-30"),
+        ("2022-02-24", "2022-12-30"),
+    ]
+    if len(f3):
+        f3["in_crisis_window"] = False
+        for start, end in crisis_windows:
+            f3["in_crisis_window"] |= f3.tradedate.between(pd.Timestamp(start), pd.Timestamp(end))
+        f3_ex = f3.loc[~f3.in_crisis_window].copy()
+    else:
+        f3_ex = pd.DataFrame()
+
+    f3_ex_summary = summarize_spreads(
+        f3_ex, ["module", "contrast", "horizon"]
+    ) if len(f3_ex) else pd.DataFrame()
 
     # Fixed subperiod robustness for all daily contrast series.
     period_frames = []
@@ -607,6 +662,7 @@ def main():
         "f2_interaction_coefficients.csv": f2_interaction,
         "f2_interaction_summary.csv": f2_int_summary,
         "f3_persistent_weakness_daily.csv": f3,
+        "f3_persistent_weakness_ex_crisis_summary.csv": f3_ex_summary,
         "f4_impulse_concentration_metrics.csv": concentration,
         "f4_impulse_concentration_daily.csv": f4,
         "period_stability.csv": periods,
@@ -620,7 +676,8 @@ def main():
         "F4 impulse concentration": f4_summary,
     }
     write_report(
-        args.report, panel, future, f1, f1_reg, f2, f2_interaction,
+        args.report, panel, future, f1, f1_reg, f1_reg_summary,
+        f2, f2_interaction, f2_int_summary, f2_quadrant_summary,
         f3, f4, summaries
     )
     print("\nFALSIFICATION RUN COMPLETE")
