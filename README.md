@@ -27,6 +27,10 @@ pipeline/
 
 The exact contents of these directories evolve. Experiment outputs, downloaded data, SQLite databases, Parquet files, logs, caches, and other generated artifacts belong in local data/output locations and must remain out of Git.
 
+## Target system architecture
+
+The current repository is the research/data foundation, not the completed target platform. The canonical target architecture is documented in [`docs/architecture/MASTER_SPECIFICATION.md`](docs/architecture/MASTER_SPECIFICATION.md), with the transition map in [`docs/PROJECT_ROADMAP.md`](docs/PROJECT_ROADMAP.md). Meta-Agent operating memory is maintained separately under [`llm_memory/meta_agent/`](llm_memory/meta_agent/README.md); Research Agent memory remains under `llm_memory/research_agent/`.
+
 ## Data principles
 
 - Keep source collection, transformations, and analytical panels as separate stages.
