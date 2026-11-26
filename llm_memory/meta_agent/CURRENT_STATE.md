@@ -50,3 +50,10 @@ The five functional roles map to three top-level system components: Signal LLM, 
 ## Research handoff
 
 The Research Agent owns the active EDA/research stage and its next-step decisions. Meta-Agent checks process integrity and handoff readiness only. Any stale research-specific context must be resolved by its owner, not silently rewritten here.
+
+
+## Outstanding owner-level memory issue
+
+During the architecture review, the Research Agent's `README.md`, `05_NEXT_STEPS.md`, and `06_ML_DIRECTION_FEATURE_RESEARCH.md` still described EDA v2 as awaiting approval / implementation, while the repository contains committed EDA2 block 5 artifacts. This is a stale status conflict, not a reason for Meta-Agent to infer the next research stage.
+
+Ownership: Quant Research / Research Agent (Qwen-led, GPT critique). Meta-Agent must route this discrepancy to the research owner and verify that the owner synchronizes its context. Do not edit research methods, reports, calculations, or next-stage decisions from this role.
