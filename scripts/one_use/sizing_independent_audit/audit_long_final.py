@@ -136,8 +136,10 @@ def evaluate(panel, dates, close, signals):
                 by_ticker = q.groupby("secid").agg(
                     signals=("net", "size"), mean_net=("net", "mean"),
                     median_net=("net", "median"), hit_rate=("net", lambda z: (z > 0).mean()),
-                    mean_excess=("excess", "mean"), positive_year_fraction=("year", lambda z: z.nunique())
-                ).reset_index()
+                    mean_excess=("excess", "mean")
+                )
+                positive_years = q.groupby(["secid", "year"]).net.mean().gt(0).groupby("secid").mean()
+                by_ticker = by_ticker.join(positive_years.rename("positive_year_fraction")).reset_index()
                 by_ticker["horizon"] = h
                 candidate_rows.append(by_ticker)
                 for year, g in q.groupby("year"):
