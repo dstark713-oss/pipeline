@@ -399,13 +399,14 @@ def h5_weakness_tests(panel, future):
     return pd.DataFrame(rows)
 
 
-def summarize_spreads(spreads, keys):
+def summarize_spreads(spreads, keys, calendar):
     rows = []
     for group_key, g in spreads.groupby(keys, dropna=False, sort=True):
         if not isinstance(group_key, tuple):
             group_key = (group_key,)
-        mean, se, t = nw_mean(g.sort_values("tradedate").daily_spread, max(HORIZONS) - 1)
-        lo, hi = circular_block_ci(g.sort_values("tradedate").daily_spread, block_length=5)
+        series = g.set_index("tradedate").daily_spread.reindex(calendar)
+        mean, se, t = nw_mean(series, max(HORIZONS) - 1)
+        lo, hi = circular_block_ci(series, block_length=5)
         row = dict(zip(keys, group_key))
         row.update({
             "n_dates": g.tradedate.nunique(), "mean_daily_spread": mean,
@@ -424,14 +425,15 @@ def summarize_spreads(spreads, keys):
     return result
 
 
-def summarize_date_series(frame, value_cols, group_cols):
+def summarize_date_series(frame, value_cols, group_cols, calendar):
     rows = []
     for group_key, g in frame.groupby(group_cols, sort=True):
         if not isinstance(group_key, tuple):
             group_key = (group_key,)
         for value_col in value_cols:
-            mean, se, t = nw_mean(g.sort_values("tradedate")[value_col], max(HORIZONS) - 1)
-            lo, hi = circular_block_ci(g.sort_values("tradedate")[value_col], block_length=5)
+            series = g.set_index("tradedate")[value_col].reindex(calendar)
+            mean, se, t = nw_mean(series, max(HORIZONS) - 1)
+            lo, hi = circular_block_ci(series, block_length=5)
             row = dict(zip(group_cols, group_key))
             row.update({
                 "coefficient": value_col, "mean": mean, "nw_se": se, "nw_t": t,
@@ -611,19 +613,19 @@ def main():
     concentration = h1_concentration(panel, close, calendar)
     f4 = h1_daily_spreads(concentration, future)
 
-    f1_summary = summarize_spreads(f1, ["module", "horizon"]) if len(f1) else pd.DataFrame()
+    f1_summary = summarize_spreads(f1, ["module", "horizon"], calendar) if len(f1) else pd.DataFrame()
     # F2 quadrant means are reported as descriptive cross-sectional series;
     # inference on the incremental interaction is reported separately.
-    f3_summary = summarize_spreads(f3, ["module", "contrast", "horizon"]) if len(f3) else pd.DataFrame()
-    f4_summary = summarize_spreads(f4, ["module", "horizon"]) if len(f4) else pd.DataFrame()
+    f3_summary = summarize_spreads(f3, ["module", "contrast", "horizon"], calendar) if len(f3) else pd.DataFrame()
+    f4_summary = summarize_spreads(f4, ["module", "horizon"], calendar) if len(f4) else pd.DataFrame()
     f1_reg_summary = summarize_date_series(
-        f1_reg, ["beta_rs20", "beta_rs5", "beta_return5"], ["module", "horizon"]
+        f1_reg, ["beta_rs20", "beta_rs5", "beta_return5"], ["module", "horizon"], calendar
     ) if len(f1_reg) else pd.DataFrame()
     f2_int_summary = summarize_date_series(
-        f2_interaction, ["beta_return5", "beta_return20", "beta_interaction"], ["horizon"]
+        f2_interaction, ["beta_return5", "beta_return20", "beta_interaction"], ["horizon"], calendar
     ) if len(f2_interaction) else pd.DataFrame()
     f2_quadrant_summary = summarize_date_series(
-        f2, ["mean_forward_rs"], ["horizon", "quadrant"]
+        f2, ["mean_forward_rs"], ["horizon", "quadrant"], calendar
     ) if len(f2) else pd.DataFrame()
 
     # Predefined crisis-window robustness for F3. Full sample remains primary.
@@ -640,8 +642,12 @@ def main():
     else:
         f3_ex = pd.DataFrame()
 
+    crisis_mask = np.zeros(len(calendar), dtype=bool)
+    for start, end in crisis_windows:
+        crisis_mask |= (calendar >= pd.Timestamp(start)) & (calendar <= pd.Timestamp(end))
+    ex_crisis_calendar = calendar[~crisis_mask]
     f3_ex_summary = summarize_spreads(
-        f3_ex, ["module", "contrast", "horizon"]
+        f3_ex, ["module", "contrast", "horizon"], ex_crisis_calendar
     ) if len(f3_ex) else pd.DataFrame()
 
     # Fixed subperiod robustness for all daily contrast series.
