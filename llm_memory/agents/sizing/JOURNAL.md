@@ -92,3 +92,50 @@ Important limitations:
 - No position weights or allocation proposal are issued at this stage.
 - Current verified handoff posture is no established Conservative BUY thesis; Aggressive candidate list remains unvalidated by Sizing.
 - The 50% / 50% sleeve mandate remains fixed.
+
+
+## 2026-11-27 — User correction and final Long audit iteration
+
+### Correction to Conservative interpretation
+
+- User clarified that Conservative's 100% cash is its actual decision, while its names are candidates for further research only.
+- The price-only TOP50 audit was never intended to prove or disprove fundamentals; the panel contains no fundamental fields.
+- The Conservative agent's current output is therefore role-consistent. Do not frame the missing fundamental columns as a failure of its current decision.
+- Future challenge of Conservative must inspect sector-first and company-level fundamental reasoning, source quality, accounting consistency, valuation, and explicit falsification. No quantitative fundamental confirmation is currently available.
+
+### First audit output received
+
+- Panel as-of 2026-11-26; 5,491 sessions; 214 tickers; PIT guard passed; 15 bps RT assumption.
+- Long 10-session: mean net +0.41%, median -0.04%, hit 49.6%, mean excess +0.23%, positive-year fraction 54.5%.
+- Long 20-session: mean net +0.98%, median +0.25%, hit 51.2%, mean excess +0.42%, positive-year fraction 59.1%.
+- Short results negative on mean net and excess at both horizons; short remains excluded from sizing absent materially different evidence and borrow/permission checks.
+- Reconstructed latest Long candidates 12 with 8/10 overlap against the reported list. This is a material but not complete reproducibility match.
+- Interpretation: Long survives as a candidate hypothesis but is not yet demonstrated as robust, independent, or executable alpha.
+
+### Final Long audit script
+
+Committed:
+- `scripts/one_use/sizing_independent_audit/audit_long_final.py`
+
+Checks:
+1. Reconstruct the Long cohort from PIT TOP50 using positive RS20 and top-quintile RS20 within the same RS5 quintile.
+2. Test 10- and 20-session forward returns at 15, 30, and 50 bps round-trip costs.
+3. Calculate Newey-West/HAC uncertainty on the daily equal-weight signal-cohort return series, using horizon-minus-one lags for overlapping forward windows; include confidence intervals for absolute and benchmark-excess returns.
+4. Report positive-year fraction by cost scenario.
+5. Report historical per-ticker signal performance for the names in the reported packet / independently reconstructed latest list.
+6. Measure how concentrated positive equal-weight P&L contributions are among the strongest ticker contributors.
+7. Produce a latest name-level risk/liquidity snapshot using fixed last-20 / last-60 global-session windows, plus a 60-session pairwise return-correlation matrix for the reported names.
+8. Preserve explicit limitations: HAC is asymptotic; the cohort test is not a fully executable portfolio simulation; ticker-level history is conditional on the reconstructed signal; 60-session correlations are unstable estimates; no weights are produced.
+
+Commits:
+- Initial final audit: `dadebbc58456897d3795179737474b1fc22a6f36`
+- Correct candidate positive-year calculation: `8933796e2cf8a742a371ed64776d0afc8112b0a7`
+- Correct fixed-session volatility/liquidity windows: `defb8cc3606651f62092706dcc4114940e0f3296`
+
+### Current stage status
+
+- Iteration 1: final Long audit script committed; awaiting user's local run and compact output.
+- Iteration 2 (name selection and sizing): not yet started; begins immediately after final Long audit output is reviewed.
+- User explicitly authorized zero weights for candidates that do not merit capital; the reported ten names are not a mandatory buy list.
+- Fixed capital mandate remains 50% Aggressive / 50% Conservative. Cash is permitted inside either sleeve. No cross-sleeve transfer.
+- No live positions or orders changed.
