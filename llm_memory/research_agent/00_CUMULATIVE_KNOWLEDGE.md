@@ -1,63 +1,89 @@
 # Cumulative Research Knowledge
 
-Last updated: 2026-11-26
+Last updated: 2026-11-27
 
 This is the concise, current cross-cycle knowledge base, not a transcript. Replace superseded conclusions instead of accumulating versions.
 
 ## Stable methodological principles
 
 - Start from a research question and estimand, not a convenient feature or fashionable model.
-- Distinguish descriptive structure, data quality, statistical association, predictive generalization, causal claims, and downstream utility.
+- Distinguish descriptive structure, data quality, statistical association, predictive generalization, causal claims, and downstream economic utility.
 - A statistically significant association is not automatically robust, useful, causal, or out-of-sample predictive.
 - Preserve temporal availability, point-in-time universe membership, and instrument identity. Test leakage, lookahead, survivorship/selection bias, missingness, and provenance.
 - Treat dependent observations and finite-sample uncertainty explicitly.
-- Feature discovery is DS-first: statistics, probability, information theory, statistical learning, and time-series analysis. Do not use trader-style indicators or rename them as statistical methods.
-- A candidate is not accepted solely because it is common, easy to calculate, or has high in-sample IC.
+- Feature and hypothesis discovery should be grounded in statistics, probability, information theory, economics, and time-series analysis. Do not disguise trader-style indicators as statistical methods.
+- A candidate is not accepted solely because it is common, easy to calculate, statistically significant, or has high in-sample performance.
+- Fix test families, horizons, outcomes, controls, and decision criteria before inspecting experiment results.
 - Do not revisit closed experiments without explicit request or concrete new evidence.
 - Keep user-reported, code-inspected, runtime-verified, and hypothesized claims distinct.
 
 ## Completed research
 
-### Primitive research and market-state screener
+### EDA2 — CLOSED
 
-Closed. The screener is a descriptive analytical tool, not a trading-signal or allocation engine. See `03_PRIMITIVE_RESEARCH.md` and `docs/tools/01_primitive_screener.md`.
+All seven descriptive EDA2 blocks are complete and interpreted. Consolidated report:
+`docs/research/eda2/results/compilation/EDA2_RESULTS_COMPILATION.md`
+
+Key reusable findings:
+- Pooled returns are heavy-tailed; individual instruments and historical periods are heterogeneous.
+- Signed-return autocorrelation is weak, while absolute and squared returns show stronger temporal dependence.
+- Cross-sectional dependence is positive on average but materially heterogeneous across instrument pairs.
+- Cross-sectional dispersion is temporally dependent; breadth sign share itself is not similarly persistent.
+- Rolling scale varies through time within instruments; cross-period rank stability is partial rather than constant.
+- PIT TOP50 ranks move relatively slowly within the universe, while composition changes more often in later periods; membership exit must not be treated as an observed rank.
+- Trading activity is highly concentrated, especially by Volume. Value is more economically interpretable for cross-instrument concentration.
+- Same-day activity-conditioned return distributions are descriptive only. They do not establish future predictive value.
+- PIT universe composition, unequal histories, missing observations, and selection effects must be controlled in subsequent studies.
+
+Do not reopen completed EDA2 blocks without explicit request or concrete material error.
 
 ### Log returns
 
-Daily log return `r_t = ln(P_t / P_{t-1})` is additive over consecutive periods and scale-normalized, but does not guarantee stationarity.
+Daily log return (r_t = \ln(P_t/P_{t-1})) is additive over consecutive periods and scale-normalized, but does not guarantee stationarity.
 
 ### Rolling Statistical Moments
 
-**CLOSED on 2026-11-25.** The experiment covered rolling mean, variance, skewness, and Fisher excess kurtosis over 20/60/120/240 sessions. Do not reopen without explicit request or concrete new evidence.
+Closed on 2026-11-25. Do not reopen without explicit request or concrete new evidence.
 
-## PIT TOP50 EDA: current understanding
+## STAGE 05 — Hypothesis Research
 
-First EDA run (user-executed 2026-11-25):
-- 203,403 PIT membership rows; 214 SECIDs; 5,490 panel dates; 5,740 TQBR/EQBR calendar sessions.
-- 199,169 rows marked bar-available (97.918%); 4,234 membership rows without a selected board bar.
-- 197,955 valid positive adjusted-Close starting observations.
-- Average daily membership 37.05; early years have fewer constituents, reaching an average of 50 from 2015.
-- Panel Close matched selected adjusted SQLite Close on all 197,955 comparable observations at tolerance 1e-8.
-- Future endpoint coverage at +1/+5/+20 sessions: 99.682% / 99.406% / 98.574%.
-- Return distributions are heavy-tailed; pooled arithmetic and log-return means differ materially at +20. Annual summaries vary.
-- This first pass was preliminary. It did not study serial dependence, cross-sectional dependence, date-level dispersion, instrument heterogeneity, rank mobility, or activity concentration. Do not call substantive EDA complete.
+The user approved exactly two categories of economic hypotheses:
 
-Known issues are not open research investigations:
-- 1,214 incomplete bars are caused by a known refresh defect: incomplete history rows are not replaced with same-day MOEX candle data. Repair via a standalone overlay utility; raw SQLite remains append-only.
-- One BELU quarantined row is known; no separate investigation is needed.
+1. **Risk Control:** preserve capital and improve capital-use efficiency through risk-state information, exposure adaptation, and diversification.
+2. **Direct Monetization:** identify reproducible effects that can generate additional net return after implementation costs.
 
-Active next research proposal: `docs/research/eda/EDA_V2_PLAN.md`. It covers distribution geometry, temporal dependence, cross-sectional co-movement, dispersion, instrument heterogeneity, PIT membership/rank mobility, and activity concentration. Await user approval before implementation.
+Approved initial pool (approved for research, not empirically validated):
 
-## Incomplete-bar repair architecture
+Risk Control:
+- RC-001 — volatility-state forecasting for exposure adaptation.
+- RC-002 — changing asset dependence and systemic portfolio risk.
+- RC-003 — unusual activity as a possible warning of future risk.
 
-- Raw SQLite remains append-only and read-only to the repair utility.
-- Standalone script `scripts/dataset/06_repair_incomplete_bars.py` fetches exact daily MOEX candles for raw keys with NULL OHLC and validates complete OHLC.
-- Corrections are stored in `data/interim/bar_repairs/moex_candle_repairs.sqlite`.
-- Adjusted builder applies overlay values at rebuild time and records repair provenance in derived data.
-- Code is committed but not yet run against the user's local database. No runtime success claim is valid until the user runs it and shares results.
+Direct Monetization:
+- DM-001 — relative-return persistence.
+- DM-002 — activity and future relative returns.
+- DM-003 — heterogeneity and asset-selection opportunity.
+- DM-004 — compensation for bearing risk.
+
+Every hypothesis must explain economic mechanism, expected market behavior, exact economic-value mechanism, information advantage and temporal availability, instruments, horizons, data, candidate variables, confounders, applicability, and predeclared confirmation/rejection criteria.
+
+Economic filter:
+- No credible Risk Control or Direct Monetization mechanism → do not include in the main registry.
+- Risk Control must beat a meaningful baseline and cannot claim success merely by holding more cash.
+- Direct Monetization must demonstrate reproducible net value after commissions, slippage, liquidity and turnover.
+- Historical profitability, correlation, or statistical significance alone is insufficient.
+- EDA-driven and mechanism-driven hypotheses are both allowed. EDA motivates and constrains but does not prove predictive value.
+
+Canonical documents:
+- `docs/research/research_hypothesis/`
+- `docs/research/hypothesis_research/PLAN.md`
+- `docs/research/hypothesis_research/results/`
 
 ## Research boundaries
 
-No fixed target, label, model count, or prediction horizon is selected. No feature engineering, IC leaderboard, model fitting, walk-forward evaluation, trading rules, or portfolio metrics during EDA. Descriptive conditional distributions can generate hypotheses but are not predictive evidence.
-
-No forward-fill, synthetic bars, bridging missing sessions, automatic outlier deletion, or source-data mutation. Preserve PIT membership and missingness. Portfolio metrics remain prohibited until a final model is approved.
+- Stage 05 forms and prioritizes falsifiable economic hypotheses; Stage 06 designs the formal research methodology.
+- No experiment begins before its research design is approved.
+- No automatic promotion from hypothesis to validated effect or model.
+- Preserve PIT membership, missingness, provenance, and temporal validation.
+- No live trading, automatic execution, or portfolio allocation decisions are produced by the Research Agent.
+- Raw datasets, SQLite, Parquet, caches, and bulky row-level outputs remain outside GitHub.
