@@ -605,14 +605,6 @@ def main():
     f4 = h1_daily_spreads(concentration, future)
 
     f1_summary = summarize_spreads(f1, ["module", "horizon"]) if len(f1) else pd.DataFrame()
-    f2_summary = summarize_spreads(
-        f2.loc[f2.quadrant.eq("positive_both")].assign(
-            module="F2_positive_both_vs_universe",
-            signal_n=f2.loc[f2.quadrant.eq("positive_both"), "n"],
-            control_n=0, signal_hit_rate=np.nan, signal_negative_rate=np.nan,
-            daily_spread=np.nan
-        ), ["module", "horizon"]
-    ) if False else pd.DataFrame()
     # F2 quadrant means are reported as descriptive cross-sectional series;
     # inference on the incremental interaction is reported separately.
     f3_summary = summarize_spreads(f3, ["module", "contrast", "horizon"]) if len(f3) else pd.DataFrame()
@@ -662,6 +654,19 @@ def main():
             period_frames.append({
                 "module_set": name, **dict(zip(keys + ["period"], group_key)),
                 "n_dates": g.tradedate.nunique(), "mean_daily_spread": mean,
+                "nw_ci_low": mean - 1.96 * se if np.isfinite(se) else np.nan,
+                "nw_ci_high": mean + 1.96 * se if np.isfinite(se) else np.nan,
+                "nw_t": t,
+            })
+    # F2 interaction coefficient stability by the same fixed periods.
+    if len(f2_interaction):
+        tmp = add_periods(f2_interaction)
+        for (horizon, period), g in tmp.groupby(["horizon", "period"], sort=True):
+            mean, se, t = nw_mean(g.sort_values("tradedate").beta_interaction, 19)
+            period_frames.append({
+                "module_set": "F2_interaction", "horizon": int(horizon),
+                "period": period, "n_dates": g.tradedate.nunique(),
+                "mean_daily_spread": mean,
                 "nw_ci_low": mean - 1.96 * se if np.isfinite(se) else np.nan,
                 "nw_ci_high": mean + 1.96 * se if np.isfinite(se) else np.nan,
                 "nw_t": t,
