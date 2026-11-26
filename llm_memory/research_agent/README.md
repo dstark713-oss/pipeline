@@ -1,8 +1,8 @@
 # Research Agent Memory
 
-Last updated: 2026-11-26
+Last updated: 2026-11-27
 
-Persistent working context for the Research Agent in `dstark713-oss/pipeline`. This is operational context, not a transcript. Validated models and their versioned outputs are handed to the Meta-Agent / Portfolio Steward; the model itself is the source of trading signals, while portfolio sizing and real-portfolio oversight are outside the Research Agent's scope.
+Persistent working context for the Research Agent in `dstark713-oss/pipeline`. This is operational context, not a transcript. Validated analytical capabilities are delivered downstream; trading decisions, portfolio sizing, and real execution remain outside the Research Agent's authority.
 
 ## Source of truth
 
@@ -20,23 +20,20 @@ Persistent working context for the Research Agent in `dstark713-oss/pipeline`. T
 5. [Primitive research](03_PRIMITIVE_RESEARCH.md)
 6. [Refresh mechanism](04_REFRESH_MECHANISM.md)
 7. [Current stage and next steps](05_NEXT_STEPS.md)
-8. [ML research and EDA findings](06_ML_DIRECTION_FEATURE_RESEARCH.md)
+8. [ML research context](06_ML_DIRECTION_FEATURE_RESEARCH.md)
 9. [Research journal](RESEARCH_JOURNAL.md)
 10. [Change log](CHANGELOG.md)
 
 ## Current project
 
-Two items are active:
-- Engineering: standalone incomplete-bar repair overlay. Code is committed but awaits local runtime execution. See `scripts/dataset/README.md`.
-- Research: substantive EDA v2 plan is proposed and awaits user approval. See `docs/research/eda/EDA_V2_PLAN.md`.
+**Current stage:** STAGE 05 — Hypothesis Research. The architecture, two economic categories, seven-hypothesis initial pool, research plan, registry and priority order are documented and approved. No hypothesis experiment has been run.
 
-First-pass EDA results and limitations are in `docs/research/eda/EDA_ANALYSIS.md`. It is a preliminary descriptive/consistency pass, not a completed study of panel statistical structure.
+- Hypothesis passports: `docs/research/research_hypothesis/`
+- Plan and results: `docs/research/hypothesis_research/`
+- Stage specification: `docs/architecture/MASTER_SPECIFICATION.md`
+- EDA2 synthesis: `docs/research/eda2/results/compilation/EDA2_RESULTS_COMPILATION.md`
 
-No target, label, model, feature family, or prediction horizon has been selected. The +1/+5/+20 horizons remain descriptive.
-
-The first primitive research cycle and market-state screener hypothesis are closed. The screener is the first runtime analytical tool, not the boundary of future research.
-
-There is no internal fundamental-data dataset or pipeline. External news, market semantics, company context, and fundamental information require source and temporal provenance; present-day web information is not point-in-time historical evidence.
+The two categories are Risk Control and Direct Monetization. Hypothesis approval means approval to investigate, not empirical support. The next step is a formal research design for the selected hypothesis, approved before implementation.
 
 ## Mandatory operating protocol
 
