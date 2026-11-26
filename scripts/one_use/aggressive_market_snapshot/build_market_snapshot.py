@@ -20,6 +20,9 @@ PRICE_BOARD_PRIORITY = {"TQBR": 0, "EQBR": 1}
 HORIZONS = (1, 5, 10, 20)
 VOL_WINDOWS = (20, 60)
 ANNUALIZATION = 252
+WARMUP_START_DATE = pd.Timestamp("2004-01-01")
+SUSPENSION_START = pd.Timestamp("2022-02-28")
+SUSPENSION_END = pd.Timestamp("2022-03-23")
 
 
 def parse_args() -> argparse.Namespace:
@@ -424,15 +427,35 @@ def main() -> int:
 
     log("Loading point-in-time TOP50 membership...")
     membership = load_membership(args.membership)
+
+    # Load the full available warm-up history. The membership file starts at
+    # the panel start date, so using its dates alone would silently truncate
+    # the first 60 sessions of rolling features.
+    log("Loading adjusted daily bars...")
+    daily = load_adjusted_daily(args.db, WARMUP_START_DATE)
+    daily = daily.loc[
+        (daily["tradedate"] <= membership["tradedate"].max())
+        & ~daily["tradedate"].between(SUSPENSION_START, SUSPENSION_END)
+    ].copy()
+
     calendar = pd.DatetimeIndex(
-        membership["tradedate"].drop_duplicates().sort_values(),
+        daily["tradedate"].drop_duplicates().sort_values(),
         name="tradedate",
     )
+    membership_dates = pd.DatetimeIndex(
+        membership["tradedate"].drop_duplicates().sort_values()
+    )
+    missing_membership_dates = membership_dates.difference(calendar)
+    if not missing_membership_dates.empty:
+        raise RuntimeError(
+            "Membership dates missing from adjusted-bar calendar: "
+            f"{missing_membership_dates[:5].tolist()}"
+        )
 
-    # Load warm-up history before the first membership date so early returns
-    # and rolling statistics can use prior observations.
-    log("Loading adjusted daily bars...")
-    daily = load_adjusted_daily(args.db, calendar.min())
+    log(
+        f"Market calendar: {calendar.min().date()} .. {calendar.max().date()} "
+        f"({len(calendar):,} sessions, including warm-up)"
+    )
 
     log("Building per-ticker time-series features...")
     features, one_day_returns = build_matrices(daily, calendar)
