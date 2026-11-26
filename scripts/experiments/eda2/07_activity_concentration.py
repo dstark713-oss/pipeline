@@ -18,7 +18,7 @@ PERIODS = (
     ("2020_2026", "2020-01-01", "2026-12-31"),
 )
 ACTIVITY_COLUMNS = ("volume", "value", "value_60d")
-QUANTILES = (0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99)
+QUANTILES = (0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99)
 
 
 def parse_args():
