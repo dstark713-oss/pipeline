@@ -157,8 +157,9 @@ def add_cross_sectional_features(snapshot):
     p["H1_impulse"] = (p.q_return_5d >= 0.80) & (p.return_5d > 0)
     p["H2_high_rs20"] = (p.q_rs_20d >= 0.80) & (p.rs_20d > 0)
     p["H3_aligned_positive"] = (p.return_5d > 0) & (p.return_20d > 0)
+    p["valid_rs_pair"] = p.rs_5d.notna() & p.rs_20d.notna()
     p["H5_persistent_weakness"] = (
-        (p.q_rs_5d <= 0.20) & (p.q_rs_20d <= 0.20)
+        p.valid_rs_pair & (p.q_rs_5d <= 0.20) & (p.q_rs_20d <= 0.20)
         & (p.rs_5d < 0) & (p.rs_20d < 0)
     )
     p["rs5_quintile"] = np.ceil(p.q_rs_5d * 5).clip(1, 5)
@@ -310,15 +311,18 @@ def h2_conditional_tests(panel, future):
 
 def h3_quadrants(panel, future):
     x = panel[["tradedate", "secid", "return_5d", "return_20d"]].copy()
+    valid = x.return_5d.notna() & x.return_20d.notna()
     x["quadrant"] = np.select(
         [
-            (x.return_5d > 0) & (x.return_20d > 0),
-            (x.return_5d > 0) & (x.return_20d <= 0),
-            (x.return_5d <= 0) & (x.return_20d > 0),
+            valid & (x.return_5d > 0) & (x.return_20d > 0),
+            valid & (x.return_5d > 0) & (x.return_20d <= 0),
+            valid & (x.return_5d <= 0) & (x.return_20d > 0),
+            valid & (x.return_5d <= 0) & (x.return_20d <= 0),
         ],
-        ["positive_both", "positive_5_only", "positive_20_only"],
-        default="negative_both",
+        ["positive_both", "positive_5_only", "positive_20_only", "negative_both"],
+        default="",
     )
+    x.loc[~valid, "quadrant"] = np.nan
     x = x.merge(
         future[["tradedate", "secid", "horizon", "forward_rs"]],
         on=["tradedate", "secid"], how="left", validate="one_to_many"
@@ -359,7 +363,7 @@ def h3_quadrants(panel, future):
 def h5_weakness_tests(panel, future):
     x = panel[[
         "tradedate", "secid", "H5_persistent_weakness",
-        "rs5_only_weak", "rs20_only_weak",
+        "rs5_only_weak", "rs20_only_weak", "valid_rs_pair",
     ]].merge(
         future[["tradedate", "secid", "horizon", "forward_rs"]],
         on=["tradedate", "secid"], how="left", validate="one_to_many"
@@ -370,7 +374,8 @@ def h5_weakness_tests(panel, future):
         one5 = day.loc[day.rs5_only_weak, "forward_rs"].dropna()
         one20 = day.loc[day.rs20_only_weak, "forward_rs"].dropna()
         rest = day.loc[
-            ~(day.H5_persistent_weakness | day.rs5_only_weak | day.rs20_only_weak),
+            day.valid_rs_pair
+            & ~(day.H5_persistent_weakness | day.rs5_only_weak | day.rs20_only_weak),
             "forward_rs"
         ].dropna()
         for label, control in [("vs_RS5_only", one5), ("vs_RS20_only", one20), ("vs_other", rest)]:
@@ -445,7 +450,7 @@ def add_periods(frame):
     return x
 
 
-def write_report(path, panel, future, f1, f1_reg, f1_reg_summary, f2, f2_interaction, f2_int_summary, f2_quadrant_summary, f3, f4, summaries):
+def write_report(path, panel, future, f1, f1_reg, f1_reg_summary, f2, f2_interaction, f2_int_summary, f2_quadrant_summary, f3, f3_ex_summary, f4, summaries):
     path.parent.mkdir(parents=True, exist_ok=True)
     calendar_min = panel.tradedate.min().date()
     calendar_max = panel.tradedate.max().date()
@@ -531,6 +536,16 @@ def write_report(path, panel, future, f1, f1_reg, f1_reg_summary, f2, f2_interac
         "Crisis windows excluded in this diagnostic: 2008-09-15 to 2009-06-30, "
         "2020-02-20 to 2020-06-30, and 2022-02-24 to 2022-12-30. These exclusions "
         "are a robustness view only; the full-sample results remain primary.",
+        "", "### F3 full sample vs crisis-excluded", "",
+        "| Contrast | Horizon | Mean spread | NW 95% CI | Dates | q |",
+        "|---|---:|---:|---:|---:|---:|",
+    ]
+    for r in f3_ex_summary.itertuples(index=False):
+        lines.append(
+            f"| {r.contrast} | {r.horizon} | {r.mean_daily_spread:.3%} | "
+            f"[{r.nw_ci_low:.3%}, {r.nw_ci_high:.3%}] | {r.n_dates:,} | {r.bh_q:.3f} |"
+        )
+    lines += [
         "", "## Inference and limitations", "",
         "- HAC Newey-West intervals and circular moving-block bootstrap are applied to daily date-level estimates. This preserves contemporaneous cross-sectional dependence because the resampling unit is the date-level statistic, not individual ticker rows.",
         "- The bootstrap uses five-session circular blocks for all reported contrast series; this is a common dependence-aware robustness check, not an exact finite-sample test.",
@@ -678,7 +693,7 @@ def main():
     write_report(
         args.report, panel, future, f1, f1_reg, f1_reg_summary,
         f2, f2_interaction, f2_int_summary, f2_quadrant_summary,
-        f3, f4, summaries
+        f3, f3_ex_summary, f4, summaries
     )
     print("\nFALSIFICATION RUN COMPLETE")
     print("=" * 68)
