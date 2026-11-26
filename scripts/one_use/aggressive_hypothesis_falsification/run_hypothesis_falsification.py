@@ -170,7 +170,7 @@ def add_cross_sectional_features(snapshot):
         & (p.rs_5d < 0) & (p.rs_20d < 0)
     )
     p["rs5_quintile"] = np.ceil(p.q_rs_5d * 5).clip(1, 5)
-    p["rs20_top"] = p.q_rs_20d >= 0.80
+    p["rs20_top"] = (p.q_rs_20d >= 0.80) & (p.rs_20d > 0)
     p["rs5_only_weak"] = (p.q_rs_5d <= 0.20) & (p.q_rs_20d > 0.20)
     p["rs20_only_weak"] = (p.q_rs_20d <= 0.20) & (p.q_rs_5d > 0.20)
     return p
@@ -319,7 +319,7 @@ def h2_conditional_tests(panel, future):
 def h3_quadrants(panel, future):
     x = panel[["tradedate", "secid", "return_5d", "return_20d"]].copy()
     valid = x.return_5d.notna() & x.return_20d.notna()
-    x["quadrant"] = np.select(
+    x["quadrant"] = pd.Series(np.select(
         [
             valid & (x.return_5d > 0) & (x.return_20d > 0),
             valid & (x.return_5d > 0) & (x.return_20d <= 0),
@@ -328,8 +328,8 @@ def h3_quadrants(panel, future):
         ],
         ["positive_both", "positive_5_only", "positive_20_only", "negative_both"],
         default="",
-    )
-    x.loc[~valid, "quadrant"] = np.nan
+    ), index=x.index, dtype="object")
+    x.loc[~valid, "quadrant"] = None
     x = x.merge(
         future[["tradedate", "secid", "horizon", "forward_rs"]],
         on=["tradedate", "secid"], how="left", validate="one_to_many"
