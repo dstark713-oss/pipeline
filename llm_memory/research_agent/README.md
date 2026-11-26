@@ -2,7 +2,7 @@
 
 Last updated: 2026-11-26
 
-Persistent working context for the Research Agent in `dstark713-oss/pipeline`. This is operational context, not a transcript.
+Persistent working context for the Research Agent in `dstark713-oss/pipeline`. This is operational context, not a transcript. Validated models and their versioned outputs are handed to the Meta-Agent / Portfolio Steward; the model itself is the source of trading signals, while portfolio sizing and real-portfolio oversight are outside the Research Agent's scope.
 
 ## Source of truth
 
