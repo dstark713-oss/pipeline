@@ -693,8 +693,8 @@ def main():
     if len(f2_interaction):
         tmp = add_periods(f2_interaction)
         for (horizon, period), g in tmp.groupby(["horizon", "period"], sort=True):
-            years = calendar.year
-            period_dates = calendar[
+            years = signal_calendar.year
+            period_dates = signal_calendar[
                 (years <= 2012) if period == "through_2012"
                 else ((years >= 2013) & (years <= 2019)) if period == "2013_2019"
                 else (years >= 2020)
