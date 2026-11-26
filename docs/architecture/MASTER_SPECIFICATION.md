@@ -807,3 +807,27 @@ Target capabilities not to be misrepresented as implemented include the Meta-Age
 A backtest is not live performance. Statistical significance is not equivalent to economic value. A model or agent configuration is not production-ready merely because it produces plausible output.
 
 Production-affecting changes require a visible diff, rationale, reproducible tests, independent deterministic checks where applicable, shadow evaluation, explicit promotion, and a documented rollback path. The user retains final authority over architecture changes, Risk Profile, live actions and production promotion.
+
+
+## G. Conversational agent pilot and decision objective
+
+**Approved:** 2026-11-26.
+
+The first practical deployment of Aggressive Trading, Conservative Investment, and Sizing is a manually orchestrated conversational pilot. The user supplies context and moves outputs between agents. No agent API, autonomous runtime, background orchestration, or paid API dependency is required at this stage. Automation may be considered only after the manual workflow demonstrates practical value.
+
+All three agents use the common reasoning cycle:
+
+**CONTEXT → HYPOTHESIS → CHECK → CONCLUSION**
+
+The CHECK stage has two separate deterministic Python parts:
+1. **Confirmation:** Python analysis designed to find evidence consistent with the hypothesis.
+2. **Falsification:** separate Python analysis designed to challenge the hypothesis, seek counterexamples, and identify conditions where the effect weakens or disappears.
+3. **Conclusion:** interpret both sets of results jointly, with uncertainty and limitations explicit.
+
+The system does not seek a perfect signal. Its objective is positive expected value (EV) across the aggregate of decisions, robust over a long horizon, under non-stationarity. IC is a diagnostic rather than a universal pass/fail threshold; an IC below 0.5 does not by itself invalidate a hypothesis. Effect size, uncertainty, conditionality, temporal behavior, dependence, costs, and implementation feasibility matter.
+
+There is no mandate to outperform an index, SBMX, LQDT, or another benchmark. Benchmark-relative outperformance is not the system's success criterion.
+
+Until explicitly changed by the user, ML outputs are supplementary information for Sizing only. The three agents must operate without ML. ML is not a required dependency and does not originate directional BUY/SELL decisions under this policy.
+
+The detailed conversational operating protocol and role instructions are maintained in `llm_memory/agents/`. These documents describe a pilot workflow, not implemented production runtime components.
