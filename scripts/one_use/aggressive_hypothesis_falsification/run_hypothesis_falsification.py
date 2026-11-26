@@ -459,7 +459,7 @@ def add_periods(frame):
     return x
 
 
-def write_report(path, panel, future, f1, f1_reg, f1_reg_summary, f2, f2_interaction, f2_int_summary, f2_quadrant_summary, f3, f3_ex_summary, f4, summaries):
+def write_report(path, panel, future, f1, f1_reg, f1_reg_summary, f2, f2_interaction, f2_int_summary, f2_quadrant_summary, f3, f3_ex_summary, f4, periods, summaries):
     path.parent.mkdir(parents=True, exist_ok=True)
     calendar_min = panel.tradedate.min().date()
     calendar_max = panel.tradedate.max().date()
@@ -553,6 +553,16 @@ def write_report(path, panel, future, f1, f1_reg, f1_reg_summary, f2, f2_interac
         lines.append(
             f"| {r.contrast} | {r.horizon} | {r.mean_daily_spread:.3%} | "
             f"[{r.nw_ci_low:.3%}, {r.nw_ci_high:.3%}] | {r.n_dates:,} | {r.bh_q:.3f} |"
+        )
+    lines += [
+        "", "## Stability by historical period", "",
+        "| Module | Horizon | Period | Mean effect | NW 95% CI | Dates |",
+        "|---|---:|---|---:|---:|---:|",
+    ]
+    for r in periods.itertuples(index=False):
+        lines.append(
+            f"| {r.module_set} | {getattr(r, 'horizon', '')} | {r.period} | "
+            f"{r.mean_daily_spread:.5f} | [{r.nw_ci_low:.5f}, {r.nw_ci_high:.5f}] | {r.n_dates:,} |"
         )
     lines += [
         "", "## Inference and limitations", "",
@@ -726,7 +736,7 @@ def main():
     write_report(
         args.report, panel, future, f1, f1_reg, f1_reg_summary,
         f2, f2_interaction, f2_int_summary, f2_quadrant_summary,
-        f3, f3_ex_summary, f4, summaries
+        f3, f3_ex_summary, f4, periods, summaries
     )
     print("\nFALSIFICATION RUN COMPLETE")
     print("=" * 68)
