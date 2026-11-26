@@ -663,7 +663,14 @@ def main():
         for group_key, g in tmp.groupby(keys + ["period"], sort=True):
             if not isinstance(group_key, tuple):
                 group_key = (group_key,)
-            mean, se, t = nw_mean(g.sort_values("tradedate").daily_spread, 19)
+            years = calendar.year
+            period_dates = calendar[
+                (years <= 2012) if group_key[-1] == "through_2012"
+                else ((years >= 2013) & (years <= 2019)) if group_key[-1] == "2013_2019"
+                else (years >= 2020)
+            ]
+            series = g.set_index("tradedate").daily_spread.reindex(period_dates)
+            mean, se, t = nw_mean(series, 19)
             period_frames.append({
                 "module_set": name, **dict(zip(keys + ["period"], group_key)),
                 "n_dates": g.tradedate.nunique(), "mean_daily_spread": mean,
@@ -675,7 +682,14 @@ def main():
     if len(f2_interaction):
         tmp = add_periods(f2_interaction)
         for (horizon, period), g in tmp.groupby(["horizon", "period"], sort=True):
-            mean, se, t = nw_mean(g.sort_values("tradedate").beta_interaction, 19)
+            years = calendar.year
+            period_dates = calendar[
+                (years <= 2012) if period == "through_2012"
+                else ((years >= 2013) & (years <= 2019)) if period == "2013_2019"
+                else (years >= 2020)
+            ]
+            series = g.set_index("tradedate").beta_interaction.reindex(period_dates)
+            mean, se, t = nw_mean(series, 19)
             period_frames.append({
                 "module_set": "F2_interaction", "horizon": int(horizon),
                 "period": period, "n_dates": g.tradedate.nunique(),
