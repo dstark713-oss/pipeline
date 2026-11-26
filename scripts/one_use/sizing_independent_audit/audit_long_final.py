@@ -228,14 +228,14 @@ def main():
     print("=" * 72)
     print(f"Panel as-of: {dates.max().date()} | sessions={len(dates):,} | tickers={panel.secid.nunique()} | PIT=PASS")
     print("\nCOST + HAC ROBUSTNESS (date-level cohort mean of overlapping horizon returns)")
-    print(robustness[["horizon", "cost_bps_rt", "signals", "date_level_cohort_mean", "daily_hac_se",
-                     "daily_hac_t", "daily_hac_ci_low", "daily_hac_ci_high",
-                     "date_level_excess_mean", "excess_hac_t", "excess_hac_ci_low",
-                     "excess_hac_ci_high", "positive_year_fraction"]].to_string(index=False,
+    print(robustness[["horizon", "cost_bps_rt", "signals", "date_level_cohort_mean", "cohort_hac_se",
+                     "cohort_hac_t", "cohort_hac_ci_low", "cohort_hac_ci_high",
+                     "date_level_excess_mean", "excess_cohort_hac_t", "excess_cohort_hac_ci_low",
+                     "excess_cohort_hac_ci_high", "positive_year_fraction"]].to_string(index=False,
                      formatters={c: (lambda x: f"{x:+.3%}") for c in
-                                 ["date_level_cohort_mean", "daily_hac_se", "daily_hac_ci_low",
-                                  "daily_hac_ci_high", "date_level_excess_mean", "excess_hac_ci_low",
-                                  "excess_hac_ci_high"]}))
+                                 ["date_level_cohort_mean", "cohort_hac_se", "cohort_hac_ci_low",
+                                  "cohort_hac_ci_high", "date_level_excess_mean", "excess_cohort_hac_ci_low",
+                                  "excess_cohort_hac_ci_high"]}))
     print(f"\nLatest reconstructed Long: {len(reconstructed)} | overlap with reported list: {overlap}/10")
     print("\nHISTORICAL RESULTS FOR REPORTED NAMES (15 bps RT)")
     reported_history = by_ticker.loc[by_ticker.secid.isin(REPORTED_LONG)].copy()
