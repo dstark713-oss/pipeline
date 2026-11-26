@@ -492,7 +492,12 @@ def write_report(path, panel, future, f1, f1_reg, f1_reg_summary, f2, f2_interac
     path.parent.mkdir(parents=True, exist_ok=True)
     calendar_min = panel.tradedate.min().date()
     calendar_max = panel.tradedate.max().date()
-    valid_future = future.forward_rs.notna().mean()
+    signal_keys = panel[["tradedate", "secid"]].drop_duplicates()
+    signal_future = signal_keys.merge(
+        future[["tradedate", "secid", "horizon", "forward_rs"]],
+        on=["tradedate", "secid"], how="left", validate="one_to_many"
+    )
+    valid_future = signal_future.forward_rs.notna().mean()
     lines = [
         "# Aggressive Agent: Hypothesis Falsification Report", "",
         f"- Signal sample: **{calendar_min} to {calendar_max}**",
@@ -514,7 +519,7 @@ def write_report(path, panel, future, f1, f1_reg, f1_reg_summary, f2, f2_interac
         "", "## F3: Is persistent weakness more than a one-horizon effect?", "",
         "Compare names weak on both RS5 and RS20 with RS5-only weak names, RS20-only weak names, and the remaining cross-section. Stability is reported by historical subperiod. A negative result is not automatically a short signal.",
         "", "## F4: Do concentrated impulses underperform distributed impulses?", "",
-        "Within the positive 5D-return top quintile, split names by the within-date median of largest absolute daily log-return share. Compare forward RS, positive hit rate, and negative forward-RS frequency over each horizon.",
+        "Within the positive 5D-return top quintile, split names by the within-date median of largest absolute daily log-return share. Compare forward RS, positive hit rate, and negative forward-RS frequency; separately regress forward RS on concentration and 5D return to test concentration beyond impulse magnitude.",
         "", "## Primary contrast summaries", "",
     ]
     for name, frame in summaries.items():
@@ -584,7 +589,7 @@ def write_report(path, panel, future, f1, f1_reg, f1_reg_summary, f2, f2_interac
         "Crisis windows excluded in this diagnostic: 2008-09-15 to 2009-06-30, "
         "2020-02-20 to 2020-06-30, and 2022-02-24 to 2022-12-30. These exclusions "
         "are a robustness view only; the full-sample results remain primary.",
-        "", "### F3 full sample vs crisis-excluded", "",
+        "", "### F3 crisis-excluded robustness", "",
         "| Contrast | Horizon | Mean spread | NW 95% CI | Dates | q |",
         "|---|---:|---:|---:|---:|---:|",
     ]
