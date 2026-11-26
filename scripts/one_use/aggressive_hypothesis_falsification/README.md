@@ -6,26 +6,26 @@ Runs four falsification modules after the initial market snapshot and confirmati
 
 From the repository root:
 
-\`\`\`powershell
+```powershell
 git pull
 python scripts/one_use/aggressive_hypothesis_falsification/run_hypothesis_falsification.py
-\`\`\`
+```
 
 ## Inputs
 
-- \`data/interim/aggressive_market_snapshot/market_snapshot.parquet\`
-- \`data/interim/aggressive_market_snapshot/equal_weight_top50_benchmark.parquet\`
-- \`data/processed/moex_daily_adjusted.sqlite\`, table \`adjusted_daily_bars\`
+- `data/interim/aggressive_market_snapshot/market_snapshot.parquet`
+- `data/interim/aggressive_market_snapshot/equal_weight_top50_benchmark.parquet`
+- `data/processed/moex_daily_adjusted.sqlite`, table `adjusted_daily_bars`
 
 The module imports the market-snapshot builder to reuse its adjusted-board aggregation policy and suspension dates.
 
 ## Forward-return convention
 
-The global adjusted-market calendar is the sorted set of dates with adjusted bars. For a signal on session \`t\`, ticker forward return at horizon \`h\` is:
+The global adjusted-market calendar is the sorted set of dates with adjusted bars. For a signal on session `t`, ticker forward return at horizon `h` is:
 
-\`adjusted_close[t+h] / adjusted_close[t] - 1\`
+`adjusted_close[t+h] / adjusted_close[t] - 1`
 
-where \`t+h\` means exactly h rows later on the global market calendar. Missing ticker closes at either endpoint remain missing. No ticker-specific next-observation substitution and no price forward-fill are allowed. The benchmark compounds daily equal-weight PIT TOP50 returns from sessions \`t+1\` through \`t+h\`.
+where `t+h` means exactly h rows later on the global market calendar. Missing ticker closes at either endpoint remain missing. No ticker-specific next-observation substitution and no price forward-fill are allowed. The benchmark compounds daily equal-weight PIT TOP50 returns from sessions `t+1` through `t+h`.
 
 ## Four modules
 
@@ -44,10 +44,10 @@ Historical subperiods are fixed as through 2012, 2013-2019, and 2020 onward. Cri
 ## Outputs
 
 One Markdown report:
-- \`docs/aggressive_hypothesis_falsification_report.md\`
+- `docs/aggressive_hypothesis_falsification_report.md`
 
 Machine-readable outputs:
-- \`data/interim/aggressive_hypothesis_falsification/\`
+- `data/interim/aggressive_hypothesis_falsification/`
 
 The script writes CSVs for daily contrasts, regression coefficients and summaries, quadrant outcomes, concentration metrics, and period stability. Console output is intentionally limited to a compact run summary.
 
