@@ -124,11 +124,11 @@ def evaluate(panel, dates, close, signals):
             cost_rows.append({
                 "horizon": h, "cost_bps_rt": bps, "signals": len(q), "active_dates": len(active),
                 "mean_active_net": active.mean(), "median_signal_net": q.net.median(),
-                "hit_rate": (q.net > 0).mean(), "daily_strategy_mean": mean,
-                "daily_hac_se": se, "daily_hac_t": t,
-                "daily_hac_ci_low": mean - 1.96 * se, "daily_hac_ci_high": mean + 1.96 * se,
-                "daily_excess_mean": ex_mean, "excess_hac_se": ex_se, "excess_hac_t": ex_t,
-                "excess_hac_ci_low": ex_mean - 1.96 * ex_se, "excess_hac_ci_high": ex_mean + 1.96 * ex_se,
+                "hit_rate": (q.net > 0).mean(), "date_level_cohort_mean": mean,
+                "cohort_hac_se": se, "cohort_hac_t": t,
+                "cohort_hac_ci_low": mean - 1.96 * se, "cohort_hac_ci_high": mean + 1.96 * se,
+                "date_level_excess_mean": ex_mean, "excess_cohort_hac_se": ex_se, "excess_cohort_hac_t": ex_t,
+                "excess_cohort_hac_ci_low": ex_mean - 1.96 * ex_se, "excess_cohort_hac_ci_high": ex_mean + 1.96 * ex_se,
                 "positive_year_fraction": (q.assign(net=q.net).groupby("year").net.mean() > 0).mean(),
             })
             if bps == 15:
@@ -210,7 +210,7 @@ def main():
         "- Long reconstruction: positive RS20 and top-quintile RS20 within the same RS5 quintile; RS benchmark is the same-date valid PIT cross-section equal-weight mean.",
         "- Forward outcomes require all h+1 close observations across intervening sessions; no forward fill.",
         "- Cost sensitivity: 15 / 30 / 50 bps round-trip, charged once per completed h-session signal.",
-        "- HAC uncertainty is calculated on the daily equal-weight signal-cohort return series, with zero return on dates without an eligible signal; lag = horizon - 1 to account for overlapping forward windows.",
+        "- HAC uncertainty is calculated on the date-level equal-weight mean of overlapping h-session cohort forward returns, with zero return on dates without an eligible signal; lag = horizon - 1 to account for overlapping forward windows.",
         "- HAC intervals are asymptotic diagnostics, not a substitute for a fully executable portfolio backtest or a multiple-testing correction.",
         "", "## Cost and HAC robustness", robustness.to_string(index=False),
         "", "## Historical performance by reported candidate", by_ticker.to_string(index=False),
@@ -227,14 +227,14 @@ def main():
     print("\nSIZING — FINAL LONG AUDIT")
     print("=" * 72)
     print(f"Panel as-of: {dates.max().date()} | sessions={len(dates):,} | tickers={panel.secid.nunique()} | PIT=PASS")
-    print("\nCOST + HAC ROBUSTNESS (daily strategy mean; overlapping horizon returns)")
-    print(robustness[["horizon", "cost_bps_rt", "signals", "daily_strategy_mean", "daily_hac_se",
+    print("\nCOST + HAC ROBUSTNESS (date-level cohort mean of overlapping horizon returns)")
+    print(robustness[["horizon", "cost_bps_rt", "signals", "date_level_cohort_mean", "daily_hac_se",
                      "daily_hac_t", "daily_hac_ci_low", "daily_hac_ci_high",
-                     "daily_excess_mean", "excess_hac_t", "excess_hac_ci_low",
+                     "date_level_excess_mean", "excess_hac_t", "excess_hac_ci_low",
                      "excess_hac_ci_high", "positive_year_fraction"]].to_string(index=False,
                      formatters={c: (lambda x: f"{x:+.3%}") for c in
-                                 ["daily_strategy_mean", "daily_hac_se", "daily_hac_ci_low",
-                                  "daily_hac_ci_high", "daily_excess_mean", "excess_hac_ci_low",
+                                 ["date_level_cohort_mean", "daily_hac_se", "daily_hac_ci_low",
+                                  "daily_hac_ci_high", "date_level_excess_mean", "excess_hac_ci_low",
                                   "excess_hac_ci_high"]}))
     print(f"\nLatest reconstructed Long: {len(reconstructed)} | overlap with reported list: {overlap}/10")
     print("\nLATEST NAME RISK SNAPSHOT")
