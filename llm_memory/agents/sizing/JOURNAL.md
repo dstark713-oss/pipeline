@@ -144,3 +144,4 @@ Commits:
 - Final script clarification commit: `09fbbece29e592118829ff524d1d8cd860a39688`.
 - Console output includes the reported ten names' historical signal stats and a compact 60-session correlation summary so the next sizing turn can work from one pasted output; detailed per-name CSVs and the full matrix are also saved locally.
 - Final console-output commit: `c8cd81ddf1c910870754ad9f5904f4b4c6794663`.
+- Final console column-name correction commit: `d4d0561285bd49a7fe1ddde0757439d5557cc510`.
