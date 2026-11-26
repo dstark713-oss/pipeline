@@ -78,3 +78,14 @@
 - Added offline unit tests and dataset-script documentation. Runtime validation on local data remains pending.
 - Withdrew repeated generic audit follow-up after user clarified the 1,214 incomplete bars are a known refresh defect and the single BELU quarantined row needs no separate investigation.
 - Added EDA v2 plan for return distribution geometry, temporal/cross-sectional dependence, dispersion, heterogeneity, PIT rank mobility, and activity concentration. Awaiting user approval; implementation not started.
+
+## 2026-11-27 | STAGE 05 Hypothesis Research approved
+
+- Updated the Master Specification's STAGE 05 to define exactly two economic-value categories: Risk Control and Direct Monetization.
+- Registered the approved initial pool of three Risk Control and four Direct Monetization hypotheses.
+- Added an explicit economic-value filter, information-advantage requirement, predeclared falsification criteria, and net-of-cost validation requirements.
+- Created seven individual hypothesis passports, a central registry, and a research-priority document under `docs/research/research_hypothesis/`.
+- Created the Stage 05 research plan and a separate results directory under `docs/research/hypothesis_research/`.
+- Updated next steps, cumulative knowledge, README navigation, and the Research Agent journal.
+- No hypothesis experiments, model code, backtests, or runtime checks were executed. The initial pool is approved for research, not empirically validated.
+- Sprint closed for 2026-11-27.
