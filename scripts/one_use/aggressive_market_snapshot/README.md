@@ -21,7 +21,7 @@ python scripts/one_use/aggressive_market_snapshot/build_market_snapshot.py --min
 - `data/processed/top50/top50_membership.parquet`
 - `data/processed/moex_daily_adjusted.sqlite`, table `adjusted_daily_bars`
 
-The script reads the adjusted database in read-only mode. It uses the panel's existing PIT membership and does not rebuild or alter the panel.
+The script reads the adjusted database in read-only mode. It uses the panel's existing PIT membership and does not rebuild or alter the panel. It loads adjusted-bar history from 2004-01-01 as warm-up, builds the trading calendar from adjusted-bar dates, and excludes the same 2022-02-28 through 2022-03-23 suspension interval excluded by the TOP50 panel builder.
 
 ## Benchmark definition
 
