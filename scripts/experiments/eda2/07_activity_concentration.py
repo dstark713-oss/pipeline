@@ -243,7 +243,7 @@ def conditional_summary(panel: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame
         rows.append(rank_summary)
     all_summary = pd.concat(rows, ignore_index=True) if rows else pd.DataFrame()
     by_date_rows = []
-    for (date, axis), group in data.groupby("tradedate"):
+    for date, group in data.groupby("tradedate"):
         for group_column in ("value_tercile", "volume_tercile", "rank_group"):
             if group_column not in group:
                 continue
