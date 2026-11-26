@@ -206,9 +206,19 @@ def rank_analysis(membership, dates):
         continuous = present.astype("int8").rolling(lag + 1, min_periods=lag + 1).sum().eq(lag + 1)
         prior = ranks.shift(lag)
         valid = continuous & ranks.notna() & prior.notna()
-        cur_long = ranks.where(valid).stack().rename("rank_current").reset_index()
-        prev_long = prior.where(valid).stack().rename("rank_prior").reset_index()
-        pairs = cur_long.merge(prev_long, on=["tradedate", "secid"], validate="one_to_one")
+        # Align the two rank series by their exact (date, security) MultiIndex.
+        # Drop missing/non-finite pairs before any integer conversion.
+        cur_long = ranks.where(valid).stack().rename("rank_current")
+        prev_long = prior.where(valid).stack().rename("rank_prior")
+        pairs = pd.concat([cur_long, prev_long], axis=1).replace(
+            [np.inf, -np.inf], np.nan
+        ).dropna(subset=["rank_current", "rank_prior"]).reset_index()
+        if pairs.empty:
+            continue
+        pairs = pairs.loc[
+            pairs["rank_current"].between(1, 50)
+            & pairs["rank_prior"].between(1, 50)
+        ].copy()
         if pairs.empty:
             continue
         pairs["lag_sessions"] = lag
