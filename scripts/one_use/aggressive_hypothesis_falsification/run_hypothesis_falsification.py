@@ -602,6 +602,7 @@ def main():
     )
     future, close = future_outcomes(daily, benchmark, calendar)
     panel = add_cross_sectional_features(snapshot)
+    signal_calendar = calendar[(calendar >= panel.tradedate.min()) & (calendar <= panel.tradedate.max())]
 
     print("Running F1: incremental RS20...")
     f1, f1_reg = h2_conditional_tests(panel, future)
@@ -613,19 +614,19 @@ def main():
     concentration = h1_concentration(panel, close, calendar)
     f4 = h1_daily_spreads(concentration, future)
 
-    f1_summary = summarize_spreads(f1, ["module", "horizon"], calendar) if len(f1) else pd.DataFrame()
+    f1_summary = summarize_spreads(f1, ["module", "horizon"], signal_calendar) if len(f1) else pd.DataFrame()
     # F2 quadrant means are reported as descriptive cross-sectional series;
     # inference on the incremental interaction is reported separately.
-    f3_summary = summarize_spreads(f3, ["module", "contrast", "horizon"], calendar) if len(f3) else pd.DataFrame()
-    f4_summary = summarize_spreads(f4, ["module", "horizon"], calendar) if len(f4) else pd.DataFrame()
+    f3_summary = summarize_spreads(f3, ["module", "contrast", "horizon"], signal_calendar) if len(f3) else pd.DataFrame()
+    f4_summary = summarize_spreads(f4, ["module", "horizon"], signal_calendar) if len(f4) else pd.DataFrame()
     f1_reg_summary = summarize_date_series(
-        f1_reg, ["beta_rs20", "beta_rs5", "beta_return5"], ["module", "horizon"], calendar
+        f1_reg, ["beta_rs20", "beta_rs5", "beta_return5"], ["module", "horizon"], signal_calendar
     ) if len(f1_reg) else pd.DataFrame()
     f2_int_summary = summarize_date_series(
-        f2_interaction, ["beta_return5", "beta_return20", "beta_interaction"], ["horizon"], calendar
+        f2_interaction, ["beta_return5", "beta_return20", "beta_interaction"], ["horizon"], signal_calendar
     ) if len(f2_interaction) else pd.DataFrame()
     f2_quadrant_summary = summarize_date_series(
-        f2, ["mean_forward_rs"], ["horizon", "quadrant"], calendar
+        f2, ["mean_forward_rs"], ["horizon", "quadrant"], signal_calendar
     ) if len(f2) else pd.DataFrame()
 
     # Predefined crisis-window robustness for F3. Full sample remains primary.
@@ -642,10 +643,10 @@ def main():
     else:
         f3_ex = pd.DataFrame()
 
-    crisis_mask = np.zeros(len(calendar), dtype=bool)
+    crisis_mask = np.zeros(len(signal_calendar), dtype=bool)
     for start, end in crisis_windows:
-        crisis_mask |= (calendar >= pd.Timestamp(start)) & (calendar <= pd.Timestamp(end))
-    ex_crisis_calendar = calendar[~crisis_mask]
+        crisis_mask |= (signal_calendar >= pd.Timestamp(start)) & (signal_calendar <= pd.Timestamp(end))
+    ex_crisis_calendar = signal_calendar[~crisis_mask]
     f3_ex_summary = summarize_spreads(
         f3_ex, ["module", "contrast", "horizon"], ex_crisis_calendar
     ) if len(f3_ex) else pd.DataFrame()
@@ -663,8 +664,8 @@ def main():
         for group_key, g in tmp.groupby(keys + ["period"], sort=True):
             if not isinstance(group_key, tuple):
                 group_key = (group_key,)
-            years = calendar.year
-            period_dates = calendar[
+            years = signal_calendar.year
+            period_dates = signal_calendar[
                 (years <= 2012) if group_key[-1] == "through_2012"
                 else ((years >= 2013) & (years <= 2019)) if group_key[-1] == "2013_2019"
                 else (years >= 2020)
