@@ -145,3 +145,72 @@ Commits:
 - Console output includes the reported ten names' historical signal stats and a compact 60-session correlation summary so the next sizing turn can work from one pasted output; detailed per-name CSVs and the full matrix are also saved locally.
 - Final console-output commit: `c8cd81ddf1c910870754ad9f5904f4b4c6794663`.
 - Final console column-name correction commit: `d4d0561285bd49a7fe1ddde0757439d5557cc510`.
+
+
+## 2026-11-27 — Final Long audit reviewed; Iteration 1 closed; provisional Iteration 2
+
+### User clarification
+
+- Conservative's 100% cash is the decision, and its names are research candidates only. The previous price-only audit is not a test of Conservative's fundamental reasoning. Future challenge is based on actual sector/company fundamental arguments and sources.
+
+### Final Long audit results received from user
+
+- Panel as-of 2026-11-26; 5,491 sessions; 214 tickers; PIT PASS.
+- 10-session cohort: 46,243 signals; date-level cohort mean +0.551% at 15 bps, +0.405% at 30 bps, +0.209% at 50 bps. HAC CI for absolute mean: [+0.194%, +0.909%] at 15 bps; [+0.048%, +0.762%] at 30 bps; [-0.148%, +0.566%] at 50 bps.
+- 10-session excess mean: +0.080%, -0.067%, -0.262% at 15/30/50 bps. At 15 bps HAC CI [-0.068%, +0.227%], including zero.
+- 20-session cohort: 46,243 signals; date-level cohort mean +1.282%, +1.135%, +0.940% at 15/30/50 bps. HAC CI remains positive for absolute mean at all three cost levels.
+- 20-session excess mean: +0.238%, +0.092%, -0.104%. At 15 bps HAC CI [-0.028%, +0.505%], including zero; at 30 and 50 bps also includes zero.
+- Conclusion: the reconstructed cohort shows positive absolute forward performance, but the evidence does not establish robust excess alpha after plausible costs. At 50 bps excess is negative on both horizons. Treat the result as a weak conditional Long effect, not a proven scalable edge.
+- Latest reconstructed Long candidates: 12; overlap with the signal agent's reported 10 = 8/10. Reported names CNRU and HYDR were not reconstructed in the latest list; four names outside the report appeared in the reconstruction. Do not add those extra names to the agent handoff without a new signal decision.
+- 60-session pairwise reported-name correlation: mean 0.32, max 0.58 (T/DOMRF). Dependence is material and the window is short.
+- Historical candidate diagnostics at 20 sessions:
+  - PHOR: mean net +1.54%, median +0.31%, hit 51.0%, mean excess +0.95%; vol60 29.2%; current absolute 20D return -3.5%.
+  - RTKM: mean net +0.21%, median +0.28%, hit 51.0%, mean excess +0.70%; vol60 31.9%; current absolute 20D return +0.1%.
+  - VKCO: mean net +5.42%, median +3.78%, hit 56.5%, mean excess +3.74%; vol60 96.1%; current absolute 20D return +5.8%.
+  - DOMRF: mean net -2.17%, median -0.49%, hit 44.8%, mean excess +7.26%; vol60 15.2%.
+  - MTSS: mean net -0.21%, median +0.03%, hit 49.2%, mean excess +0.45%; vol60 24.7%.
+  - SMLT: mean net +0.13%, median +0.16%, hit 45.2%, mean excess -0.09%; vol60 82.9%.
+  - SVCB: mean net -1.10%, median -2.37%, hit 42.8%, mean excess -0.87%; vol60 29.8%.
+  - T: mean net -1.78%, median -0.74%, hit 41.6%, mean excess +0.66%; vol60 22.2%.
+  - HYDR: mean net +0.15%, median -0.79%, hit 44.7%, mean excess -0.36%; current vol20/60 unavailable in the audit output.
+  - CNRU: only one historical signal; no usable historical performance estimate. Agent handoff reports 64.6% vol20 and 1.06x turnover/median, while the independent snapshot had too little history for vol60. Treat the historical sample as insufficient.
+- Important caution: the final output reports exactly 46,243 signals for both 10- and 20-session horizons. This is possible only if no eligible signals lie in the extra tail window that the 20-session horizon excludes, but given the latest candidate reconstruction it is unusual and should be treated as a diagnostic anomaly. The supplied console output does not establish why counts are identical. Do not overstate the HAC inference or use the cohort test as an executable portfolio backtest.
+- The by-name mean excess column is gross excess, while mean net includes the 15 bps cost. Compare labels accordingly.
+
+### Iteration 2 — provisional name selection and sizing
+
+Context recovered from prior user instructions:
+- Last explicitly stated starting capital: ₽150,000; monthly additions ₽5–10k. Current account value has not been reconfirmed.
+- Unified portfolio: Growth/Aggressive 50% (about ₽75,000 at the stated starting capital) / Preservation/Conservative 50%.
+- User-stated total tolerable drawdown: 20–25%.
+- User prefers portfolio-contribution sizing, with risk assessed using volatility and downside / fat-tail behavior; no fixed per-position risk budget or maximum position cap was supplied.
+- Leverage is allowed as a tool in principle, but the user explicitly requires care and statistical justification; no leverage is justified by this weak alpha evidence.
+- Conservative remains 100% cash. No transfer between sleeves.
+
+Provisional selection (weights are percentages of the Aggressive sleeve, not of total capital):
+- PHOR: 10%.
+- RTKM: 7.5%.
+- VKCO: 2.5%.
+- Aggressive sleeve cash: 80%.
+- All other reported Long candidates: 0%.
+- All conditional Short candidates: 0%; no borrow, permission, financing, or short implementation evidence.
+- Conservative sleeve: 100% cash.
+
+Equivalent percentages of total capital:
+- PHOR 5.0%; RTKM 3.75%; VKCO 1.25%; Aggressive cash 40%; Conservative cash 50%.
+- Total deployed equity = 10% of total capital; total cash = 90%.
+- If ₽150,000 starting capital is still current, indicative amounts are PHOR ₽7,500; RTKM ₽5,625; VKCO ₽1,875; Aggressive cash ₽60,000; Conservative cash ₽75,000. Do not derive share counts without current prices, lot sizes, and execution constraints.
+
+Rationale:
+- PHOR receives the largest provisional weight because it combines the best balanced 20-session historical candidate stats among the lower-volatility names in the supplied table. Its current absolute 20D return is negative, so this is not a high-conviction allocation.
+- RTKM receives a smaller weight: modestly positive 20-session net and excess results, median positive, but higher volatility and only modest absolute momentum.
+- VKCO receives a small satellite weight because it has the strongest historical 20-session results, but ~96% annualized 60-session volatility makes a normal-sized allocation inappropriate.
+- CNRU is zero because one historical signal is not a usable sample despite strong current reported RS20 / absolute return.
+- HYDR, SVCB, T, SMLT, MTSS and DOMRF are zero because absolute candidate-level history is weak, negative, inconsistent, or (for SMLT) too volatile relative to its weak net/excess evidence.
+- All weights are explicitly provisional: no formal risk engine run, no current total NAV confirmation, no exact position/sector caps, no lot-size/execution check, and no left-tail portfolio contribution calculation. The 60-session correlation summary is insufficient for robust covariance estimation.
+- No live positions or orders changed; user confirmation remains mandatory.
+
+### Status
+
+- Iteration 1: closed after user returned final audit output.
+- Iteration 2: provisional sizing proposal documented; awaiting user review and missing implementation constraints before any actionable order plan.
