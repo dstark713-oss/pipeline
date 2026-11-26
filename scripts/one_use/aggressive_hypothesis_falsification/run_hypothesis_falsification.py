@@ -117,7 +117,7 @@ def future_outcomes(daily, benchmark, calendar):
         .reindex(calendar)
         .sort_index()
     )
-    if close.index.has_duplicates() or not close.index.equals(calendar):
+    if close.index.has_duplicates or not close.index.equals(calendar):
         raise RuntimeError("Ticker close matrix is not aligned to the global session calendar.")
     bench = (
         benchmark.drop_duplicates("tradedate")
