@@ -1,6 +1,6 @@
 # Aggressive Hypothesis Confirmation
 
-Runs the first historical confirmation pass for the five hypotheses. It does not perform the separate falsification stage and does not produce BUY/SELL decisions or position sizes.
+Runs the first historical confirmation pass for the five market hypotheses. It does not perform the separate falsification stage and does not produce BUY/SELL decisions or position sizes.
 
 ## Run
 
@@ -37,9 +37,11 @@ All thresholds are calculated cross-sectionally by date:
 - H1: positive 5-session return in the top quintile.
 - H2: positive 20-session relative strength in the top quintile.
 - H3: positive absolute returns over both 5 and 20 sessions.
-- H4: positive 5-session relative strength in the top quintile; inspect relationship with 20-session realized volatility.
+- H4: positive 5-session relative strength in the top quintile; inspect its association with 20-session realized volatility and compare low-volatility versus high-volatility members within that high-RS group.
 - H5: negative 5-session and 20-session relative strength, both in the bottom quintile.
 
-The primary outcome is forward relative return versus equal-weight TOP50 over 3, 5, 10, and 20 sessions. Signal groups are compared with the same-date complement. Statistical inference uses Newey-West standard errors on daily spreads, with lag equal to horizon minus one.
+The primary outcome is forward relative return versus equal-weight TOP50 over 3, 5, 10, and 20 sessions. Signal groups are compared with the same-date complement, except the H4 subgroup contrast, which compares low-volatility high-RS names with high-volatility high-RS names.
+
+Statistical inference uses Newey-West standard errors on daily spreads, with lag equal to horizon minus one. Circular block-bootstrap confidence intervals use a block length equal to the forward horizon. Benjamini-Hochberg q-values adjust the pooled set of reported hypothesis/horizon tests; p-values are normal approximations to Newey-West t-statistics and should be treated as screening diagnostics.
 
 The report is confirmation-stage evidence only. A separate falsification module is required before any trading decision.
