@@ -237,6 +237,17 @@ def main():
                                   "daily_hac_ci_high", "date_level_excess_mean", "excess_hac_ci_low",
                                   "excess_hac_ci_high"]}))
     print(f"\nLatest reconstructed Long: {len(reconstructed)} | overlap with reported list: {overlap}/10")
+    print("\nHISTORICAL RESULTS FOR REPORTED NAMES (15 bps RT)")
+    reported_history = by_ticker.loc[by_ticker.secid.isin(REPORTED_LONG)].copy()
+    print(reported_history.to_string(index=False, formatters={
+        "mean_net": lambda x: f"{x:+.2%}", "median_net": lambda x: f"{x:+.2%}",
+        "hit_rate": lambda x: f"{x:.1%}", "mean_excess": lambda x: f"{x:+.2%}",
+        "positive_year_fraction": lambda x: f"{x:.1%}",
+    }))
+    upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(bool)).stack()
+    if not upper.empty:
+        max_pair = upper.idxmax()
+        print(f"\n60-session correlation: mean={upper.mean():.2f} | max={upper.max():.2f} ({max_pair[0]}/{max_pair[1]})")
     print("\nLATEST NAME RISK SNAPSHOT")
     print(risk.to_string(index=False, formatters={
         "vol20_ann": lambda x: "n/a" if pd.isna(x) else f"{x:.1%}",
