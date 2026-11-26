@@ -305,7 +305,8 @@ Outputs:
 - `scripts/experiments/eda2/07_activity_concentration.py`
 - initial commit: `0b328457eedec60a299b98213dfacea95f053de1`
 - исправление группировки дневных условных сводок: `c9936420fee686a5056c182d4b93daec651a9347`;
-- нормализация меток групп в итоговом отчёте: `7a416409de7908771ed4201a860a074e7aea7404`
+- нормализация меток групп в итоговом отчёте: `7a416409de7908771ed4201a860a074e7aea7404`;
+- добавлен отсутствовавший q05, требуемый шаблоном условного отчёта после локального traceback: `eca3c02afa5096966e30fffc5017b4e77150a332`
 
 Методика реализации:
 - pooled-, per-security- и period-сводки Volume, Value, value_60d;
