@@ -57,26 +57,30 @@ def normal_p(t):
 
 
 def nw_mean(values, max_lag):
+    # Keep missing dates in place so HAC lags remain calendar-session lags.
     x = np.asarray(values, dtype=float)
-    x = x[np.isfinite(x)]
-    n = len(x)
+    valid = np.isfinite(x)
+    n = int(valid.sum())
     if n < 3:
-        return (float(x.mean()) if n else np.nan), np.nan, np.nan
-    mean = float(x.mean())
-    e = x - mean
+        return (float(np.nanmean(x)) if n else np.nan), np.nan, np.nan
+    mean = float(np.nanmean(x))
+    e = np.where(valid, x - mean, 0.0)
     lrv = float(np.dot(e, e) / n)
-    for lag in range(1, min(max_lag, n - 1) + 1):
-        gamma = float(np.dot(e[lag:], e[:-lag]) / n)
-        lrv += 2.0 * (1.0 - lag / (max_lag + 1.0)) * gamma
+    for lag in range(1, min(max_lag, len(x) - 1) + 1):
+        pair_valid = valid[lag:] & valid[:-lag]
+        pairs = int(pair_valid.sum())
+        if pairs:
+            gamma = float(np.dot(e[lag:][pair_valid], e[:-lag][pair_valid]) / pairs)
+            lrv += 2.0 * (1.0 - lag / (max_lag + 1.0)) * gamma
     se = float(np.sqrt(max(lrv, 0.0) / n))
     return mean, se, mean / se if se > 0 else np.nan
 
 
 def circular_block_ci(values, block_length, repetitions=BOOTSTRAP_REPS, seed=SEED):
+    # Preserve missing calendar positions while resampling contiguous date blocks.
     x = np.asarray(values, dtype=float)
-    x = x[np.isfinite(x)]
     n = len(x)
-    if n < max(20, 2 * block_length):
+    if np.isfinite(x).sum() < max(20, 2 * block_length):
         return np.nan, np.nan
     rng = np.random.default_rng(seed + n + block_length)
     blocks = int(np.ceil(n / block_length))
@@ -85,7 +89,10 @@ def circular_block_ci(values, block_length, repetitions=BOOTSTRAP_REPS, seed=SEE
     for b in range(repetitions):
         starts = rng.integers(0, n, size=blocks)
         sample = np.concatenate([x[(s + offsets) % n] for s in starts])[:n]
-        estimates[b] = sample.mean()
+        estimates[b] = np.nanmean(sample) if np.isfinite(sample).any() else np.nan
+    estimates = estimates[np.isfinite(estimates)]
+    if not len(estimates):
+        return np.nan, np.nan
     return tuple(np.quantile(estimates, [0.025, 0.975]))
 
 
