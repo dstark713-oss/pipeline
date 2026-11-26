@@ -210,7 +210,7 @@ def h1_concentration(panel, close, calendar):
     logret = np.log(close.div(close.shift(1)))
     positions = {d: i for i, d in enumerate(calendar)}
     records = []
-    for r in panel.loc[panel.H1_impulse, ["tradedate", "secid"]].itertuples(index=False):
+    for r in panel.loc[panel.H1_impulse, ["tradedate", "secid", "return_5d"]].itertuples(index=False):
         i = positions.get(r.tradedate)
         if i is None or i < 4 or r.secid not in logret.columns:
             continue
@@ -221,6 +221,7 @@ def h1_concentration(panel, close, calendar):
         gross_pos = path[path > 0].sum()
         records.append({
             "tradedate": r.tradedate, "secid": r.secid,
+            "return_5d": float(r.return_5d),
             "concentration_abs": np.max(np.abs(path)) / gross_abs if gross_abs > 0 else np.nan,
             "concentration_positive": np.max(path[path > 0]) / gross_pos if gross_pos > 0 else np.nan,
             "positive_days": int((path > 0).sum()),
@@ -254,6 +255,33 @@ def h1_daily_spreads(metrics, future):
             "daily_spread": hi.mean() - lo.mean(),
             "signal_hit_rate": (hi > 0).mean(),
             "signal_negative_rate": (hi < 0).mean(),
+        })
+    return pd.DataFrame(rows)
+
+
+def h1_conditional_regression(metrics, future):
+    x = metrics[["tradedate", "secid", "concentration_abs", "return_5d"]].merge(
+        future[["tradedate", "secid", "horizon", "forward_rs"]],
+        on=["tradedate", "secid"], how="left", validate="one_to_many"
+    )
+    rows = []
+    for (h, date), day in x.groupby(["horizon", "tradedate"], sort=True):
+        d = day[["concentration_abs", "return_5d", "forward_rs"]].replace(
+            [np.inf, -np.inf], np.nan
+        ).dropna()
+        if len(d) < 8:
+            continue
+        z = d[["concentration_abs", "return_5d"]].apply(
+            lambda s: (s - s.mean()) / s.std(ddof=0) if s.std(ddof=0) > 0 else np.nan
+        )
+        valid = z.notna().all(axis=1)
+        if valid.sum() < 8:
+            continue
+        design = np.column_stack([np.ones(valid.sum()), z.loc[valid].to_numpy()])
+        beta = np.linalg.lstsq(design, d.loc[valid, "forward_rs"].to_numpy(), rcond=None)[0]
+        rows.append({
+            "horizon": int(h), "tradedate": date, "n": int(valid.sum()),
+            "beta_concentration": beta[1], "beta_return5": beta[2],
         })
     return pd.DataFrame(rows)
 
@@ -460,7 +488,7 @@ def add_periods(frame):
     return x
 
 
-def write_report(path, panel, future, f1, f1_reg, f1_reg_summary, f2, f2_interaction, f2_int_summary, f2_quadrant_summary, f3, f3_ex_summary, f4, periods, summaries):
+def write_report(path, panel, future, f1, f1_reg, f1_reg_summary, f2, f2_interaction, f2_int_summary, f2_quadrant_summary, f3, f3_ex_summary, f4, f4_reg_summary, periods, summaries):
     path.parent.mkdir(parents=True, exist_ok=True)
     calendar_min = panel.tradedate.min().date()
     calendar_max = panel.tradedate.max().date()
@@ -537,6 +565,16 @@ def write_report(path, panel, future, f1, f1_reg, f1_reg_summary, f2, f2_interac
         "|---:|---|---:|---:|---:|---:|",
     ]
     for r in f2_int_summary.itertuples(index=False):
+        lines.append(
+            f"| {r.horizon} | {r.coefficient} | {r.mean:.5f} | "
+            f"[{r.nw_ci_low:.5f}, {r.nw_ci_high:.5f}] | {r.n_dates:,} | {r.bh_q:.3f} |"
+        )
+    lines += [
+        "", "## F4 concentration conditional on impulse size", "",
+        "| Horizon | Coefficient | Mean | NW 95% CI | Dates | q |",
+        "|---:|---|---:|---:|---:|---:|",
+    ]
+    for r in f4_reg_summary.itertuples(index=False):
         lines.append(
             f"| {r.horizon} | {r.coefficient} | {r.mean:.5f} | "
             f"[{r.nw_ci_low:.5f}, {r.nw_ci_high:.5f}] | {r.n_dates:,} | {r.bh_q:.3f} |"
@@ -624,12 +662,16 @@ def main():
     print("Running F4: impulse concentration...")
     concentration = h1_concentration(panel, close, calendar)
     f4 = h1_daily_spreads(concentration, future)
+    f4_reg = h1_conditional_regression(concentration, future)
 
     f1_summary = summarize_spreads(f1, ["module", "horizon"], signal_calendar) if len(f1) else pd.DataFrame()
     # F2 quadrant means are reported as descriptive cross-sectional series;
     # inference on the incremental interaction is reported separately.
     f3_summary = summarize_spreads(f3, ["module", "contrast", "horizon"], signal_calendar) if len(f3) else pd.DataFrame()
     f4_summary = summarize_spreads(f4, ["module", "horizon"], signal_calendar) if len(f4) else pd.DataFrame()
+    f4_reg_summary = summarize_date_series(
+        f4_reg, ["beta_concentration", "beta_return5"], ["horizon"], signal_calendar
+    ) if len(f4_reg) else pd.DataFrame()
     f1_reg_summary = summarize_date_series(
         f1_reg, ["beta_rs20", "beta_rs5", "beta_vol20"], ["module", "horizon"], signal_calendar
     ) if len(f1_reg) else pd.DataFrame()
@@ -720,6 +762,8 @@ def main():
         "f3_persistent_weakness_ex_crisis_summary.csv": f3_ex_summary,
         "f4_impulse_concentration_metrics.csv": concentration,
         "f4_impulse_concentration_daily.csv": f4,
+        "f4_conditional_coefficients.csv": f4_reg,
+        "f4_conditional_summary.csv": f4_reg_summary,
         "period_stability.csv": periods,
     }
     for filename, frame in outputs.items():
@@ -733,7 +777,7 @@ def main():
     write_report(
         args.report, panel, future, f1, f1_reg, f1_reg_summary,
         f2, f2_interaction, f2_int_summary, f2_quadrant_summary,
-        f3, f3_ex_summary, f4, periods, summaries
+        f3, f3_ex_summary, f4, f4_reg_summary, periods, summaries
     )
     print("\nFALSIFICATION RUN COMPLETE")
     print("=" * 68)
